@@ -42,6 +42,8 @@ import lune.base.Log;
 import lune.base.Nodes;
 import lune.base.LuneControl;
 import lune.base.OutputDepend;
+import lune.base.LuaMod;
+import lune.base.Ver;
 
 fn createModuleInfo(
    ast:&AstInfo.ASTInfo, mod:str,
@@ -618,12 +620,68 @@ pub class PythonConverter extend Runner.Runner {
 }
 
 
+/**
+lnsc 自身 (DependLuaOnLns を含むプログラム) を変換する場合に、wasm に埋め込む情報を返す。
+
+Go 版 (misc/go/binding/bind.lns が生成する binding.go) と同じく、次のものを埋め込む。
+- Lua 版の lnsc (マクロの実行に使う): 全てのモジュールを Lua に変換したコードと、runtime (-mklunemod の内容)
+- lune.base.Testing の LuneScript のソース (Depend.getBindLns で返す)
+
+Lua のコードは、wasm に変換するのと同じ AST から生成するので、lnsc のソースと必ず一致する。
+
+@return 埋め込む Lua のモジュール
+@return Depend.getBindLns で返す LuneScript のソース (モジュール名 → ソース)
+*/
+pub fn createWasmEmbedInfo( ast:&AstInfo.ASTInfo, importAstList:&List<&AstInfo.ASTInfo>,
+                            option:&Option.Option )
+   : &List<&convWasm.EmbedLua>, &Map<str,str>
+{
+   let mut astList:List<&AstInfo.ASTInfo> = [];
+   let mut hasDepend = false;
+   foreach work in importAstList {
+      astList.insert( work );
+      if work.$exportInfo.$fullName == "lune.base.DependLuaOnLns" {
+         hasDepend = true;
+      }
+   }
+   let mut embedLuaList:List<&convWasm.EmbedLua> = [];
+   let mut bindLnsMap:Map<str,str> = {};
+   if not hasDepend {
+      return embedLuaList, bindLnsMap;
+   }
+   astList.insert( ast );
+   foreach work in astList {
+      let mod = work.$exportInfo.$fullName;
+      let mut stream = new Util.memStream();
+      let mut metaStream = new Util.memStream();
+      let mut conv = ast2LuaMain(
+         work, work.$streamName, stream, metaStream, .ConvMeta, false, option );
+      conv.outputLuaAndMeta( unwrap work.$node@@@Nodes.RootNode );
+      embedLuaList.insert(
+         new convWasm.EmbedLua( mod, "@%s.lua" ((mod.gsub( "%.", "/" ))), stream.$txt ) );
+      if mod == "lune.base.Testing" {
+         if! let code = Util.readFile( work.$streamName ) {
+            bindLnsMap[ mod ] = code;
+         }
+      }
+   }
+   let mut runtime = "";
+   foreach kind in LuaMod.CodeKind.$_allList {
+      runtime = runtime .. LuaMod.getCode( kind );
+   }
+   let runtimeMod = "lune.base.runtime%d" (Ver.luaModVersion);
+   embedLuaList.insert(
+      new convWasm.EmbedLua( runtimeMod, "@%s.lua" ((runtimeMod.gsub( "%.", "/" ))), runtime ) );
+   return embedLuaList, bindLnsMap;
+}
+
 pub class WasmConverter extend Runner.Runner {
    let mut memStream:Util.memStream;
    let path:str;
    let scriptPath:str;
    let astResult:&CreateAstResult;
    let mut ast:&AstInfo.ASTInfo!;
+   let option:&Option.Option;
 
    pub fn __init( scriptPath:str, astResult:&CreateAstResult, mod:str,
                   option:&Option.Option ) __async
@@ -641,6 +699,7 @@ pub class WasmConverter extend Runner.Runner {
       self.astResult = astResult;
       self.ast = nil;
       self.memStream = new Util.memStream();
+      self.option = option;
 
       self.start( __lns.runMode.Queue, "convwasm -- %s" (scriptPath) );
    }
@@ -661,8 +720,9 @@ pub class WasmConverter extend Runner.Runner {
    */
    pub fn saveWasm( importAstList:&List<&AstInfo.ASTInfo> ) mut {
       let ast = self.getAst();
+      let embedLuaList, bindLnsMap = createWasmEmbedInfo( ast, importAstList, self.option );
       let mut conv = convWasm.createFilter(
-         self.scriptPath, self.memStream, ast, importAstList );
+         self.scriptPath, self.memStream, ast, importAstList, embedLuaList, bindLnsMap );
       ast.$node.processFilter( conv, new convWasm.Opt( ast.$node ) );
 
       let! mut file = io.open( self.path, "w" ) {

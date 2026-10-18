@@ -143,11 +143,8 @@ pub fn name( txt:str ) : str {
 
 /** wasm の vector (要素数 + 要素) */
 pub fn vec( list:&List<str> ) : str {
-   let mut txt = uleb( #list );
-   foreach item in list {
-      txt = txt .. item;
-   }
-   return txt;
+   // 要素を 1 つずつ連結すると、要素数 × 全体の長さに比例する時間がかかるので、まとめて連結する
+   return uleb( #list ) .. string.__join( list, "" ## );
 }
 
 /** セクション */
@@ -677,6 +674,25 @@ fn encodeFuncType( params:&List<&ValType>, results:&List<&ValType> ) : str {
    return byte( 0x60 ) .. vec( paramList ) .. vec( resultList );
 }
 
+/**
+rec group の外で定義する関数型の型インデックスを返す (未定義なら typeEntryList に追加する)。
+
+@param typeEntryList 型セクションの要素 (先頭は rec group)
+@param typeMap 関数型のエンコード結果 → 型インデックス
+@param recNum rec group の型の数
+*/
+fn getExternalType( mut typeEntryList:List<str>, mut typeMap:Map<str,int>, recNum:int,
+                    funcType:str ) : int
+{
+   if! let work = typeMap[ funcType ] {
+      return work;
+   }
+   let typeIdx = recNum + #typeEntryList - 1;
+   typeMap[ funcType ] = typeIdx;
+   typeEntryList.insert( funcType );
+   return typeIdx;
+}
+
 /** モジュール */
 pub class Module {
    /** 型定義 (エンコード済みの subtype)。全て 1 つの rec group に入れる */
@@ -870,21 +886,30 @@ pub class Module {
       let mut stream = new memStream();
       stream.write( "%sasm%s" ( byte( 0 ), byte( 1 ) .. byte( 0 ) .. byte( 0 ) .. byte( 0 ) ) );
       // 全ての型を 1 つの rec group に入れる。
-      // import する関数の型は、その後に rec group の外で定義する。
+      // import・export する関数の型は、その後に rec group の外で定義する
+      // (rec group 内の型は、他のモジュールの同じ構造の関数型と一致しないため)。
       let mut typeEntryList:List<str> = [ byte( 0x4e ) .. vec( self.typeList ) ];
-      let mut importTypeMap:Map<str,int> = {};
+      let mut externalTypeMap:Map<str,int> = {};
       let mut importList:List<str> = [];
       foreach entry, index in self.importList {
-         let funcType = self.importTypeList[ index ];
-         let typeIdx;
-         if! let work = importTypeMap[ funcType ] {
-            typeIdx = work;
-         } else {
-            typeIdx = #self.typeList + #typeEntryList - 1;
-            importTypeMap[ funcType ] = typeIdx;
-            typeEntryList.insert( funcType );
-         }
+         let typeIdx = getExternalType( typeEntryList, externalTypeMap, #self.typeList, self.importTypeList[ index ] );
          importList.insert( entry .. byte( 0x00 ) .. uleb( typeIdx ) );
+      }
+      // export する関数 (ref.func で参照しないもの) の型 (関数の ID → 型インデックス)
+      let mut index2funcType:Map<int,str> = {};
+      foreach index, funcType in self.funcTypeMap {
+         index2funcType[ index ] = funcType;
+      }
+      let mut exportTypeMap:Map<int,int> = {};
+      foreach funcId in self.exportIdList {
+         if not self.refFuncSet.has( funcId ) {
+            if! let func = self.id2func[ funcId ] {
+               if! let funcType = index2funcType[ func.$typeIdx ] {
+                  exportTypeMap[ funcId ] = getExternalType( typeEntryList, externalTypeMap,
+                                                              #self.typeList, funcType );
+               }
+            }
+         }
       }
       stream.write( section( 1, vec( typeEntryList ) ) );
       foreach entry in self.importMemList {
@@ -895,8 +920,9 @@ pub class Module {
       }
       let mut funcTypeList:List<str> = [];
       let mut codeList:List<str> = [];
-      foreach func in self.funcList {
-         funcTypeList.insert( uleb( func.$typeIdx ) );
+      foreach func, index in self.funcList {
+         funcTypeList.insert(
+            uleb( exportTypeMap[ self.funcIdList[ index ] ] or func.$typeIdx ) );
          codeList.insert( func.encode( funcIndexList ) );
       }
       stream.write( section( 3, vec( funcTypeList ) ) );

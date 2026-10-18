@@ -250,8 +250,27 @@ class FuncCtx {
    }
 }
 
+/**
+wasm に埋め込む Lua のモジュール (lnsc 自身を変換する場合の、Lua 版の lnsc)。
+
+Go 版 (runtime_go/binding51.go) と同じく、Lua の package.preload に登録して require で読み込めるようにする。
+*/
+pub class EmbedLua {
+   /** モジュール名 (lune.base.Util など) */
+   let mod:str {pub};
+   /** Lua の chunkname (@lune/base/Util.lua など) */
+   let chunkname:str {pub};
+   let code:str {pub};
+}
+
 class convFilter extend Nodes.Filter<Opt> {
    let streamName:str;
+   /** wasm に埋め込む Lua のモジュール */
+   let embedLuaList:&List<&EmbedLua>;
+   /** Depend.getBindLns で返す LuneScript のソース (モジュール名 → ソース) */
+   let bindLnsMap:&Map<str,str>;
+   /** 埋め込んだ Lua のモジュールを登録済みかどうかのグローバル変数 (登録する場合だけ生成する) */
+   let mut embedLuaGlobal:int;
    let mut stream:oStream;
    let processInfo:Ast.ProcessInfo;
    let builtinFuncs:&Builtin.BuiltinFuncType;
@@ -262,8 +281,14 @@ class convFilter extend Nodes.Filter<Opt> {
    let importAstList:&List<&AstInfo.ASTInfo>;
    /** 全てのモジュールのスコープ (モジュールレベルの変数の判定に使う) */
    let mut moduleScopeSet:Set<&Ast.Scope>;
-   /** import したモジュールの型 → モジュールの初期化 (トップレベルの処理) の関数 */
-   let mut module2init:Map<&Ast.TypeInfo,int>;
+   /** import したモジュールの名前 → モジュールの初期化 (トップレベルの処理) の関数 */
+   let mut module2init:Map<str,int>;
+   /** provide しているモジュールの名前 → provide しているシンボル */
+   let mut module2provide:Map<str,&Ast.SymbolInfo>;
+   /** import したモジュールのシンボル → provide しているシンボル */
+   let mut symAlias:Map<&Ast.SymbolInfo,&Ast.SymbolInfo>;
+   /** import.l で遅延ロードするモジュールのシンボル → モジュールの名前 */
+   let mut lazySym2module:Map<&Ast.SymbolInfo,str>;
 
    let mut mod:W.Module;
    let mut rt:Rt.Runtime;
@@ -287,8 +312,24 @@ class convFilter extend Nodes.Filter<Opt> {
    let mut enumType2decl:Map<&Ast.TypeInfo,&Nodes.DeclEnumNode>;
    /** 宣言があるメソッド (自動生成されるメソッドを除く) */
    let mut declaredMethodSet:Set<&Ast.TypeInfo>;
+   /** advertise で生成したメソッド */
+   let mut advertiseMethodSet:Set<&Ast.TypeInfo>;
+   /**
+   メソッドとして宣言・委譲 (advertise) している getter の名前 (全モジュール)。
+   これらの名前の自動生成の getter は、派生クラスで置き換わっている可能性があるので、
+   メンバを直接参照せずに vtable で呼び出す。
+   */
+   let mut dynGetterNameSet:Set<str>;
+   /** 実行時の型で _toMap を呼び分ける関数 (使う場合だけ生成する。本体は finalizeClasses で生成) */
+   let mut toMapDynIndex:int;
+   /** 最初に _toMap を呼んだノード (変換のエラーの位置に使う) */
+   let mut toMapDynNode:&Nodes.Node!;
    /** 関数を関数型のクロージャに変換するアダプタ (キー → 関数インデックス) */
    let mut adapterMap:Map<str,int>;
+   /** Lua のモジュール (module ... require) の型 → その値を持つグローバル変数 */
+   let mut extModule2global:Map<&Ast.TypeInfo,int>;
+   /** 情報を生成中の alge → base の型 (値に自身を持つ alge の、getRep の再帰を止める) */
+   let mut algeBuildingMap:Map<&Ast.TypeInfo,int>;
    /** 評価済みの値で置き換えるノード ($. などで、評価済みの prefix を使う) */
    let mut node2val:Map<&Nodes.Node,&Val>;
    /** nil の判定を処理済みの $. などのノード */
@@ -303,17 +344,22 @@ let f = fn () {} の場合、__func__ を持つ関数の型と宣言の型が別
    /** 標準出力のオブジェクト (グローバル変数) */
    let mut stdoutGlobal:int;
    let mut stderrGlobal:int;
+   let mut stdinGlobal:int;
    let mainIndex:int;
    /** 本体を変換済みの関数 */
    let mut compiledFuncSet:Set<int>;
 
    pub fn __init( streamName:str, stream:oStream, ast:&AstInfo.ASTInfo,
-                  importAstList:&List<&AstInfo.ASTInfo> )
+                  importAstList:&List<&AstInfo.ASTInfo>,
+                  embedLuaList:&List<&EmbedLua>, bindLnsMap:&Map<str,str> )
    {
       super( true, ast.$exportInfo.$moduleTypeInfo,
              ast.$exportInfo.$moduleTypeInfo.$scope );
 
       self.streamName = streamName;
+      self.embedLuaList = embedLuaList;
+      self.bindLnsMap = bindLnsMap;
+      self.embedLuaGlobal = -1;
       self.stream = stream;
       self.processInfo = ast.$exportInfo.$processInfo.clone();
       self.builtinFuncs = ast.$builtinFunc;
@@ -323,6 +369,9 @@ let f = fn () {} の場合、__func__ を持つ関数の型と宣言の型が別
       self.moduleScopeSet = (@);
       self.moduleScopeSet.add( self.moduleScope );
       self.module2init = {};
+      self.module2provide = {};
+      self.symAlias = {};
+      self.lazySym2module = {};
 
       let mut mod = new W.Module();
       self.rt = new Rt.Runtime( mod );
@@ -346,20 +395,27 @@ let f = fn () {} の場合、__func__ を持つ関数の型と宣言の型が別
       self.algeInfoList = [];
       self.enumType2decl = {};
       self.declaredMethodSet = (@);
+      self.advertiseMethodSet = (@);
+      self.dynGetterNameSet = (@);
+      self.toMapDynIndex = -1;
+      self.toMapDynNode = nil;
       self.adapterMap = {};
+      self.extModule2global = {};
+      self.algeBuildingMap = {};
       self.node2val = {};
       self.nilAccDoneSet = (@);
       self.funcSym2name = {};
       self.prologue = [];
       self.stdoutGlobal = -1;
       self.stderrGlobal = -1;
+      self.stdinGlobal = -1;
    }
 }
 
 /** node の位置を付けてエラーを出す。 */
 fn convFilter.error( node:&Nodes.Node, mess:str ) : __ {
-   Util.err( "%s:%d:%d: wasm: %s"
-             ( self.streamName, node.$pos.lineNo, node.$pos.column, mess ) );
+   // import したモジュールのノードもあるので、ノードの位置のファイル名を使う
+   Util.err( "%s: wasm: %s" ( node.$pos.getDisplayTxt(), mess ) );
 }
 
 fn convFilter.notSupport( node:&Nodes.Node ) : __ {
@@ -374,15 +430,71 @@ fn convFilter.normType( typeInfo:&Ast.TypeInfo ) : &Ast.TypeInfo {
    if work.$nilable {
       work = work.$nonnilableType.$aliasSrc.$srcTypeInfo;
    }
+   if work.$kind == .Ext {
+      // Luaval<T>。Lua の値 ($LuaVal) か、Lua の値に変換しない値 (数値・文字列など) なので
+      // stem と同じに扱う。Luaval<T> の値の操作は、isLuaval() で判定して Lua で行う
+      return Ast.builtinTypeStem;
+   }
    return work;
+}
+
+/** Lua のモジュール (module ... require) の型。それ以外は nil */
+fn convFilter.getExtModuleType( typeInfo:&Ast.TypeInfo ) : &Ast.TypeInfo! {
+   let work = typeInfo.$aliasSrc.$srcTypeInfo.$nonnilableType;
+   if work.$kind == .ExtModule {
+      return work;
+   }
+   return nil;
+}
+
+/**
+Lua のモジュールの値 (Lua の require の結果)。
+
+Lua 版の require と同じく、最初の参照時に .lua ファイルを読み込んで実行する。
+module.l (遅延ロード) でない場合は、宣言の位置でも参照して読み込む。
+*/
+fn convFilter.lowerExtModuleVal( node:&Nodes.Node, modType:&Ast.TypeInfo ) mut : &W.Ins {
+   let modGlobal;
+   if! let work = self.extModule2global[ modType ] {
+      modGlobal = work;
+   } else {
+      modGlobal = self.mod.addGlobal( W.typeAnyRef, W.refNull( W.htAny ) );
+      self.extModule2global[ modType ] = modGlobal;
+   }
+   let! normalType = modType@@@Ast.NormalTypeInfo {
+      self.error( node, "not support module -- %s" (modType.getTxt( ## )) );
+   };
+   let args = self.tempLocal( self.rt.$listType );
+   return W.seq( [
+      W.ifElse( W.refIsNull( W.globalGet( modGlobal ) ), [
+         ls( args, W.call( self.rt.fnListNew(), [ W.i32Const( 1 ) ] ) ),
+         W.call( self.rt.fnListPush(), [ lg( args ), self.rt.strLiteral( normalType.$requirePath ) ] ),
+         W.globalSet( modGlobal, self.rt.listItem(
+            W.call( self.rt.fnLuaCall(), [ W.i32Const( Rt.luaRequire ), lg( args ) ] ), 0 ) ) ],
+                nil, nil ),
+      W.globalGet( modGlobal ) ] );
+}
+
+/** Luaval<T> (Lua の値) の型かどうか */
+fn convFilter.isLuaval( typeInfo:&Ast.TypeInfo ) : bool {
+   let mut work = typeInfo.$aliasSrc.$srcTypeInfo;
+   if work.$nilable {
+      work = work.$nonnilableType.$aliasSrc.$srcTypeInfo;
+   }
+   return work.$kind == .Ext;
 }
 
 /** generics の型の場合は、元の型 (クラスなど) を返す */
 fn convFilter.getGenSrc( typeInfo:&Ast.TypeInfo ) : &Ast.TypeInfo {
    let mut work = self.normType( typeInfo );
-   let src = work.$genSrcTypeInfo.$aliasSrc.$srcTypeInfo;
-   if src ~= work {
-      return src;
+   // クラスの中の自身の型 (AltBase<T> の中の AltBase<T>) は、
+   // 型パラメータで生成した型なので、元の型になるまでたどる
+   for _ = 1, 10 {
+      let src = work.$genSrcTypeInfo.$aliasSrc.$srcTypeInfo;
+      if src == work {
+         break;
+      }
+      work = src;
    }
    return work;
 }
@@ -434,7 +546,8 @@ fn convFilter.getRep( typeInfo:&Ast.TypeInfo ) mut : &W.ValType {
          }
       }
       // タプルは Lua 版と同じく、値のリストで表す
-      case .List, .Array, .DDD, .Tuple {
+      // Nilable<T> の箱も、Lua 版と同じく要素が 1 つのリストで表す
+      case .List, .Array, .DDD, .Tuple, .Box {
          return self.rt.$listType;
       }
       case .Map, .Set {
@@ -453,6 +566,9 @@ fn convFilter.getRep( typeInfo:&Ast.TypeInfo ) mut : &W.ValType {
          return W.refType( self.getFuncCloInfo( work ).$cloType );
       }
       case .Alge {
+         if! let baseType = self.algeBuildingMap[ self.getGenSrc( work ) ] {
+            return W.refType( baseType );
+         }
          if! let info = self.getAlgeInfo( self.getGenSrc( work ) ) {
             return W.refType( info.$baseType );
          }
@@ -589,20 +705,25 @@ fn convFilter.registerClass( declNode:&Nodes.DeclClassNode ) mut : &ClassInfo {
          // _toMap などの builtin のメソッドは、呼び出し側で処理する
       } elseif isMethodSym( symbol ) {
          let mut impl = -1;
+         let mut slotImpl = -1;
          if not methodType.$abstractFlag {
-            let funcType;
-            if! let slotIndex = info.$name2slot[ name ] {
-               funcType = info.$slotList[ slotIndex ].$funcType;
-            } else {
-               funcType = self.getMethodFuncType( methodType );
-            }
+            let funcType = self.getMethodFuncType( methodType );
             let work, _ = self.mod.addFuncWithType( funcType, 1 + #methodType.$argTypeInfoList );
             impl = work;
+            slotImpl = work;
             self.mod.setFuncName( impl, "%s.%s" ( classType.getTxt( ## ), name ) );
             self.func2index[ methodType ] = impl;
+            if! let slotIndex = info.$name2slot[ name ] {
+               let slot = info.$slotList[ slotIndex ];
+               if slot.$funcType ~= funcType {
+                  // generics の親クラスの型パラメータ (anyref) を、具体的な型 (i64 など) で
+                  // オーバーライドした場合は、変換するアダプタを vtable に登録する
+                  slotImpl = self.makeIfAdapter( slot.$methodType, methodType, impl );
+               }
+            }
          }
          if! let slotIndex = info.$name2slot[ name ] {
-            info.$slotList[ slotIndex ].set_impl( impl );
+            info.$slotList[ slotIndex ].set_impl( slotImpl );
          } else {
             info.$slotList.insert(
                new SlotInfo( name, self.getMethodFuncType( methodType ), methodType, impl ) );
@@ -629,8 +750,12 @@ fn convFilter.registerClass( declNode:&Nodes.DeclClassNode ) mut : &ClassInfo {
          let name = advertiseInfo.$prefix .. mtdName;
          let mut methodType = child;
          if! let symbol = scope.$symbol2SymbolInfoMap[ name ] {
-            if self.declaredMethodSet.has( symbol.$typeInfo ) or autoMethodSet.has( name ) {
+            let ownMethod = self.getGenSrc( symbol.$typeInfo.$parentInfo ) == classType;
+            if ownMethod and self.declaredMethodSet.has( symbol.$typeInfo ) or
+               autoMethodSet.has( name )
+            {
                // このクラスで定義しているメソッドは委譲しない
+               // (親クラスから継承したメソッドは委譲する)
                continue;
             }
             methodType = symbol.$typeInfo;
@@ -652,6 +777,7 @@ fn convFilter.registerClass( declNode:&Nodes.DeclClassNode ) mut : &ClassInfo {
          info.$advertiseList.insert(
             new AdvertiseMethod( advertiseInfo.$member.$name.txt, memberType, mtdName,
                                  methodType, impl ) );
+         self.advertiseMethodSet.add( methodType );
       }
    }
 
@@ -807,6 +933,7 @@ fn convFilter.getAlgeInfo( algeType:&Ast.TypeInfo ) mut : &AlgeInfo! {
    }
    let baseType = self.mod.addStructType(
       self.rt.$tBase, [ W.field( W.typeI32, true ), W.field( W.typeI32, false ) ] );
+   self.algeBuildingMap[ algeType ] = baseType;
    let mut name2tag:Map<str,int> = {};
    let mut name2type:Map<str,int> = {};
    let mut name2global:Map<str,int> = {};
@@ -836,6 +963,7 @@ fn convFilter.getAlgeInfo( algeType:&Ast.TypeInfo ) mut : &AlgeInfo! {
       W.globalSet( namesGlobal, W.arrayNewFixed( self.rt.$tAnyArr, nameInsList ) ) );
    let info = new AlgeInfo( algeType, baseType, valNames, name2tag, name2type, name2global,
                             namesGlobal );
+   self.algeBuildingMap[ algeType ] = nil;
    self.alge2info[ algeType ] = info;
    self.algeInfoList.insert( info );
    return info;
@@ -915,7 +1043,14 @@ fn convFilter.envGet( field:int ) : &W.Ins {
 
 /** 変数の値を読む */
 fn convFilter.readSym( node:&Nodes.Node, symbol:&Ast.SymbolInfo ) mut : &W.Ins {
-   let orgSym = symbol.getOrg();
+   if! let initIns = self.getLazyInit( node ) {
+      // provide している遅延ロードのモジュールの値
+      return W.seq( [ initIns, self.readSymSub( node, symbol ) ] );
+   }
+   return self.readSymSub( node, symbol );
+}
+fn convFilter.readSymSub( node:&Nodes.Node, symbol:&Ast.SymbolInfo ) mut : &W.Ins {
+   let orgSym = self.resolveSym( symbol.getOrg() );
    let rep = self.getRep( orgSym.$typeInfo );
    if! let loc = self.findLoc( orgSym ) {
       _match loc {
@@ -941,6 +1076,16 @@ fn convFilter.readSym( node:&Nodes.Node, symbol:&Ast.SymbolInfo ) mut : &W.Ins {
       }
    }
    switch orgSym.$name {
+      case "_G", "_ENV" {
+         // Lua のグローバル変数の表 (Lua 専用のモジュールで使う)。
+         // Lua の _G を Map にする (値は Lua の値のまま)
+         return W.call( self.rt.fnLuaToMap(),
+                        [ self.rt.listItem(
+                           W.call( self.rt.fnLuaCall(),
+                                   [ W.i32Const( Rt.luaGlobals ),
+                                     W.call( self.rt.fnListNew(), [ W.i32Const( 0 ) ] ) ] ), 0 ),
+                          W.i32Const( 0 ) ] );
+      }
       case "__mod__" {
          return self.rt.strLiteral(
             self.moduleTypeInfo.getFullName( self.$typeNameCtrl, self.$moduleInfoManager, false ) );
@@ -963,6 +1108,10 @@ fn convFilter.readSym( node:&Nodes.Node, symbol:&Ast.SymbolInfo ) mut : &W.Ins {
 /** 変数に値を書く */
 fn convFilter.writeSym( node:&Nodes.Node, symbol:&Ast.SymbolInfo, val:&W.Ins ) mut : &W.Ins {
    let orgSym = symbol.getOrg();
+   if orgSym.$name == "_" {
+      // _ への代入は、値を捨てる
+      return W.drop( val );
+   }
    let rep = self.getRep( orgSym.$typeInfo );
    let! loc = self.findLoc( orgSym ) {
       self.error( node, "not support symbol -- %s" ( orgSym.$name ) );
@@ -1039,7 +1188,75 @@ fn convFilter.coerceRep( ins:&W.Ins, fromRep:&W.ValType, toRep:&W.ValType ) mut 
    if toRep.$heapType == W.htAny {
       return ins;
    }
+   if fromRep.$heapType == W.htAny and toRep.equalsType( self.rt.$mapType ) {
+      // Lua の table と同じく、List も Map として扱えるようにする
+      return W.call( self.fnAnyToMap(), [ ins ] );
+   }
    return W.refCast( toRep.$heapType, ins );
+}
+
+/**
+anyref を Map にする。
+
+List の場合は、Lua の table と同じく、添字 (1 始まり) をキーにした Map を生成する。
+Lua では数値のキーも .. で文字列につなげられるが、wasm では str の型の値として扱うので、
+キーは添字の文字列 ("1", "2", ...) にする (Lua とは整列の順番が異なる場合がある)。
+*/
+fn convFilter.fnAnyToMap() mut : int {
+   if! let index = self.adapterMap[ "anyToMap" ] {
+      return index;
+   }
+   let index, mut func = self.mod.addFunc( [ W.typeAnyRef ], [ self.rt.$mapType ] );
+   self.adapterMap[ "anyToMap" ] = index;
+   self.mod.setFuncName( index, "anyToMap" );
+   let list = func.addLocal( self.rt.$listType );
+   let map = func.addLocal( self.rt.$mapType );
+   let pos = func.addLocal( W.typeI32 );
+   let item = func.addLocal( W.typeAnyRef );
+   func.setBody( [
+      W.ifElse( p( W.opI32Eqz, [ W.refTest( self.rt.$tList, lg( 0 ) ) ] ),
+                [ W.ret( [ W.refCast( self.rt.$tMap, lg( 0 ) ) ] ) ], nil, nil ),
+      ls( list, W.refCast( self.rt.$tList, lg( 0 ) ) ),
+      ls( map, self.rt.newMap() ),
+      W.block( [ W.loop( [
+         W.brIf( 1, p( W.opI32GeS, [ lg( pos ),
+                                     W.structGet( self.rt.$tList, Rt.fListLen, lg( list ) ) ] ) ),
+         ls( item, W.arrayGet( self.rt.$tAnyArr,
+                               W.structGet( self.rt.$tList, Rt.fListItems, lg( list ) ),
+                               lg( pos ) ) ),
+         ls( pos, p( W.opI32Add, [ lg( pos ), W.i32Const( 1 ) ] ) ),
+         // Lua と同じく nil の要素は Map に入れない
+         W.ifElse( p( W.opI32Eqz, [ W.refIsNull( lg( item ) ) ] ), [
+            W.call( self.rt.fnMapSet(),
+                    [ lg( map ), W.call( self.rt.fnI64ToStr(),
+                                         [ p( W.opI64ExtendI32S, [ lg( pos ) ] ) ] ),
+                      lg( item ) ] ) ], nil, nil ),
+         W.br( 0 ) ], nil ) ], nil ),
+      lg( map ) ] );
+   return index;
+}
+
+/** Map の 1 からの連続した整数のキーの値を List にする (Lua の ipairs と同じ範囲) */
+fn convFilter.fnMapToList() mut : int {
+   if! let index = self.adapterMap[ "mapToList" ] {
+      return index;
+   }
+   let index, mut func = self.mod.addFunc( [ self.rt.$mapType ], [ self.rt.$listType ] );
+   self.adapterMap[ "mapToList" ] = index;
+   self.mod.setFuncName( index, "mapToList" );
+   let list = func.addLocal( self.rt.$listType );
+   let pos = func.addLocal( W.typeI64 );
+   let item = func.addLocal( W.typeAnyRef );
+   func.setBody( [
+      ls( list, W.call( self.rt.fnListNew(), [ W.i32Const( 4 ) ] ) ),
+      W.block( [ W.loop( [
+         ls( pos, p( W.opI64Add, [ lg( pos ), W.i64Const( 1 ) ] ) ),
+         ls( item, W.call( self.rt.fnMapGet(), [ lg( 0 ), self.rt.boxI64( lg( pos ) ) ] ) ),
+         W.brIf( 1, W.refIsNull( lg( item ) ) ),
+         W.call( self.rt.fnListPush(), [ lg( list ), lg( item ) ] ),
+         W.br( 0 ) ], nil ) ], nil ),
+      lg( list ) ] );
+   return index;
 }
 
 /** 型を変換する */
@@ -1052,7 +1269,80 @@ fn convFilter.coerce( ins:&W.Ins, fromType:&Ast.TypeInfo, toType:&Ast.TypeInfo )
    if self.isFuncType( fromType ) and self.isFuncType( toType ) {
       return self.adaptClosure( ins, fromType, toType );
    }
+   if self.isLuaval( fromType ) and not self.isLuaval( toType ) and self.isFuncType( toType ) {
+      return self.luaFuncToClosure( ins, toType );
+   }
+   if self.isType( fromType, Ast.builtinTypeStem ) and self.isFuncType( toType ) {
+      // stem の値が Lua の関数 (_G の値など) の場合は、それを呼び出すクロージャにする
+      let work = self.tempLocal( W.typeAnyRef );
+      return W.seq( [
+         ls( work, ins ),
+         W.ifElse( W.refTest( self.rt.$tLuaVal, lg( work ) ),
+                   [ self.luaFuncToClosure( lg( work ), toType ) ],
+                   [ self.coerceRep( lg( work ), fromRep, toRep ) ], toRep ) ] );
+   }
    return self.coerceRep( ins, fromRep, toRep );
+}
+
+/**
+Lua の関数の値 (Luaval) を、それを呼び出すクロージャに変換する。
+
+例えば、Luaval<form> を form にキャストする場合など。nil は nil のまま。
+*/
+fn convFilter.luaFuncToClosure( ins:&W.Ins, toType:&Ast.TypeInfo ) mut : &W.Ins {
+   let toInfo = self.getFuncCloInfo( toType );
+   let key = "luaFunc:%d" ( toInfo.$funcType );
+   let adaptType;
+   if! let work = self.adapterMap[ key ] {
+      adaptType = work;
+   } else {
+      adaptType = self.mod.addStructType(
+         toInfo.$cloType, [ W.field( W.typeI32, true ),
+                            W.field( W.refType( toInfo.$funcType ), false ),
+                            W.field( W.typeAnyRef, false ) ] );
+      self.adapterMap[ key ] = adaptType;
+      let funcIndex, mut func = self.mod.addFuncWithType( toInfo.$funcType, 1 + #toInfo.$params );
+      self.adapterMap[ key .. ":func" ] = funcIndex;
+      let args = func.addLocal( self.rt.$listType );
+      let result = func.addLocal( self.rt.$listType );
+      let mut body:List<&W.Ins> = [
+         ls( args, W.call( self.rt.fnListNew(), [ W.i32Const( #toInfo.$params ) ] ) ) ];
+      let toArgs = self.normType( toType ).$argTypeInfoList;
+      foreach rep, index in toInfo.$params {
+         if self.normType( toArgs[ index ] ).$kind == .DDD {
+            body.insert( W.call( self.rt.fnListAppend(), [ lg( args ), lg( index ) ] ) );
+         } else {
+            body.insert( W.call( self.rt.fnListPush(),
+                                 [ lg( args ), self.coerceRep( lg( index ), rep, W.typeAnyRef ) ] ) );
+         }
+      }
+      body.insert( ls( result, W.call( self.rt.fnLuaCallValLazy(),
+                                       [ W.structGet( adaptType, 2, W.refCast( adaptType, lg( 0 ) ) ),
+                                         lg( args ) ] ) ) );
+      let toRetTypes = self.normType( toType ).$retTypeInfoList;
+      foreach rep, index in toInfo.$results {
+         if self.normType( toRetTypes[ index ] ).$kind == .DDD {
+            if index ~= 1 {
+               Util.err( "wasm: not support the luaval form -- %s" (toType.getTxt( ## )) );
+            }
+            body.insert( lg( result ) );
+         } else {
+            body.insert( self.coerceRep(
+               W.call( self.rt.fnListGet(), [ lg( result ), W.i64Const( index ) ] ),
+               W.typeAnyRef, rep ) );
+         }
+      }
+      func.setBody( body );
+   }
+   let funcIndex = unwrap self.adapterMap[ key .. ":func" ];
+   let work = self.tempLocal( W.typeAnyRef );
+   return W.seq( [
+      ls( work, ins ),
+      W.ifElse( W.refIsNull( lg( work ) ),
+                [ W.refNull( toInfo.$cloType ) ],
+                [ W.structNew( adaptType, [ W.i32Const( 0 ), self.mod.refFunc( funcIndex ),
+                                            lg( work ) ] ) ],
+                W.refType( toInfo.$cloType ) ) ] );
 }
 
 fn convFilter.coerceVal( val:&Val, toType:&Ast.TypeInfo ) mut : &W.Ins {
@@ -1162,6 +1452,7 @@ fn convFilter.fnTruthy() mut : int {
    }
    let index, mut func = self.mod.addFunc( [ W.typeAnyRef ], [ W.typeI32 ] );
    self.adapterMap[ "truthy" ] = index;
+   self.mod.setFuncName( index, "truthy" );
    func.setBody( [
       W.ifElse( W.refIsNull( lg( 0 ) ), [ W.ret( [ W.i32Const( 0 ) ] ) ], nil, nil ),
       W.ifElse( W.refTest( self.rt.$tBoxBool, lg( 0 ) ),
@@ -1243,6 +1534,14 @@ fn convFilter.buildList( vals:&List<&Val> ) mut : &W.Ins {
 多値がある場合、評価順序を保つために全ての値を局所変数に入れる。その命令は pre に追加する。
 */
 fn convFilter.lowerValList( expList:&Nodes.ExpListNode, mut pre:List<&W.Ins> ) mut : &List<&Val> {
+   return self.lowerValListSub( expList, pre, false );
+}
+/**
+@param raw true の場合、多値の式の暗黙の cast をしない (nil の判定の前の値として使う場合)
+*/
+fn convFilter.lowerValListSub( expList:&Nodes.ExpListNode, mut pre:List<&W.Ins>, raw:bool )
+   mut : &List<&Val>
+{
    let mut vals:List<&Val> = [];
    let mRetIndex;
    if! let mRetExp = expList.$mRetExp {
@@ -1302,7 +1601,7 @@ fn convFilter.lowerValList( expList:&Nodes.ExpListNode, mut pre:List<&W.Ins> ) m
          } else {
             val = new Val( W.refNull( W.htAny ), W.typeAnyRef, Ast.builtinTypeNil );
          }
-         if isRawMRet {
+         if isRawMRet or raw {
             vals.insert( val );
          } else {
             vals.insert( new Val( self.coerceVal( val, castType ),
@@ -1355,6 +1654,21 @@ fn convFilter.lowerMulti( node:&Nodes.Node, mut pre:List<&W.Ins> ) mut : &List<&
    let mut work = node;
    if! let mretNode = node@@@Nodes.ExpMRetNode {
       work = mretNode.$mRet;
+   }
+   // 多値を返すマクロ (: __exps) は、展開した式を使う
+   while true {
+      let! macroNode = work@@@Nodes.ExpMacroExpNode {
+         break;
+      };
+      if #macroNode.$stmtList ~= 1 {
+         break;
+      }
+      let stmt = macroNode.$stmtList[ 1 ];
+      if! let stmtExp = stmt@@@Nodes.StmtExpNode {
+         work = stmtExp.$exp;
+      } else {
+         work = stmt;
+      }
    }
    let! callNode = work@@@Nodes.ExpCallNode {
       let val = self.lowerVal( work );
@@ -1555,17 +1869,29 @@ fn convFilter.lowerAndOr( node:&Nodes.ExpOp2Node ) mut : &Val {
    }
    // Lua と同じく、オペランドの値を返す
    let val1 = self.lowerVal( node.$exp1 );
+   // オペランドを式の型の表現に変換できない場合 (1 and "2" or 3.0 など) は、stem にする
+   let mut valType = resultType;
+   let mut valRep = resultRep;
+   foreach opType in [ val1.$typeInfo, node.$exp2.$expType ] {
+      let opRep = self.getRep( opType );
+      if not opRep.equalsType( valRep ) and valRep.$kind ~= .Ref or
+         valRep.$kind == .Ref and valRep.$heapType ~= W.htAny and isScalar( opRep )
+      {
+         valType = Ast.builtinTypeStem_;
+         valRep = W.typeAnyRef;
+      }
+   }
    let work = self.tempLocal( val1.$rep );
    let cond = self.toCond( new Val( lg( work ), val1.$rep, val1.$typeInfo ) );
-   let first = self.coerce( lg( work ), val1.$typeInfo, resultType );
-   let second = self.lowerExpAs( node.$exp2, resultType );
+   let first = self.coerce( lg( work ), val1.$typeInfo, valType );
+   let second = self.lowerExpAs( node.$exp2, valType );
    let ins;
    if opTxt == "and" {
-      ins = W.ifElse( cond, [ second ], [ first ], resultRep );
+      ins = W.ifElse( cond, [ second ], [ first ], valRep );
    } else {
-      ins = W.ifElse( cond, [ first ], [ second ], resultRep );
+      ins = W.ifElse( cond, [ first ], [ second ], valRep );
    }
-   return new Val( W.seq( [ ls( work, val1.$ins ), ins ] ), resultRep, resultType );
+   return new Val( W.seq( [ ls( work, val1.$ins ), ins ] ), valRep, valType );
 }
 
 /** 文字列にする */
@@ -1676,6 +2002,9 @@ fn convFilter.lowerOp1( node:&Nodes.ExpOp1Node ) mut : &Val {
          return self.newVal( p( W.opI32Eqz, [ self.toCond( val ) ] ), resultType );
       }
       case "#" {
+         if self.isLuaval( node.$exp.$expType ) {
+            return self.newVal( W.call( self.rt.fnLuaLen(), [ self.toAny( val ) ] ), resultType );
+         }
          if val.$rep.equalsType( self.rt.$strType ) {
             return self.newVal( p( W.opI64ExtendI32U, [ W.arrayLen( val.$ins ) ] ), resultType );
          }
@@ -1773,6 +2102,7 @@ fn convFilter.fnShift( left:bool ) mut : int {
    }
    let index, mut func = self.mod.addFunc( [ W.typeI64, W.typeI64 ], [ W.typeI64 ] );
    self.adapterMap[ name ] = index;
+   self.mod.setFuncName( index, name );
    func.setBody( [
       W.ifElse( p( W.opI32Or, [ p( W.opI64LeS, [ lg( 1 ), W.i64Const( -64 ) ] ),
                                 p( W.opI64GeS, [ lg( 1 ), W.i64Const( 64 ) ] ) ] ),
@@ -1837,6 +2167,7 @@ fn convFilter.fnIsIntVal() mut : int {
    }
    let index, mut func = self.mod.addFunc( [ W.typeAnyRef ], [ W.typeI32 ] );
    self.adapterMap[ "isIntVal" ] = index;
+   self.mod.setFuncName( index, "isIntVal" );
    let fval = func.addLocal( W.typeF64 );
    func.setBody( [
       W.ifElse( W.refTest( self.rt.$tBoxI64, lg( 0 ) ), [ W.ret( [ W.i32Const( 1 ) ] ) ], nil, nil ),
@@ -1908,10 +2239,33 @@ fn convFilter.lowerLiteralMap( node:&Nodes.LiteralMapNode ) mut : &Val {
 /** オブジェクトの型 (generics の型パラメータは制約の型) */
 fn convFilter.getObjType( typeInfo:&Ast.TypeInfo ) : &Ast.TypeInfo {
    let work = self.normType( typeInfo );
-   if work.$kind == .Alternate and work.hasBase() {
-      return self.getObjType( work.$baseTypeInfo );
+   if work.$kind == .Alternate {
+      if work.hasBase() {
+         return self.getObjType( work.$baseTypeInfo );
+      }
+      // インタフェースの制約を持つ型パラメータ (T:(IF)) は、そのインタフェースとして扱う
+      if #work.$interfaceList > 0 {
+         return self.getObjType( work.$interfaceList[ 1 ] );
+      }
    }
    return work;
+}
+
+/**
+メソッド name を呼び出すオブジェクトの型。
+
+複数のインタフェースの制約を持つ型パラメータ (T:(IF1,IF2)) の場合は、name を持つインタフェースを返す。
+*/
+fn convFilter.getObjTypeForMethod( typeInfo:&Ast.TypeInfo, name:str ) : &Ast.TypeInfo {
+   let work = self.normType( typeInfo );
+   if work.$kind == .Alternate and not work.hasBase() {
+      foreach ifType in work.$interfaceList {
+         if self.getIfMethodType( ifType, name ) {
+            return self.getObjType( ifType );
+         }
+      }
+   }
+   return self.getObjType( typeInfo );
 }
 
 /** オブジェクトのメンバを参照する */
@@ -1947,9 +2301,30 @@ fn convFilter.getMemberType( info:&ClassInfo, name:str ) : &Ast.TypeInfo {
 
 /** RefField (prefix.field) */
 fn convFilter.lowerRefField( node:&Nodes.RefFieldNode ) mut : &Val {
+   if! let initIns = self.getLazyInit( node.$prefix ) {
+      let val = self.lowerRefFieldSub( node );
+      return new Val( W.seq( [ initIns, val.$ins ] ), val.$rep, val.$typeInfo );
+   }
+   return self.lowerRefFieldSub( node );
+}
+fn convFilter.lowerRefFieldSub( node:&Nodes.RefFieldNode ) mut : &Val {
    let prefix = node.$prefix;
    let fieldName = node.$field.txt;
    let prefixType = self.normType( prefix.$expType );
+   if! let modType = self.getExtModuleType( prefix.$expType ) {
+      // Lua のモジュールのメンバ
+      return new Val( W.call( self.rt.fnLuaGetAt(),
+                              [ self.lowerExtModuleVal( node, modType ),
+                                self.rt.strLiteral( fieldName ) ] ),
+                      W.typeAnyRef, Ast.builtinTypeStem_ );
+   }
+   if self.isLuaval( prefix.$expType ) {
+      // Lua の値のメンバ (Lua の obj.name)
+      return new Val( W.call( self.rt.fnLuaGetAt(),
+                              [ self.lowerExpAs( prefix, Ast.builtinTypeStem_ ),
+                                self.rt.strLiteral( fieldName ) ] ),
+                      W.typeAnyRef, Ast.builtinTypeStem_ );
+   }
    if! let symbol = node.$symbolInfo {
       // static メンバ、enum の値など
       let orgSym = symbol.getOrg();
@@ -1985,6 +2360,25 @@ fn convFilter.lowerRefField( node:&Nodes.RefFieldNode ) mut : &Val {
          }
       }
    }
+   if prefix.$kind == Nodes.NodeKind.$ExpRef and prefixType.$kind == .Module {
+      // builtin のモジュール (io、package) の変数 (io.stdout と同じく名前で判定する)。
+      // builtin のモジュールの型の名前は "@io" のように @ が付いている
+      let modName = prefixType.$rawTxt.gsub( "^@", "" );
+      if modName == "io" and fieldName == "stdin" {
+         return new Val( W.globalGet( self.getStdinGlobal() ), self.rt.$objType,
+                         node.$expType );
+      }
+      if modName == "package" and fieldName == "path" {
+         // Lua の package.path (環境変数 LUA_PATH で変更できる)
+         return new Val( W.refCast( self.rt.$tStr,
+                                    self.rt.listItem(
+                                       W.call( self.rt.fnLuaCall(),
+                                               [ W.i32Const( Rt.luaPackagePath ),
+                                                 W.call( self.rt.fnListNew(),
+                                                         [ W.i32Const( 0 ) ] ) ] ), 0 ) ),
+                         self.rt.$strType, Ast.builtinTypeString );
+      }
+   }
    switch prefixType.$kind {
       case .Map {
          return new Val( W.call( self.rt.fnMapGet(),
@@ -2014,6 +2408,15 @@ fn convFilter.lowerEnumVal( enumType:&Ast.EnumTypeInfo, valInfo:&Ast.EnumValInfo
    }
 }
 
+/** 標準入力のオブジェクト (グローバル変数) */
+fn convFilter.getStdinGlobal() mut : int {
+   if self.stdinGlobal < 0 {
+      self.stdinGlobal = self.mod.addGlobal( self.rt.$objType, W.refNull( self.rt.$tObj ) );
+      self.prologue.insert( W.globalSet( self.stdinGlobal, W.call( self.rt.fnIoStdin(), [] ) ) );
+   }
+   return self.stdinGlobal;
+}
+
 /** 標準出力・標準エラー出力のオブジェクト */
 fn convFilter.getStdStream( isStdout:bool ) mut : int {
    if self.stdoutGlobal < 0 {
@@ -2034,10 +2437,27 @@ fn convFilter.getStdStream( isStdout:bool ) mut : int {
 /** ExpRefItem (val[index]) */
 fn convFilter.lowerRefItem( node:&Nodes.ExpRefItemNode ) mut : &Val {
    let valType = self.normType( node.$val.$expType );
+   if self.isLuaval( node.$val.$expType ) {
+      // Lua の値の要素 (Lua の obj[key])
+      let keyIns;
+      if! let index = node.$index {
+         keyIns = self.lowerExpAs( index, Ast.builtinTypeStem_ );
+      } else {
+         keyIns = self.rt.strLiteral( unwrap node.$symbol );
+      }
+      return new Val( W.call( self.rt.fnLuaGetAt(),
+                              [ self.lowerExpAs( node.$val, Ast.builtinTypeStem_ ), keyIns ] ),
+                      W.typeAnyRef, Ast.builtinTypeStem_ );
+   }
    let! index = node.$index {
       if! let symbol = node.$symbol {
          if valType.$kind == .Map {
             return new Val( W.call( self.rt.fnMapGet(),
+                                    [ self.lowerExp( node.$val ), self.rt.strLiteral( symbol ) ] ),
+                            W.typeAnyRef, Ast.builtinTypeStem_ );
+         }
+         if self.isType( valType, Ast.builtinTypeStem ) {
+            return new Val( W.call( self.fnStemIndex(),
                                     [ self.lowerExp( node.$val ), self.rt.strLiteral( symbol ) ] ),
                             W.typeAnyRef, Ast.builtinTypeStem_ );
          }
@@ -2132,6 +2552,8 @@ fn convFilter.getNilAccPrefix( node:&Nodes.Node ) : &Nodes.Node! {
                return funcNode.$prefix;
             }
          }
+         // func$() は、関数の値を判定する
+         return callNode.$func;
       }
    }
    return nil;
@@ -2158,6 +2580,58 @@ fn convFilter.lowerNilAcc( node:&Nodes.Node, prefix:&Nodes.Node ) mut : &Val {
    return self.newVal( W.seq( pre ), resultType );
 }
 
+/**
+obj$.func() / func$() の呼び出し。prefix が nil なら、全ての戻り値を nil にする。
+
+多値を返す場合もあるので、戻り値は局所変数に入れる。
+*/
+fn convFilter.lowerNilAccCall( node:&Nodes.ExpCallNode, prefix:&Nodes.Node )
+   mut : &W.Ins, &List<&Ast.TypeInfo>
+{
+   let prefixVal = self.lowerVal( prefix );
+   let work = self.tempLocal( prefixVal.$rep );
+   let mut pre:List<&W.Ins> = [ ls( work, prefixVal.$ins ) ];
+   self.node2val[ prefix ] = new Val( lg( work ), prefixVal.$rep, prefixVal.$typeInfo );
+   self.nilAccDoneSet.add( node );
+   self.nilAccDoneSet.add( node.$func );
+   let callIns, callRetTypes = self.lowerCall( node );
+   self.node2val[ prefix ] = nil;
+
+   let mut retTypes:List<&Ast.TypeInfo> = [];
+   let mut callLocals:List<int> = [];
+   let mut retLocals:List<int> = [];
+   foreach retType in callRetTypes {
+      let nilableType = retType.$nilableTypeInfo;
+      retTypes.insert( nilableType );
+      callLocals.insert( self.tempLocal( self.getRep( retType ) ) );
+      retLocals.insert( self.tempLocal( self.getRep( nilableType ) ) );
+   }
+   let mut thenBody:List<&W.Ins> = [ callIns ];
+   let mut elseBody:List<&W.Ins> = [];
+   for index = #callLocals, 1, -1 {
+      thenBody.insert( ls( callLocals[ index ], W.nop() ) );
+   }
+   foreach retType, index in callRetTypes {
+      thenBody.insert( ls( retLocals[ index ],
+                           self.coerce( lg( callLocals[ index ] ), retType, retTypes[ index ] ) ) );
+      if self.normType( retType ).$kind == .DDD {
+         // ... の場合は、Lua 版と同じく nil を 1 つ返す
+         elseBody.insert( ls( retLocals[ index ],
+                              W.call( self.rt.fnListNew(), [ W.i32Const( 1 ) ] ) ) );
+         elseBody.insert( W.call( self.rt.fnListPush(),
+                                  [ lg( retLocals[ index ] ), W.refNull( W.htAny ) ] ) );
+      } else {
+         elseBody.insert( ls( retLocals[ index ],
+                              self.getDefaultVal( self.getRep( retTypes[ index ] ) ) ) );
+      }
+   }
+   pre.insert( W.ifElse( W.refIsNull( lg( work ) ), elseBody, thenBody, nil ) );
+   foreach retLocal in retLocals {
+      pre.insert( lg( retLocal ) );
+   }
+   return W.seq( pre ), retTypes;
+}
+
 fn convFilter.lowerVal( node:&Nodes.Node ) mut : &Val {
    if! let val = self.node2val[ node ] {
       return val;
@@ -2173,6 +2647,30 @@ fn convFilter.lowerVal( node:&Nodes.Node ) mut : &Val {
          let vals = self.lowerValList( tupleNode.$expList, pre );
          pre.insert( self.buildList( vals ) );
          return self.newVal( W.seq( pre ), expType );
+      }
+      case Nodes.NodeKind.$LuneKind {
+         // _kind(): Lua 版と同じく、式の (暗黙の cast の前の) 型の種類の値
+         let kindNode = unwrap node@@@Nodes.LuneKindNode;
+         let mut exp = kindNode.$exp;
+         if! let castNode = exp@@@Nodes.ExpCastNode {
+            if castNode.$castKind == .Implicit {
+               exp = castNode.$exp;
+            }
+         }
+         return self.newVal( W.i64Const( exp.$expType.$kind ), Ast.builtinTypeInt );
+      }
+      case Nodes.NodeKind.$Boxing {
+         let boxNode = unwrap node@@@Nodes.BoxingNode;
+         let mut pre:List<&W.Ins> = [];
+         pre.insert( self.buildList( [ self.lowerVal( boxNode.$src ) ] ) );
+         return self.newVal( W.seq( pre ), expType );
+      }
+      case Nodes.NodeKind.$Unboxing {
+         let unboxNode = unwrap node@@@Nodes.UnboxingNode;
+         return new Val( W.call( self.rt.fnListGet(),
+                                 [ self.lowerExpAs( unboxNode.$src, unboxNode.$src.$expType ),
+                                   W.i64Const( 1 ) ] ),
+                         W.typeAnyRef, Ast.builtinTypeStem_ );
       }
       case Nodes.NodeKind.$ExpExpandTuple {
          // タプルの値のリストを ... として扱う
@@ -2402,7 +2900,7 @@ fn convFilter.lowerPrint( node:&Nodes.ExpCallNode ) mut : &W.Ins {
 fn convFilter.lowerCallRef( node:&Nodes.ExpCallNode, refNode:&Nodes.ExpRefNode,
                             mut pre:List<&W.Ins> ) mut : &W.Ins, &List<&Ast.TypeInfo>
 {
-   let symbol = refNode.$symbolInfo.getOrg();
+   let symbol = self.resolveSym( refNode.$symbolInfo.getOrg() );
    let funcType = symbol.$typeInfo;
    let builtin = self.builtinFuncs;
    if funcType.equals( self.processInfo, builtin.lns_print ## ) {
@@ -2449,8 +2947,26 @@ fn convFilter.lowerCallRef( node:&Nodes.ExpCallNode, refNode:&Nodes.ExpRefNode,
                                  self.lowerArgAs( node, 1, Ast.builtinTypeString ) ] ) );
       return W.seq( pre ), funcType.$retTypeInfoList;
    }
+   if funcType.equals( self.processInfo, builtin.lns_collectgarbage ## ) {
+      // GC はホスト (wasm の実行環境) が行う
+      return W.seq( pre ), [];
+   }
    if funcType.equals( self.processInfo, builtin.lns_tonumber ## ) {
       return self.lowerLuaCall( node, Rt.luaTonumber, [] )**;
+   }
+   if funcType.equals( self.processInfo, builtin.lns_require ## ) {
+      return self.lowerLuaCall( node, Rt.luaRequire, [] )**;
+   }
+   if funcType.equals( self.processInfo, builtin.lns__load ## ) {
+      return self.lowerLuaCall( node, Rt.luaLoad, [] )**;
+   }
+   if funcType.equals( self.processInfo, builtin.lns_loadfile ## ) {
+      pre.insert( W.call( self.rt.fnLuaLoadfile(), [ self.lowerArgAs( node, 1, Ast.builtinTypeString ) ] ) );
+      return W.seq( pre ), [ Ast.builtinTypeDDD ];
+   }
+   if funcType.equals( self.processInfo, builtin.lns_expandLuavalMap ## ) {
+      pre.insert( W.call( self.rt.fnLuaExpand(), [ self.lowerArgAs( node, 1, Ast.builtinTypeStem_ ) ] ) );
+      return W.seq( pre ), funcType.$retTypeInfoList;
    }
    if funcType.equals( self.processInfo, builtin.lns_type ## ) {
       pre.insert( W.call( self.fnLuaType(), [ self.lowerArgAs( node, 1, Ast.builtinTypeStem_ ) ] ) );
@@ -2470,7 +2986,14 @@ fn convFilter.lowerCallRef( node:&Nodes.ExpCallNode, refNode:&Nodes.ExpRefNode,
          return W.seq( pre ), funcType.$retTypeInfoList;
       }
    }
-   pre.insert( self.callClosure( self.readSym( refNode, symbol ), funcType, node.$argList, pre ) );
+   let cloIns;
+   if! let val = self.node2val[ refNode ] {
+      // func$() で評価済みの関数の値
+      cloIns = val.$ins;
+   } else {
+      cloIns = self.readSym( refNode, symbol );
+   }
+   pre.insert( self.callClosure( cloIns, funcType, node.$argList, pre ) );
    return W.seq( pre ), self.normType( funcType ).$retTypeInfoList;
 }
 
@@ -2554,6 +3077,7 @@ fn convFilter.fnIntOrZero() mut : int {
    }
    let index, mut func = self.mod.addFunc( [ W.typeAnyRef ], [ W.typeI64 ] );
    self.adapterMap[ "intOrZero" ] = index;
+   self.mod.setFuncName( index, "intOrZero" );
    func.setBody( [
       W.ifElse( W.refIsNull( lg( 0 ) ), [ W.ret( [ W.i64Const( 0 ) ] ) ], nil, nil ),
       self.rt.unboxI64( lg( 0 ) ) ] );
@@ -2680,7 +3204,23 @@ Lua の builtin の関数 (Rt.luaXXX) を呼び出す。
 fn convFilter.lowerLuaCall( node:&Nodes.ExpCallNode, luaId:int, headArgs:&List<&W.Ins> )
    mut : &W.Ins, &List<&Ast.TypeInfo>
 {
+   return self.lowerLuaCallSub( node, luaId, nil, headArgs, [] )**;
+}
+
+/**
+Lua の関数の呼び出し。
+
+@param luaId builtin の関数の ID (funcVal が nil の場合)
+@param funcVal 呼び出す Lua の値 (Luaval)
+@param headArgs 先頭に追加する引数
+@param headPre 事前に評価する命令
+*/
+fn convFilter.lowerLuaCallSub( node:&Nodes.ExpCallNode, luaId:int, funcVal:&W.Ins!,
+                               headArgs:&List<&W.Ins>, headPre:&List<&W.Ins> )
+   mut : &W.Ins, &List<&Ast.TypeInfo>
+{
    let mut pre:List<&W.Ins> = [];
+   append( pre, headPre );
    let args = self.tempLocal( self.rt.$listType );
    pre.insert( ls( args, W.call( self.rt.fnListNew(), [ W.i32Const( 4 ) ] ) ) );
    foreach ins in headArgs {
@@ -2688,6 +3228,13 @@ fn convFilter.lowerLuaCall( node:&Nodes.ExpCallNode, luaId:int, headArgs:&List<&
    }
    if! let argList = node.$argList {
       foreach exp in argList.$expList {
+         if! let dddNode = exp@@@Nodes.ExpToDDDNode {
+            // 可変長引数 (...) の値は、展開して 1 つずつ渡す
+            foreach val in self.lowerValList( dddNode.$expList, pre ) {
+               pre.insert( W.call( self.rt.fnListPush(), [ lg( args ), self.toAny( val ) ] ) );
+            }
+            continue;
+         }
          let argIns;
          if exp.$kind == Nodes.NodeKind.$Abbr {
             argIns = W.refNull( W.htAny );
@@ -2697,8 +3244,24 @@ fn convFilter.lowerLuaCall( node:&Nodes.ExpCallNode, luaId:int, headArgs:&List<&
          pre.insert( W.call( self.rt.fnListPush(), [ lg( args ), argIns ] ) );
       }
    }
-   let result = W.call( self.rt.fnLuaCall(), [ W.i32Const( luaId ), lg( args ) ] );
-   let retTypeList = node.$func.$expType.$retTypeInfoList;
+   let result;
+   when! funcVal {
+      result = W.call( self.rt.fnLuaCallVal(), [ funcVal, lg( args ) ] );
+   } else {
+      if! let nativeFunc = self.rt.getNativeStrFunc( luaId ) {
+         // Go 版と同じく、Lua を使わずに wasm の中で処理する
+         result = W.call( nativeFunc, [ lg( args ) ] );
+      } else {
+         result = W.call( self.rt.fnLuaCall(), [ W.i32Const( luaId ), lg( args ) ] );
+      }
+   }
+   let retTypeList;
+   if funcVal {
+      // Lua の値の関数の戻り値は Luaval<T> になる (宣言時の型ではなく、呼び出しの式の型を使う)
+      retTypeList = node.$expTypeList;
+   } else {
+      retTypeList = node.$func.$expType.$retTypeInfoList;
+   }
    if #retTypeList == 1 and retTypeList[ 1 ].$kind ~= .DDD {
       pre.insert( self.coerce( self.rt.listItem( result, 0 ),
                                Ast.builtinTypeStem_, retTypeList[ 1 ] ) );
@@ -2715,6 +3278,7 @@ fn convFilter.fnLuaType() mut : int {
    }
    let index, mut func = self.mod.addFunc( [ W.typeAnyRef ], [ self.rt.$strType ] );
    self.adapterMap[ "luaType" ] = index;
+   self.mod.setFuncName( index, "luaType" );
    let check = fn ( cond:&W.Ins, name:str ) : &W.Ins {
       return W.ifElse( cond, [ W.ret( [ self.rt.strLiteral( name ) ] ) ], nil, nil );
    };
@@ -2725,6 +3289,12 @@ fn convFilter.fnLuaType() mut : int {
       check( W.refTest( self.rt.$tBoxBool, lg( 0 ) ), "boolean" ),
       check( W.refTest( self.rt.$tStr, lg( 0 ) ), "string" ),
       check( W.refTest( self.rt.$tClo, lg( 0 ) ), "function" ),
+      W.ifElse( W.refTest( self.rt.$tLuaVal, lg( 0 ) ), [
+         check( p( W.opI32Eq, [ self.rt.luaValType( lg( 0 ) ), W.i32Const( Rt.luaTFunction ) ] ),
+                "function" ),
+         check( p( W.opI32Eq, [ self.rt.luaValType( lg( 0 ) ), W.i32Const( 7 ) ] ), "userdata" ),
+         check( p( W.opI32Eq, [ self.rt.luaValType( lg( 0 ) ), W.i32Const( 8 ) ] ), "thread" ) ],
+                nil, nil ),
       self.rt.strLiteral( "table" ) ] );
    return index;
 }
@@ -2736,7 +3306,12 @@ fn convFilter.fnStemIndex() mut : int {
    }
    let index, mut func = self.mod.addFunc( [ W.typeAnyRef, W.typeAnyRef ], [ W.typeAnyRef ] );
    self.adapterMap[ "stemIndex" ] = index;
+   self.mod.setFuncName( index, "stemIndex" );
+   let pos = func.addLocal( W.typeI64 );
    func.setBody( [
+      // Lua の値 (_G の値など)
+      W.ifElse( W.refTest( self.rt.$tLuaVal, lg( 0 ) ), [
+         W.ret( [ W.call( self.rt.fnLuaGetAtLazy(), [ lg( 0 ), lg( 1 ) ] ) ] ) ], nil, nil ),
       W.ifElse( W.refTest( self.rt.$tList, lg( 0 ) ), [
          W.ifElse( W.refTest( self.rt.$tBoxI64, lg( 1 ) ), [
             W.ret( [ W.call( self.rt.fnListGet(),
@@ -2746,6 +3321,20 @@ fn convFilter.fnStemIndex() mut : int {
       W.ifElse( W.refTest( self.rt.$tMap, lg( 0 ) ), [
          W.ret( [ W.call( self.rt.fnMapGet(),
                           [ W.refCast( self.rt.$tMap, lg( 0 ) ), lg( 1 ) ] ) ] ) ], nil, nil ),
+      // 文字列は、そのバイトの値 (範囲外は nil)
+      W.ifElse( p( W.opI32And, [ W.refTest( self.rt.$tStr, lg( 0 ) ),
+                                  W.refTest( self.rt.$tBoxI64, lg( 1 ) ) ] ), [
+         ls( pos, p( W.opI64Sub, [ self.rt.unboxI64( lg( 1 ) ), W.i64Const( 1 ) ] ) ),
+         W.ifElse( p( W.opI32Or,
+                      [ p( W.opI64LtS, [ lg( pos ), W.i64Const( 0 ) ] ),
+                        p( W.opI64GeS, [ lg( pos ),
+                                         p( W.opI64ExtendI32U,
+                                            [ W.arrayLen( W.refCast( self.rt.$tStr, lg( 0 ) ) ) ] ) ] ) ] ),
+                   [ W.ret( [ W.refNull( W.htAny ) ] ) ], nil, nil ),
+         W.ret( [ self.rt.boxI64(
+            p( W.opI64ExtendI32U,
+               [ W.arrayGetU( self.rt.$tStr, W.refCast( self.rt.$tStr, lg( 0 ) ),
+                              p( W.opI32WrapI64, [ lg( pos ) ] ) ) ] ) ) ] ) ], nil, nil ),
       self.rt.error( self.rt.strLiteral( "attempt to index a non-table value" ) ) ] );
    return index;
 }
@@ -2758,6 +3347,7 @@ fn convFilter.fnIntOrDefault( defVal:int ) mut : int {
    }
    let index, mut func = self.mod.addFunc( [ W.typeAnyRef ], [ W.typeI64 ] );
    self.adapterMap[ name ] = index;
+   self.mod.setFuncName( index, name );
    func.setBody( [
       W.ifElse( W.refIsNull( lg( 0 ) ), [ W.ret( [ W.i64Const( defVal ) ] ) ], nil, nil ),
       self.rt.unboxI64( lg( 0 ) ) ] );
@@ -2782,28 +3372,95 @@ fn convFilter.lowerStreamMethod( node:&Nodes.ExpCallNode, prefix:&Nodes.Node, na
    mut : &W.Ins, &List<&Ast.TypeInfo>
 {
    let obj = self.tempLocal( self.rt.$objType );
-   let mut pre:List<&W.Ins> = [ ls( obj, self.lowerExpAs( prefix, prefix.$expType ) ) ];
+   // Luaval<T> (io.popen の結果など) の場合もあるので、anyref からキャストする
+   let mut pre:List<&W.Ins> = [
+      ls( obj, W.refCast( self.rt.$tObj, self.lowerExpAs( prefix, Ast.builtinTypeStem_ ) ) ) ];
    let isFile = self.rt.isFile( lg( obj ) );
+   // LuneScript のクラスで実装したストリーム (Util.memStream など) は、インタフェースのメソッドを呼ぶ。
+   // ファイルと標準出力・標準エラー出力のオブジェクトは、itable を持たない
+   let mut ifType = self.getGenSrc( prefix.$expType );
+   if self.isLuaval( prefix.$expType ) {
+      ifType = self.getGenSrc( prefix.$expType.$nonnilableType.$extedType );
+   }
+   let isUser = p( W.opI32Eqz,
+                   [ W.refIsNull( W.structGet( self.rt.$tVT, Rt.fVtItabs,
+                                               W.structGet( self.rt.$tObj, Rt.fObjVt,
+                                                            lg( obj ) ) ) ) ] );
+   /**
+   インタフェースのメソッドを呼び出し、戻り値を retLocals (表現 retReps) に入れる命令。
+   */
+   let userCall = fn ( args:&List<&W.Ins>, retLocals:&List<int>,
+                       retReps:&List<&W.ValType> ) : &W.Ins
+   {
+      let ifInfo = self.getIfInfo( ifType );
+      let! methodIndex = ifInfo.$name2index[ name ] {
+         self.error( node, "not found method -- %s" (name) );
+      };
+      let methodType = unwrap self.getIfMethodType( ifType, name );
+      let mut callArgs:List<&W.Ins> = [ lg( obj ) ];
+      foreach arg in args {
+         callArgs.insert( arg );
+      }
+      let itab = W.refCast(
+         ifInfo.$itType,
+         W.arrayGet( self.rt.$tAnyArr,
+                     W.structGet( self.rt.$tVT, Rt.fVtItabs,
+                                  W.structGet( self.rt.$tObj, Rt.fObjVt, lg( obj ) ) ),
+                     W.i32Const( ifInfo.$ifId ) ) );
+      callArgs.insert( W.structGet( ifInfo.$itType, methodIndex, itab ) );
+      let mut body:List<&W.Ins> = [
+         W.callRef( ifInfo.$methodFuncTypes[ methodIndex + 1 ], callArgs ) ];
+      let calleeRets = self.getRepList( methodType.$retTypeInfoList );
+      let mut works:List<int> = [];
+      foreach rep in calleeRets {
+         works.insert( self.tempLocal( rep ) );
+      }
+      for index = #works, 1, -1 {
+         body.insert( ls( works[ index ], W.nop() ) );
+      }
+      foreach retLocal, index in retLocals {
+         if index <= #works {
+            body.insert( ls( retLocal, self.coerceRep( lg( works[ index ] ), calleeRets[ index ],
+                                                       retReps[ index ] ) ) );
+         } else {
+            body.insert( ls( retLocal, self.getDefaultVal( retReps[ index ] ) ) );
+         }
+      }
+      return W.seq( body );
+   };
    switch name {
       case "write" {
          let txt = self.tempLocal( self.rt.$strType );
          pre.insert( ls( txt, self.lowerArgAs( node, 1, Ast.builtinTypeString ) ) );
          self.getStdStream( true );
+         let ret1 = self.tempLocal( W.typeAnyRef );
+         let ret2 = self.tempLocal( self.rt.$strType );
+         pre.insert( ls( ret1, lg( obj ) ) );
+         pre.insert( ls( ret2, W.refNull( self.rt.$tStr ) ) );
          pre.insert(
             W.ifElse( isFile, [ W.call( self.rt.fnFileWrite(), [ lg( obj ), lg( txt ) ] ) ],
                       [ W.ifElse( W.refEq( lg( obj ), W.globalGet( self.stderrGlobal ) ),
-                                  [ W.call( self.rt.$fnHostWriteErr, [ lg( txt ) ] ) ],
-                                  [ W.call( self.rt.$fnHostWrite, [ lg( txt ) ] ) ], nil ) ],
+                                  [ W.call( self.rt.fnHostWriteErr(), [ lg( txt ) ] ) ],
+                                  [ W.ifElse( isUser,
+                                              [ userCall( [ lg( txt ) ], [ ret1, ret2 ],
+                                                          [ W.typeAnyRef, self.rt.$strType ] ) ],
+                                              [ W.call( self.rt.fnHostWrite(), [ lg( txt ) ] ) ],
+                                              nil ) ], nil ) ],
                       nil ) );
-         pre.insert( lg( obj ) );
-         pre.insert( W.refNull( self.rt.$tStr ) );
+         pre.insert( lg( ret1 ) );
+         pre.insert( lg( ret2 ) );
          return W.seq( pre ), [ Ast.builtinTypeStem_, Ast.builtinTypeString.$nilableTypeInfo ];
       }
       case "read" {
-         // 標準入力からの読み込みは未対応 (nil)
-         let fmt = self.lowerArgAs( node, 1, Ast.builtinTypeStem_ );
-         pre.insert( W.ifElse( isFile, [ W.call( self.rt.fnFileRead(), [ lg( obj ), fmt ] ) ],
-                               [ W.refNull( self.rt.$tStr ) ], self.rt.$strType ) );
+         let fmt = self.tempLocal( W.typeAnyRef );
+         pre.insert( ls( fmt, self.lowerArgAs( node, 1, Ast.builtinTypeStem_ ) ) );
+         let ret = self.tempLocal( self.rt.$strType );
+         pre.insert( ls( ret, W.refNull( self.rt.$tStr ) ) );
+         pre.insert( W.ifElse( isFile, [ ls( ret, W.call( self.rt.fnFileRead(), [ lg( obj ), lg( fmt ) ] ) ) ],
+                               [ W.ifElse( isUser,
+                                           [ userCall( [ lg( fmt ) ], [ ret ], [ self.rt.$strType ] ) ],
+                                           nil, nil ) ], nil ) );
+         pre.insert( lg( ret ) );
          return W.seq( pre ), [ Ast.builtinTypeString.$nilableTypeInfo ];
       }
       case "seek" {
@@ -2813,12 +3470,14 @@ fn convFilter.lowerStreamMethod( node:&Nodes.ExpCallNode, prefix:&Nodes.Node, na
          // Lua と同じく、成功なら値は 1 つ、失敗なら 2 つ (...)
          return W.seq( pre ), [ Ast.builtinTypeDDD ];
       }
-      case "close" {
-         pre.insert( W.ifElse( isFile, [ W.call( self.rt.fnFileClose(), [ lg( obj ) ] ) ],
-                               nil, nil ) );
-         return W.seq( pre ), [];
-      }
-      case "flush" {
+      case "close", "flush" {
+         let mut fileOp:List<&W.Ins> = [];
+         if name == "close" {
+            fileOp.insert( W.call( self.rt.fnFileClose(), [ lg( obj ) ] ) );
+         }
+         pre.insert( W.ifElse( isFile, fileOp,
+                               [ W.ifElse( isUser, [ userCall( [], [], [] ) ], nil, nil ) ],
+                               nil ) );
          return W.seq( pre ), [];
       }
    }
@@ -2839,7 +3498,7 @@ fn convFilter.lowerIfMethodCall( prefix:&Nodes.Node, name:str, mut pre:List<&W.I
                                  argList:&Nodes.ExpListNode! )
    mut : &W.Ins, &List<&Ast.TypeInfo>
 {
-   let objType = self.getObjType( prefix.$expType );
+   let objType = self.getObjTypeForMethod( prefix.$expType, name );
    let ifInfo = self.getIfInfo( objType );
    let! methodIndex = ifInfo.$name2index[ name ] {
       self.error( prefix, "not found method -- %s" (name) );
@@ -2885,7 +3544,7 @@ fn convFilter.lowerObjMethodCall( errNode:&Nodes.Node, prefix:&Nodes.Node, name:
                                   mut pre:List<&W.Ins>, argList:&Nodes.ExpListNode! )
    mut : &W.Ins, &List<&Ast.TypeInfo>
 {
-   let objType = self.getObjType( prefix.$expType );
+   let objType = self.getObjTypeForMethod( prefix.$expType, name );
    if objType.$kind == .IF {
       return self.lowerIfMethodCall( prefix, name, pre, argList )**;
    }
@@ -2919,9 +3578,16 @@ fn convFilter.lowerCallField( node:&Nodes.ExpCallNode, fieldNode:&Nodes.RefField
 {
    let prefix = fieldNode.$prefix;
    let name = fieldNode.$field.txt;
-   let prefixType = self.normType( prefix.$expType );
+   let mut prefixType = self.normType( prefix.$expType );
+   if self.isLuaval( prefix.$expType ) {
+      // Lua の値ではない Luaval<T> (io.popen の結果のストリーム)
+      prefixType = self.normType( prefix.$expType.$nonnilableType.$extedType );
+   }
    let builtin = self.builtinFuncs;
    let funcType = node.$func.$expType;
+   if! let initIns = self.getLazyInit( prefix ) {
+      pre.insert( initIns );
+   }
    if funcType.equals( self.processInfo, builtin.string_format ## ) {
       let mut vals:&List<&Val> = [];
       if! let argList = node.$argList {
@@ -2937,6 +3603,14 @@ fn convFilter.lowerCallField( node:&Nodes.ExpCallNode, fieldNode:&Nodes.RefField
       return W.seq( pre ), [ Ast.builtinTypeString ];
    }
    switch prefixType.$kind {
+      case .Box {
+         if name == "val" {
+            // Nilable<T>.val() は箱の中の値
+            pre.insert( W.call( self.rt.fnListGet(),
+                                [ self.lowerExpAs( prefix, prefix.$expType ), W.i64Const( 1 ) ] ) );
+            return W.seq( pre ), [ Ast.builtinTypeStem_ ];
+         }
+      }
       case .List, .Array {
          return self.lowerListMethod( node, prefix, name )**;
       }
@@ -2974,16 +3648,19 @@ fn convFilter.lowerCallField( node:&Nodes.ExpCallNode, fieldNode:&Nodes.RefField
       return W.seq( pre ), [ Ast.builtinTypeString ];
    }
    if name == "_toMap" {
-      if! let info = self.getClassInfo( self.getObjType( prefixType ) ) {
-         pre.insert( W.call( self.fnToMap( node, info ),
-                             [ self.lowerExpAs( prefix, info.$typeInfo ) ] ) );
-         return W.seq( pre ), [ node.$expType ];
+      // Lua 版はオブジェクトそのものを返すので、派生クラスのメンバも含める。
+      // そのため、実行時の型の _toMap を呼ぶ
+      if not self.toMapDynNode {
+         self.toMapDynNode = node;
       }
+      pre.insert( W.call( self.fnToMapDyn(),
+                          [ self.lowerExpAs( prefix, Ast.builtinTypeStem_ ) ] ) );
+      return W.seq( pre ), [ node.$expType ];
    }
    return self.lowerMethodCall( node, prefix, name, pre )**;
 }
 
-/** string モジュールの関数の型 → Lua の関数の ID */
+/** string・math モジュールの関数の型 → Lua の関数の ID */
 fn convFilter.getStringModuleFuncMap() : &Map<&Ast.TypeInfo,int> {
    let builtin = self.builtinFuncs;
    return {
@@ -2991,6 +3668,8 @@ fn convFilter.getStringModuleFuncMap() : &Map<&Ast.TypeInfo,int> {
       builtin.string_rep: Rt.luaRep, builtin.string_gsub: Rt.luaGsub,
       builtin.string_lower: Rt.luaLower, builtin.string_upper: Rt.luaUpper,
       builtin.string_reverse: Rt.luaReverse, builtin.string_sub: Rt.luaSub,
+      builtin.math_random: Rt.luaRandom, builtin.math_randomseed: Rt.luaRandomseed,
+      builtin.string_dump: Rt.luaDump,
    };
 }
 
@@ -3006,13 +3685,33 @@ fn convFilter.fnStrJoin() mut : int {
    let index, mut func = self.mod.addFunc(
       [ W.typeAnyRef, W.typeAnyRef, W.typeAnyRef, W.typeAnyRef ], [ self.rt.$strType ] );
    self.adapterMap[ "strJoin" ] = index;
+   self.mod.setFuncName( index, "strJoin" );
    let list = func.addLocal( self.rt.$listType );
    let sep = func.addLocal( self.rt.$strType );
    let pos = func.addLocal( W.typeI32 );
    let last = func.addLocal( W.typeI32 );
    let result = func.addLocal( self.rt.$strType );
+   let first = func.addLocal( W.typeI32 );
+   let total = func.addLocal( W.typeI32 );
+   let work = func.addLocal( self.rt.$strType );
    let toI32 = fn ( val:&W.Ins ) : &W.Ins {
       return p( W.opI32WrapI64, [ self.rt.unboxI64( val ) ] );
+   };
+   // pos 番目 (1 始まり) の要素
+   let item = fn () : &W.Ins {
+      return W.refCast( self.rt.$tStr,
+                        W.arrayGet( self.rt.$tAnyArr,
+                                    W.structGet( self.rt.$tList, Rt.fListItems, lg( list ) ),
+                                    p( W.opI32Sub, [ lg( pos ), W.i32Const( 1 ) ] ) ) );
+   };
+   // 文字列を result の total の位置にコピーし、total を進める
+   let copyTo = fn ( val:&W.Ins ) : &W.Ins {
+      let strIdx = self.rt.$tStr;
+      return W.seq( [
+         ls( work, val ),
+         W.arrayCopy( strIdx, strIdx, lg( result ), lg( total ), lg( work ), W.i32Const( 0 ),
+                      W.arrayLen( lg( work ) ) ),
+         ls( total, p( W.opI32Add, [ lg( total ), W.arrayLen( lg( work ) ) ] ) ) ] );
    };
    func.setBody( [
       ls( list, W.refCast( self.rt.$tList, lg( 0 ) ) ),
@@ -3023,19 +3722,24 @@ fn convFilter.fnStrJoin() mut : int {
       ls( last, W.ifElse( W.refIsNull( lg( 3 ) ),
                           [ W.structGet( self.rt.$tList, Rt.fListLen, lg( list ) ) ],
                           [ toI32( lg( 3 ) ) ], W.typeI32 ) ),
-      ls( result, self.rt.strLiteral( "" ) ),
+      // 先に結果の長さを求め、1 回だけ領域を確保してコピーする
+      // (1 つずつ連結すると、要素数 × 全体の長さに比例する時間がかかる)
+      ls( first, lg( pos ) ),
       W.block( [ W.loop( [
          W.brIf( 1, p( W.opI32GtS, [ lg( pos ), lg( last ) ] ) ),
-         ls( result, W.call( self.rt.fnStrConcat(),
-                             [ lg( result ),
-                               W.refCast( self.rt.$tStr,
-                                          W.arrayGet( self.rt.$tAnyArr,
-                                                      W.structGet( self.rt.$tList, Rt.fListItems,
-                                                                   lg( list ) ),
-                                                      p( W.opI32Sub, [ lg( pos ), W.i32Const( 1 ) ] ) ) ) ] ) ),
+         ls( total, p( W.opI32Add, [ lg( total ), W.arrayLen( item() ) ] ) ),
          W.ifElse( p( W.opI32LtS, [ lg( pos ), lg( last ) ] ),
-                   [ ls( result, W.call( self.rt.fnStrConcat(), [ lg( result ), lg( sep ) ] ) ) ],
+                   [ ls( total, p( W.opI32Add, [ lg( total ), W.arrayLen( lg( sep ) ) ] ) ) ],
                    nil, nil ),
+         ls( pos, p( W.opI32Add, [ lg( pos ), W.i32Const( 1 ) ] ) ),
+         W.br( 0 ) ], nil ) ], nil ),
+      ls( result, W.arrayNewDefault( self.rt.$tStr, lg( total ) ) ),
+      ls( pos, lg( first ) ),
+      ls( total, W.i32Const( 0 ) ),
+      W.block( [ W.loop( [
+         W.brIf( 1, p( W.opI32GtS, [ lg( pos ), lg( last ) ] ) ),
+         copyTo( item() ),
+         W.ifElse( p( W.opI32LtS, [ lg( pos ), lg( last ) ] ), [ copyTo( lg( sep ) ) ], nil, nil ),
          ls( pos, p( W.opI32Add, [ lg( pos ), W.i32Const( 1 ) ] ) ),
          W.br( 0 ) ], nil ) ], nil ),
       lg( result ) ] );
@@ -3047,6 +3751,26 @@ fn convFilter.lowerStaticCall( node:&Nodes.ExpCallNode, prefix:&Nodes.Node, name
                                methodType:&Ast.TypeInfo, mut pre:List<&W.Ins> )
    mut : &W.Ins, &List<&Ast.TypeInfo>
 {
+   if not self.declaredMethodSet.has( methodType ) {
+      // static メンバの自動生成のアクセッサは、メンバ (グローバル変数) を直接読み書きする
+      if name.find( "^[gs]et_." ## ) {
+         let memberName = name.sub( 5 ## );
+         if! let scope = self.getGenSrc( prefix.$expType ).$scope {
+            if! let symbol = scope.$symbol2SymbolInfoMap[ memberName ] {
+               let orgSym = symbol.getOrg();
+               if self.globalSym2loc[ orgSym ] {
+                  if name.find( "^get_" ## ) {
+                     pre.insert( self.readSym( node, orgSym ) );
+                     return W.seq( pre ), [ orgSym.$typeInfo ];
+                  }
+                  pre.insert( self.writeSym(
+                     node, orgSym, self.lowerArgAs( node, 1, orgSym.$typeInfo ) ) );
+                  return W.seq( pre ), [];
+               }
+            }
+         }
+      }
+   }
    if! let funcIndex = self.func2index[ methodType ] {
       let mut args:List<&W.Ins> = [ W.refNull( self.rt.$tClo ) ];
       append( args, self.lowerArgs( node.$argList, methodType.$argTypeInfoList, pre ) );
@@ -3059,6 +3783,79 @@ fn convFilter.lowerStaticCall( node:&Nodes.ExpCallNode, prefix:&Nodes.Node, name
       if methodType.equals( self.processInfo, strFunc ## ) {
          return self.lowerLuaCall( node, luaId, [] )**;
       }
+   }
+   // Lua 版と同じく、ログなどの処理は何もしない
+   foreach noopFunc in [ builtin.__lns_runtime_log, builtin.__lns_runtime_enableLog,
+                         builtin.__lns_runtime_enableDebugLog, builtin.__lns_runtime_dumpLog,
+                         builtin.__processor_end ]
+   {
+      if methodType.equals( self.processInfo, noopFunc ## ) {
+         if! let argList = node.$argList {
+            foreach exp in argList.$expList {
+               pre.insert( W.drop( self.lowerExpAs( exp, Ast.builtinTypeStem_ ) ) );
+            }
+         }
+         return W.seq( pre ), [];
+      }
+   }
+   if methodType.equals( self.processInfo, builtin.__lns_runtime_time ## ) {
+      // Lua 版と同じく os.time() * 1000
+      pre.insert( p( W.opI64Mul, [ W.call( self.rt.fnOsTime(), [] ), W.i64Const( 1000 ) ] ) );
+      return W.seq( pre ), [ Ast.builtinTypeInt ];
+   }
+   if methodType.equals( self.processInfo, builtin.debug_getinfo ## ) {
+      // wasm では Lua のスタックの情報は無い
+      pre.insert( W.refNull( self.rt.$tMap ) );
+      return W.seq( pre ), methodType.$retTypeInfoList;
+   }
+   if methodType.equals( self.processInfo, builtin.debug_getlocal ## ) {
+      pre.insert( W.refNull( self.rt.$tStr ) );
+      pre.insert( W.refNull( W.htAny ) );
+      return W.seq( pre ), methodType.$retTypeInfoList;
+   }
+   if methodType.equals( self.processInfo, builtin.os_exit ## ) {
+      let mut codeIns:&W.Ins = W.i64Const( 0 );
+      if! let argList = node.$argList {
+         if #argList.$expList >= 1 and argList.$expList[ 1 ].$kind ~= Nodes.NodeKind.$Abbr {
+            codeIns = W.call( self.fnIntOrZero(),
+                              [ self.lowerArgAs( node, 1, Ast.builtinTypeStem_ ) ] );
+         }
+      }
+      pre.insert( W.call( self.rt.fnOsExit(), [ codeIns ] ) );
+      pre.insert( W.unreachable() );
+      return W.seq( pre ), [];
+   }
+   if methodType.equals( self.processInfo, builtin.os_remove ## ) {
+      pre.insert( W.call( self.rt.fnOsFileOp( "remove" ),
+                          [ self.lowerArgAs( node, 1, Ast.builtinTypeString ) ] ) );
+      return W.seq( pre ), methodType.$retTypeInfoList;
+   }
+   if methodType.equals( self.processInfo, builtin.os_rename ## ) {
+      pre.insert( W.call( self.rt.fnOsFileOp( "rename" ),
+                          [ self.lowerArgAs( node, 1, Ast.builtinTypeString ),
+                            self.lowerArgAs( node, 2, Ast.builtinTypeString ) ] ) );
+      return W.seq( pre ), methodType.$retTypeInfoList;
+   }
+   if methodType.equals( self.processInfo, builtin.os_time ## ) {
+      if! let argList = node.$argList {
+         if #argList.$expList >= 1 and argList.$expList[ 1 ].$kind ~= Nodes.NodeKind.$Abbr {
+            self.error( node, "not support os.time with the argument" );
+         }
+      }
+      pre.insert( self.rt.boxI64( W.call( self.rt.fnOsTime(), [] ) ) );
+      return W.seq( pre ), methodType.$retTypeInfoList;
+   }
+   if methodType.equals( self.processInfo, builtin.package_searchpath ## ) {
+      return self.lowerLuaCall( node, Rt.luaSearchpath, [] )**;
+   }
+   if methodType.equals( self.processInfo, builtin.os_clock ## ) {
+      pre.insert( W.call( self.rt.fnOsClock(), [] ) );
+      return W.seq( pre ), [ Ast.builtinTypeReal ];
+   }
+   if methodType.equals( self.processInfo, builtin.io_popen ## ) {
+      pre.insert( W.call( self.rt.fnIoPopen(),
+                          [ self.lowerArgAs( node, 1, Ast.builtinTypeString ) ] ) );
+      return W.seq( pre ), methodType.$retTypeInfoList;
    }
    if methodType.equals( self.processInfo, builtin.io_open ## ) {
       let mut modeIns:&W.Ins = W.refNull( self.rt.$tStr );
@@ -3092,8 +3889,11 @@ fn convFilter.lowerStaticCall( node:&Nodes.ExpCallNode, prefix:&Nodes.Node, name
    let classType = self.getGenSrc( prefix.$expType );
    if! let enumType = classType@@@Ast.EnumTypeInfo {
       if name == "_from" {
-         pre.insert( W.call( self.fnEnumFrom( enumType ),
-                             [ self.lowerArgAs( node, 1, enumType.$valTypeInfo ) ] ) );
+         // fnEnumFrom は anyref を返すので、nilable の enum の表現 (str の enum は str) にする
+         pre.insert( self.coerceRep(
+            W.call( self.fnEnumFrom( enumType ),
+                    [ self.lowerArgAs( node, 1, enumType.$valTypeInfo ) ] ),
+            W.typeAnyRef, self.getRep( enumType.$nilableTypeInfo ) ) );
          return W.seq( pre ), [ enumType.$nilableTypeInfo ];
       }
    }
@@ -3110,8 +3910,43 @@ fn convFilter.lowerStaticCall( node:&Nodes.ExpCallNode, prefix:&Nodes.Node, name
 
 /** 関数呼び出し。命令と、戻り値の型 (宣言時の型) を返す */
 fn convFilter.lowerCall( node:&Nodes.ExpCallNode ) mut : &W.Ins, &List<&Ast.TypeInfo> {
+   if! let prefix = self.getNilAccPrefix( node ) {
+      return self.lowerNilAccCall( node, prefix )**;
+   }
    let mut pre:List<&W.Ins> = [];
    let funcNode = node.$func;
+   if! let fieldNode = funcNode@@@Nodes.RefFieldNode {
+      if! let modType = self.getExtModuleType( fieldNode.$prefix.$expType ) {
+         // Lua のモジュールの関数 (Lua 版と同じく、メソッドは Lua の mod:name( ... ))
+         let modVal = self.tempLocal( W.typeAnyRef );
+         let func = self.tempLocal( W.typeAnyRef );
+         pre.insert( ls( modVal, self.lowerExtModuleVal( node, modType ) ) );
+         pre.insert( ls( func, W.call( self.rt.fnLuaGetAt(),
+                                       [ lg( modVal ), self.rt.strLiteral( fieldNode.$field.txt ) ] ) ) );
+         let mut headArgs:List<&W.Ins> = [];
+         if funcNode.$expType.$kind == .Method {
+            headArgs.insert( lg( modVal ) );
+         }
+         return self.lowerLuaCallSub( node, 0, lg( func ), headArgs, pre )**;
+      }
+      if self.isLuaval( fieldNode.$prefix.$expType ) and
+         not self.isStreamType( fieldNode.$prefix.$expType.$nonnilableType.$extedType )
+      {
+         // Lua の値のメソッドの呼び出し (Lua の obj:name( ... ))
+         let obj = self.tempLocal( W.typeAnyRef );
+         let func = self.tempLocal( W.typeAnyRef );
+         pre.insert( ls( obj, self.lowerExpAs( fieldNode.$prefix, Ast.builtinTypeStem_ ) ) );
+         pre.insert( ls( func, W.call( self.rt.fnLuaGetAt(),
+                                       [ lg( obj ), self.rt.strLiteral( fieldNode.$field.txt ) ] ) ) );
+         return self.lowerLuaCallSub( node, 0, lg( func ), [ lg( obj ) ], pre )**;
+      }
+   }
+   if self.isLuaval( funcNode.$expType ) {
+      // Lua の値 (関数) の呼び出し
+      let func = self.tempLocal( W.typeAnyRef );
+      pre.insert( ls( func, self.lowerExpAs( funcNode, Ast.builtinTypeStem_ ) ) );
+      return self.lowerLuaCallSub( node, 0, lg( func ), [], pre )**;
+   }
    if! let refNode = funcNode@@@Nodes.ExpRefNode {
       return self.lowerCallRef( node, refNode, pre )**;
    }
@@ -3213,9 +4048,19 @@ fn convFilter.lowerGetField( node:&Nodes.GetFieldNode ) mut : &Val {
          }
       }
    }
-   if getterType.$autoFlag or not self.declaredMethodSet.has( getterType ) {
-      // 自動生成の getter はメンバを直接参照する
+   if ( getterType.$autoFlag or not self.declaredMethodSet.has( getterType ) ) and
+      not self.advertiseMethodSet.has( getterType ) and
+      not self.dynGetterNameSet.has( getterName )
+   {
+      // 自動生成の getter はメンバを直接参照する (advertise で委譲する getter は除く)
       return self.lowerMemberRef( node, prefix, fieldName );
+   }
+   if getterType.$staticFlag {
+      // static の getter は関数として呼び出す
+      if! let funcIndex = self.func2index[ getterType ] {
+         return self.newVal( W.call( funcIndex, [ W.refNull( self.rt.$tClo ) ] ),
+                             getterType.$retTypeInfoList[ 1 ] );
+      }
    }
    // getter のメソッドを呼び出す
    let objType = self.getObjType( prefix.$expType );
@@ -3278,6 +4123,7 @@ fn convFilter.fnEnumTxt( enumType:&Ast.EnumTypeInfo ) mut : int {
    let rep = self.getRep( enumType );
    let index, mut func = self.mod.addFunc( [ rep ], [ self.rt.$strType ] );
    self.adapterMap[ name ] = index;
+   self.mod.setFuncName( index, name );
    let mut body:List<&W.Ins> = [];
    foreach valInfo in self.getEnumValList( enumType ) {
       body.insert( W.ifElse( self.enumEq( enumType, lg( 0 ), valInfo ),
@@ -3299,6 +4145,7 @@ fn convFilter.fnEnumFrom( enumType:&Ast.EnumTypeInfo ) mut : int {
    let rep = self.getRep( enumType );
    let index, mut func = self.mod.addFunc( [ rep ], [ W.typeAnyRef ] );
    self.adapterMap[ name ] = index;
+   self.mod.setFuncName( index, name );
    let mut body:List<&W.Ins> = [];
    foreach valInfo in self.getEnumValList( enumType ) {
       body.insert( W.ifElse( self.enumEq( enumType, lg( 0 ), valInfo ),
@@ -3318,6 +4165,7 @@ fn convFilter.fnEnumAllList( enumType:&Ast.EnumTypeInfo ) mut : int {
    }
    let index, mut func = self.mod.addFunc( [], [ self.rt.$listType ] );
    self.adapterMap[ name ] = index;
+   self.mod.setFuncName( index, name );
    let mut vals:List<&Val> = [];
    foreach valInfo in self.getEnumValList( enumType ) {
       vals.insert( self.lowerEnumVal( enumType, valInfo ) );
@@ -3355,6 +4203,9 @@ fn convFilter.needToMapConv( typeInfo:&Ast.TypeInfo ) mut : bool {
          }
          return self.getClassInfo( work ) ~= nil;
       }
+      case .Alge {
+         return true;
+      }
    }
    return false;
 }
@@ -3387,6 +4238,7 @@ fn convFilter.fnToMapConv( node:&Nodes.Node, typeInfo:&Ast.TypeInfo ) mut : int 
    }
    let index, mut func = self.mod.addFunc( [ W.typeAnyRef ], [ W.typeAnyRef ] );
    self.adapterMap[ name ] = index;
+   self.mod.setFuncName( index, name );
    let work = self.normType( typeInfo );
    let mut body:List<&W.Ins> = [
       W.ifElse( W.refIsNull( lg( 0 ) ), [ W.ret( [ W.refNull( W.htAny ) ] ) ], nil, nil ) ];
@@ -3431,6 +4283,45 @@ fn convFilter.fnToMapConv( node:&Nodes.Node, typeInfo:&Ast.TypeInfo ) mut : int 
             W.br( 0 ) ], nil ) ], nil ) );
          body.insert( lg( result ) );
       }
+      case .Alge {
+         // Lua 版の alge の値と同じく、{ 1: 値の名前, 2: [ パラメータ ] } にする
+         let algeType = self.getGenSrc( work );
+         let algeInfo = unwrap self.getAlgeInfo( algeType );
+         let algeWork = unwrap algeType@@@Ast.AlgeTypeInfo;
+         let src = func.addLocal( W.refType( algeInfo.$baseType ) );
+         let result = func.addLocal( self.rt.$mapType );
+         let params = func.addLocal( self.rt.$listType );
+         let tag = func.addLocal( W.typeI32 );
+         body.insert( ls( src, W.refCast( algeInfo.$baseType, lg( 0 ) ) ) );
+         body.insert( ls( tag, W.structGet( algeInfo.$baseType, 1, lg( src ) ) ) );
+         body.insert( ls( result, self.rt.newMap() ) );
+         foreach valName in algeInfo.$valNames {
+            let valInfo = unwrap algeWork.$valInfoMap[ valName ];
+            let valType = unwrap algeInfo.$name2type[ valName ];
+            let mut thenBody:List<&W.Ins> = [
+               W.call( self.rt.fnMapSet(), [ lg( result ), self.rt.boxI64( W.i64Const( 1 ) ),
+                                             self.rt.strLiteral( valName ) ] ) ];
+            if #valInfo.$typeList > 0 {
+               thenBody.insert( ls( params, W.call( self.rt.fnListNew(),
+                                                    [ W.i32Const( #valInfo.$typeList ) ] ) ) );
+               foreach paramType, paramIndex in valInfo.$typeList {
+                  let paramVal = self.coerceRep(
+                     W.structGet( valType, paramIndex + 1, W.refCast( valType, lg( src ) ) ),
+                     self.getRep( paramType ), W.typeAnyRef );
+                  thenBody.insert( W.call( self.rt.fnListPush(),
+                                           [ lg( params ),
+                                             self.toMapVal( node, paramType, paramVal ) ] ) );
+               }
+               thenBody.insert( W.call( self.rt.fnMapSet(),
+                                        [ lg( result ), self.rt.boxI64( W.i64Const( 2 ) ),
+                                          lg( params ) ] ) );
+            }
+            body.insert( W.ifElse(
+               p( W.opI32Eq, [ lg( tag ), W.i32Const( unwrap algeInfo.$name2tag[ valName ] ) ] ),
+               thenBody, nil, nil ) );
+         }
+         body.insert( lg( result ) );
+      }
       default {
          let! info = self.getClassInfo( work ) {
             self.error( node, "not support _toMap -- %s" ( typeInfo.getTxt( ## ) ) );
@@ -3459,6 +4350,7 @@ fn convFilter.fnToMap( node:&Nodes.Node, info:&ClassInfo ) mut : int {
    }
    let index, mut func = self.mod.addFunc( [ W.refType( info.$structType ) ], [ self.rt.$mapType ] );
    self.adapterMap[ name ] = index;
+   self.mod.setFuncName( index, name );
    let map = func.addLocal( self.rt.$mapType );
    let mut body:List<&W.Ins> = [ ls( map, self.rt.newMap() ) ];
    foreach fieldName, fieldIndex in info.$fieldNames {
@@ -3489,6 +4381,7 @@ fn convFilter.fnFromConv( node:&Nodes.Node, typeInfo:&Ast.TypeInfo ) mut : int {
    let anyNull = W.refNull( W.htAny );
    let index, mut func = self.mod.addFunc( [ W.typeAnyRef ], [ W.typeAnyRef, self.rt.$strType ] );
    self.adapterMap[ name ] = index;
+   self.mod.setFuncName( index, name );
    let work = self.normType( typeInfo );
    let fail = W.ret( [ anyNull, strNull ] );
    let ok = fn ( val:&W.Ins ) : &W.Ins {
@@ -3507,10 +4400,19 @@ fn convFilter.fnFromConv( node:&Nodes.Node, typeInfo:&Ast.TypeInfo ) mut : int {
                                            [ self.rt.strLiteral( "." ), lg( messLocal ) ] ) ] ) ],
                        self.rt.$strType );
    };
-   if self.isType( work, Ast.builtinTypeInt ) or work.$kind == .Enum {
-      if work.$kind == .Enum {
-         self.error( node, "not support _fromMap for enum -- %s" ( typeInfo.getTxt( ## ) ) );
-      }
+   if! let enumType = work@@@Ast.EnumTypeInfo {
+      // Lua 版と同じく、値の型に変換してから _from で enum にする
+      let valType = enumType.$valTypeInfo;
+      let val = func.addLocal( W.typeAnyRef );
+      body.insert( W.call( self.fnFromConv( node, valType ), [ lg( 0 ) ] ) );
+      body.insert( W.drop( W.nop() ) );
+      body.insert( ls( val, W.nop() ) );
+      body.insert( ifThen( W.refIsNull( lg( val ) ), [ fail ] ) );
+      body.insert( ok( self.coerceRep(
+         W.call( self.fnEnumFrom( enumType ),
+                 [ self.coerceRep( lg( val ), W.typeAnyRef, self.getRep( valType ) ) ] ),
+         self.getRep( enumType.$nilableTypeInfo ), W.typeAnyRef ) ) );
+   } elseif self.isType( work, Ast.builtinTypeInt ) {
       body.insert( ifThen( W.refTest( self.rt.$tBoxI64, lg( 0 ) ), [ ok( lg( 0 ) ) ] ) );
       body.insert( ifThen( W.refTest( self.rt.$tBoxF64, lg( 0 ) ), [
          ok( self.rt.boxI64( p( W.opI64TruncF64S, [ p( W.opF64Floor, [ self.rt.unboxF64( lg( 0 ) ) ] ) ] ) ) ) ] ) );
@@ -3538,6 +4440,11 @@ fn convFilter.fnFromConv( node:&Nodes.Node, typeInfo:&Ast.TypeInfo ) mut : int {
             let pos = func.addLocal( W.typeI32 );
             let val = func.addLocal( W.typeAnyRef );
             let mess = func.addLocal( self.rt.$strType );
+            // Lua の table と同じく、1 からの整数のキーの Map も List として扱う
+            // (expandLuavalMap の結果など)
+            body.insert( ifThen( W.refTest( self.rt.$tMap, lg( 0 ) ),
+                                 [ ls( 0, W.call( self.fnMapToList(),
+                                                  [ W.refCast( self.rt.$tMap, lg( 0 ) ) ] ) ) ] ) );
             body.insert( ifThen( p( W.opI32Eqz, [ W.refTest( self.rt.$tList, lg( 0 ) ) ] ),
                                  [ fail ] ) );
             body.insert( ls( src, W.refCast( self.rt.$tList, lg( 0 ) ) ) );
@@ -3604,6 +4511,58 @@ fn convFilter.fnFromConv( node:&Nodes.Node, typeInfo:&Ast.TypeInfo ) mut : int {
             body.insert( W.block( [ W.loop( loopBody, nil ) ], nil ) );
             body.insert( ok( lg( result ) ) );
          }
+         case .Alge {
+            // Lua 版の _lune._AlgeFrom と同じく、[1] の名前の値を、[2] のパラメータで生成する
+            let algeType = self.getGenSrc( work );
+            let algeInfo = unwrap self.getAlgeInfo( algeType );
+            let algeWork = unwrap algeType@@@Ast.AlgeTypeInfo;
+            let algeName = func.addLocal( self.rt.$strType );
+            let params = func.addLocal( W.typeAnyRef );
+            let val = func.addLocal( W.typeAnyRef );
+            let item = fn ( obj:&W.Ins, itemIndex:int ) : &W.Ins {
+               return W.call( self.fnStemIndex(), [ obj, self.rt.boxI64( W.i64Const( itemIndex ) ) ] );
+            };
+            body.insert( ifThen( p( W.opI32Eqz,
+                                    [ p( W.opI32Or, [ W.refTest( self.rt.$tList, lg( 0 ) ),
+                                                      W.refTest( self.rt.$tMap, lg( 0 ) ) ] ) ] ),
+                                 [ fail ] ) );
+            body.insert( ls( val, item( lg( 0 ), 1 ) ) );
+            body.insert( ifThen( p( W.opI32Eqz, [ W.refTest( self.rt.$tStr, lg( val ) ) ] ),
+                                 [ fail ] ) );
+            body.insert( ls( algeName, W.refCast( self.rt.$tStr, lg( val ) ) ) );
+            body.insert( ls( params, item( lg( 0 ), 2 ) ) );
+            foreach valName in algeInfo.$valNames {
+               let valInfo = unwrap algeWork.$valInfoMap[ valName ];
+               let valType = unwrap algeInfo.$name2type[ valName ];
+               let mut thenBody:List<&W.Ins> = [];
+               if #valInfo.$typeList == 0 {
+                  thenBody.insert(
+                     ok( W.globalGet( unwrap algeInfo.$name2global[ valName ] ) ) );
+               } else {
+                  thenBody.insert( ifThen( W.refIsNull( lg( params ) ), [ fail ] ) );
+                  let mut fields:List<&W.Ins> = [ W.i32Const( 0 ),
+                                                  W.i32Const( unwrap algeInfo.$name2tag[ valName ] ) ];
+                  foreach paramType, paramIndex in valInfo.$typeList {
+                     let paramLocal = func.addLocal( self.getRep( paramType ) );
+                     thenBody.insert( W.call( self.fnFromConv( node, paramType ),
+                                              [ item( lg( params ), paramIndex ) ] ) );
+                     thenBody.insert( W.drop( W.nop() ) );
+                     thenBody.insert( ls( val, W.nop() ) );
+                     if not paramType.$nilable {
+                        thenBody.insert( ifThen( W.refIsNull( lg( val ) ), [ fail ] ) );
+                     }
+                     thenBody.insert( ls( paramLocal, self.coerceRep(
+                        lg( val ), W.typeAnyRef, self.getRep( paramType ) ) ) );
+                     fields.insert( lg( paramLocal ) );
+                  }
+                  thenBody.insert( ok( W.structNew( valType, fields ) ) );
+               }
+               body.insert( ifThen( W.call( self.rt.fnStrEq(),
+                                            [ lg( algeName ), self.rt.strLiteral( valName ) ] ),
+                                    thenBody ) );
+            }
+            body.insert( fail );
+         }
          default {
             let! info = self.getClassInfo( work ) {
                self.error( node, "not support _fromMap -- %s" ( typeInfo.getTxt( ## ) ) );
@@ -3625,6 +4584,7 @@ fn convFilter.fnFromMap( node:&Nodes.Node, info:&ClassInfo ) mut : int {
    let objRep = W.refType( info.$structType );
    let index, mut func = self.mod.addFunc( [ W.typeAnyRef ], [ objRep, self.rt.$strType ] );
    self.adapterMap[ name ] = index;
+   self.mod.setFuncName( index, name );
    let map = func.addLocal( self.rt.$mapType );
    let val = func.addLocal( W.typeAnyRef );
    let mess = func.addLocal( self.rt.$strType );
@@ -3691,6 +4651,13 @@ fn convFilter.lowerBlockAt( node:&Nodes.BlockNode, depth:int ) mut : &List<&W.In
 
 /** 関数・クラスを先に登録する */
 fn convFilter.preDeclare( stmt:&Nodes.Node, mut out:List<&W.Ins> ) mut {
+   if! let macroNode = getMacroExp( stmt ) {
+      // マクロを展開した文は、展開した位置の文と同じに扱う
+      foreach child in macroNode.$stmtList {
+         self.preDeclare( child, out );
+      }
+      return;
+   }
    if! let declNode = stmt@@@Nodes.DeclFuncNode {
       if! let symbol = declNode.$declInfo.$symbol {
          self.registerFunc( declNode.$declInfo, declNode.$expType );
@@ -4003,7 +4970,7 @@ fn convFilter.lowerRawValList( expList:&Nodes.ExpListNode, mut pre:List<&W.Ins> 
 {
    let mut vals:List<&Val> = [];
    if expList.$mRetExp {
-      foreach val in self.lowerValList( expList, pre ) {
+      foreach val in self.lowerValListSub( expList, pre, true ) {
          vals.insert( self.spillVal( val, pre ) );
       }
    } else {
@@ -4034,12 +5001,24 @@ fn convFilter.lowerDeclVar( node:&Nodes.DeclVarNode, mut out:List<&W.Ins> ) mut 
          vals = self.expandDDD( self.lowerRawValList( expList, out ),
                                 #node.$symbolInfoList, out );
       }
-      foreach symbol in node.$symbolInfoList {
-         out.insert( self.declareVar( symbol, nil ) );
+      if node.$mode == .Let {
+         // unwrap! (mode が Unwrap) は、宣言済みの変数への代入
+         foreach symbol in node.$symbolInfoList {
+            out.insert( self.declareVar( symbol, nil ) );
+         }
       }
       self.ctx.set_depth( base + 1 );
       let mut nilBody:List<&W.Ins> = [];
       if! let block = node.$unwrapBlock {
+         // ブロックの中では、_変数名 で unwrap する前の値を参照できる
+         foreach symbol, index in node.$symbolInfoList {
+            if! let rawSym = block.$scope.$symbol2SymbolInfoMap[ "_" .. symbol.$name ] {
+               if index <= #vals {
+                  nilBody.insert( self.declareVar(
+                     rawSym, self.coerceVal( vals[ index ], rawSym.$typeInfo ) ) );
+               }
+            }
+         }
          append( nilBody, self.lowerBlock( block ) );
       }
       let mut thenBody:List<&W.Ins> = [];
@@ -4342,14 +5321,29 @@ fn convFilter.lowerFor( node:&Nodes.ForNode ) mut : &W.Ins {
 fn convFilter.lowerForeach( node:&Nodes.Node, valSym:&Ast.SymbolInfo, keySym:&Ast.SymbolInfo!,
                             exp:&Nodes.Node, block:&Nodes.BlockNode, sort:bool ) mut : &W.Ins
 {
-   let expType = self.normType( exp.$expType );
+   let mut expType = self.normType( exp.$expType );
    let mut list:List<&W.Ins> = [];
    let pos = self.tempLocal( W.typeI32 );
    list.insert( ls( pos, W.i32Const( 0 ) ) );
+   let luavalFlag = self.isLuaval( exp.$expType );
+   if luavalFlag {
+      // Lua の値は、List / Map に変換して処理する (要素のテーブルは Lua の値のまま)
+      expType = self.normType( exp.$expType.$nonnilableType.$extedType );
+   }
+   let lowerColl = fn () : &W.Ins {
+      if not luavalFlag {
+         return self.lowerExp( exp );
+      }
+      let luaVal = self.lowerExpAs( exp, Ast.builtinTypeStem_ );
+      if expType.$kind == .List or expType.$kind == .Array {
+         return W.call( self.rt.fnLuaToList(), [ luaVal ] );
+      }
+      return W.call( self.rt.fnLuaToMap(), [ luaVal, W.i32Const( 0 ) ] );
+   };
    switch expType.$kind {
       case .List, .Array {
          let coll = self.tempLocal( self.rt.$listType );
-         list.insert( ls( coll, self.lowerExp( exp ) ) );
+         list.insert( ls( coll, lowerColl() ) );
          self.enterLoop();
          let mut body:List<&W.Ins> = [];
          body.insert( W.brIf( 1, p( W.opI32GeS, [ lg( pos ),
@@ -4372,7 +5366,7 @@ fn convFilter.lowerForeach( node:&Nodes.Node, valSym:&Ast.SymbolInfo, keySym:&As
       case .Map, .Set {
          let isSet = expType.$kind == .Set;
          let coll = self.tempLocal( self.rt.$mapType );
-         list.insert( ls( coll, self.lowerExp( exp ) ) );
+         list.insert( ls( coll, lowerColl() ) );
          if sort {
             // キーを整列して処理する
             let keys = self.tempLocal( self.rt.$listType );
@@ -4605,7 +5599,7 @@ fn convFilter.lowerStmt( node:&Nodes.Node, mut out:List<&W.Ins> ) mut {
          Nodes.NodeKind.$LuneControl, Nodes.NodeKind.$DeclMacro, Nodes.NodeKind.$TestBlock,
          Nodes.NodeKind.$DeclForm, Nodes.NodeKind.$ProtoClass, Nodes.NodeKind.$DeclEnum,
          Nodes.NodeKind.$DeclAlge, Nodes.NodeKind.$ProtoMethod, Nodes.NodeKind.$Subfile,
-         Nodes.NodeKind.$Alias
+         Nodes.NodeKind.$Alias, Nodes.NodeKind.$TestCase, Nodes.NodeKind.$Provide
       {
          return;
       }
@@ -4737,16 +5731,26 @@ fn convFilter.lowerStmt( node:&Nodes.Node, mut out:List<&W.Ins> ) mut {
          return;
       }
       case Nodes.NodeKind.$Scope {
-         append( out, self.lowerBlock( (unwrap node@@@Nodes.ScopeNode).$block ) );
+         let scopeNode = unwrap node@@@Nodes.ScopeNode;
+         // __scope root ( sym ) では、スコープの中に sym と同じ名前の別のシンボルを作るので、
+         // 元のシンボルに対応付ける
+         foreach symbol in scopeNode.$symbolList {
+            if! let aliasSym = scopeNode.$scope.$symbol2SymbolInfoMap[ symbol.$name ] {
+               self.symAlias[ aliasSym.getOrg() ] = self.resolveSym( symbol.getOrg() );
+            }
+         }
+         append( out, self.lowerBlock( scopeNode.$block ) );
          return;
       }
       case Nodes.NodeKind.$Import {
          let info = (unwrap node@@@Nodes.ImportNode).$info;
-         let! initIndex = self.module2init[ info.$moduleTypeInfo ] {
+         let! initIndex = self.module2init[ info.$modulePath ] {
             self.error( node, "not found the imported module -- %s" ( info.$modulePath ) );
          };
          // import したモジュールのシンボル (SubPkg など) は、モジュールの型で参照するので値は不要
-         out.insert( W.call( initIndex, [] ) );
+         if info.$lazy == .Off {
+            out.insert( W.call( initIndex, [] ) );
+         }
          return;
       }
       case Nodes.NodeKind.$Apply {
@@ -4784,9 +5788,12 @@ fn convFilter.registerFunc( declInfo:&Nodes.DeclFuncInfo, funcType:&Ast.TypeInfo
 fn convFilter.getCaptureSyms( funcType:&Ast.TypeInfo ) : &List<&Ast.SymbolInfo> {
    let mut list:List<&Ast.SymbolInfo> = [];
    if! let scope = funcType.$scope {
+      let mut addedSet:Set<&Ast.SymbolInfo> = (@);
       foreach symbol in scope.$closureSymList {
-         let orgSym = symbol.getOrg();
-         if not self.isGlobalSym( orgSym ) {
+         // __scope root の別名のシンボルは、元のシンボルを捕捉する
+         let orgSym = self.resolveSym( symbol.getOrg() );
+         if not self.isGlobalSym( orgSym ) and not addedSet.has( orgSym ) {
+            addedSet.add( orgSym );
             list.insert( orgSym );
          }
       }
@@ -4900,15 +5907,89 @@ fn convFilter.compileFunc( node:&Nodes.Node, declInfo:&Nodes.DeclFuncInfo,
       }
    }
    self.setupParams( declInfo, funcType, body );
-   if! let block = declInfo.$body {
-      append( body, self.lowerBlock( block ) );
-   }
-   if #retTypes > 0 {
-      body.insert( W.unreachable() );
+   if self.isRunLuaOnLns( funcType ) {
+      // Go 版と同じく、Lua 版の LuneScript を使って Lua のコードを実行する
+      // 引数: (クロージャ, frontAccessor, luaCode, baseDir, async)
+      let args = self.tempLocal( self.rt.$listType );
+      let result = self.tempLocal( self.rt.$listType );
+      let mess = self.tempLocal( W.typeAnyRef );
+      if #self.embedLuaList > 0 {
+         body.insert( self.registerEmbedLua() );
+      }
+      body.insert( ls( args, W.call( self.rt.fnListNew(), [ W.i32Const( 1 ) ] ) ) );
+      body.insert( W.call( self.rt.fnListPush(), [ lg( args ), lg( 2 ) ] ) );
+      body.insert( ls( result, W.call( self.rt.fnLuaCall(),
+                                       [ W.i32Const( Rt.luaRunLuaOnLns ), lg( args ) ] ) ) );
+      body.insert( ls( mess, W.call( self.rt.fnListGet(), [ lg( result ), W.i64Const( 2 ) ] ) ) );
+      body.insert( W.call( self.rt.fnListGet(), [ lg( result ), W.i64Const( 1 ) ] ) );
+      body.insert( W.ifElse( W.refIsNull( lg( mess ) ), [ self.rt.strLiteral( "" ) ],
+                             [ W.refCast( self.rt.$tStr, lg( mess ) ) ], self.rt.$strType ) );
+   } elseif self.isModuleFunc( funcType, "@lune.@base.@Str", "getLineList" ) {
+      // Lua 版は string.gmatch を使うので、Go 版と同じく Lua を使わない処理に置き換える
+      body.insert( W.call( self.rt.fnStrLineList(), [ lg( 1 ) ] ) );
+   } elseif self.isModuleFunc( funcType, "@lune.@base.@Depend", "getBindLns" ) {
+      // Go 版と同じく、埋め込んだ LuneScript のソースを返す
+      let mut val:&W.Ins = W.refNull( W.htAny );
+      forsort code, mod in self.bindLnsMap {
+         val = W.ifElse( W.call( self.rt.fnStrEq(), [ lg( 1 ), self.rt.strLiteral( mod ) ] ),
+                         [ self.rt.strLiteral( code ) ], [ val ], W.typeAnyRef );
+      }
+      body.insert( self.coerce( val, Ast.builtinTypeStem_, retTypes[ 1 ] ) );
+   } elseif self.isModuleFunc( funcType, "@lune.@base.@Depend", "getFileLastModifiedTime" ) {
+      // Lua 版は stat コマンドを起動するので、Go 版と同じくホストで取得する
+      let mtime = self.tempLocal( W.typeF64 );
+      body.insert( ls( mtime, W.call( self.rt.fnFileMtime(), [ lg( 1 ) ] ) ) );
+      body.insert( self.coerce( W.ifElse( W.plain( W.opF64Ne, [ lg( mtime ), lg( mtime ) ] ),
+                                          [ W.refNull( W.htAny ) ],
+                                          [ self.rt.boxF64( lg( mtime ) ) ], W.typeAnyRef ),
+                                Ast.builtinTypeStem_, retTypes[ 1 ] ) );
+   } else {
+      if! let block = declInfo.$body {
+         append( body, self.lowerBlock( block ) );
+      }
+      if #retTypes > 0 {
+         body.insert( W.unreachable() );
+      }
    }
    self.ctx.$func.setBody( body );
    self.ctx = saved;
    return cloIns;
+}
+
+/** funcType が、モジュール modName (getFullName の形式) の関数 name かどうか */
+fn convFilter.isModuleFunc( funcType:&Ast.TypeInfo, modName:str, name:str ) : bool {
+   if funcType.$rawTxt ~= name {
+      return false;
+   }
+   return funcType.getModule().getFullName(
+      self.$typeNameCtrl, self.$moduleInfoManager, false ) == modName;
+}
+
+/**
+埋め込んだ Lua のモジュールを、Lua の package.preload に登録する命令 (最初の 1 回だけ登録する)。
+
+lnsc の起動を遅くしないように、最初にマクロを実行する時 (runLuaOnLns) に登録する。
+*/
+fn convFilter.registerEmbedLua() mut : &W.Ins {
+   if self.embedLuaGlobal < 0 {
+      self.embedLuaGlobal = self.mod.addGlobal( W.typeI32, W.i32Const( 0 ) );
+   }
+   let args = self.tempLocal( self.rt.$listType );
+   let mut body:List<&W.Ins> = [ W.globalSet( self.embedLuaGlobal, W.i32Const( 1 ) ) ];
+   foreach info in self.embedLuaList {
+      body.insert( ls( args, W.call( self.rt.fnListNew(), [ W.i32Const( 3 ) ] ) ) );
+      foreach txt in [ info.$mod, info.$code, info.$chunkname ] {
+         body.insert( W.call( self.rt.fnListPush(), [ lg( args ), self.rt.strLiteral( txt ) ] ) );
+      }
+      body.insert( W.drop( W.call( self.rt.fnLuaCall(),
+                                   [ W.i32Const( Rt.luaPreload ), lg( args ) ] ) ) );
+   }
+   return W.ifElse( W.plain( W.opI32Eqz, [ W.globalGet( self.embedLuaGlobal ) ] ), body, nil, nil );
+}
+
+/** DependLuaOnLns.runLuaOnLns (マクロの実行) の関数かどうか */
+fn convFilter.isRunLuaOnLns( funcType:&Ast.TypeInfo ) : bool {
+   return self.isModuleFunc( funcType, "@lune.@base.@DependLuaOnLns", "runLuaOnLns" );
 }
 
 /** メソッド・コンストラクタの本体を変換する */
@@ -4939,14 +6020,67 @@ fn convFilter.compileMethod( node:&Nodes.Node, declInfo:&Nodes.DeclFuncInfo,
       }
    }
    self.setupParams( declInfo, methodType, body );
-   if! let block = declInfo.$body {
-      append( body, self.lowerBlock( block ) );
-   }
-   if #retReps > 0 {
-      body.insert( W.unreachable() );
+   if! let nativeBody = self.getStrBuilderBody( node, methodType, info, selfLocal ) {
+      append( body, nativeBody );
+   } else {
+      if! let block = declInfo.$body {
+         append( body, self.lowerBlock( block ) );
+      }
+      if #retReps > 0 {
+         body.insert( W.unreachable() );
+      }
    }
    self.ctx.$func.setBody( body );
    self.ctx = saved;
+}
+
+/**
+Str.Builder のメソッドの場合、Go 版 (strings.Builder) と同じく、
+容量に余裕を持たせたバッファで処理する本体を返す。それ以外は nil。
+
+Lua 版は、1000 バイトごとにそれまでの文字列全体を連結し直す。
+wasm では、private のフィールド progress にバッファ (Rt.newBuf) を持ち、txt は使わない。
+フィールドはメソッドからしか参照しないので、全てのメソッドを置き換える。
+*/
+fn convFilter.getStrBuilderBody( node:&Nodes.Node, methodType:&Ast.TypeInfo, info:&ClassInfo,
+                                 selfLocal:int ) mut : &List<&W.Ins>!
+{
+   let classType = methodType.$parentInfo;
+   if classType.$rawTxt ~= "Builder" or
+      classType.getModule().getFullName(
+         self.$typeNameCtrl, self.$moduleInfoManager, false ) ~= "@lune.@base.@Str"
+   {
+      return nil;
+   }
+   let structType = info.$structType;
+   let txtField = self.getFieldIndex( node, info, "txt" );
+   let bufField = self.getFieldIndex( node, info, "progress" );
+   let buf = W.refCast( self.rt.$tStr, W.structGet( structType, bufField, lg( selfLocal ) ) );
+   let setBuf = fn ( val:&W.Ins ) : &W.Ins {
+      return W.structSet( structType, bufField, lg( selfLocal ), val );
+   };
+   switch methodType.$rawTxt {
+      case "__init" {
+         return [ W.structSet( structType, txtField, lg( selfLocal ), self.rt.strLiteral( "" ) ),
+                  setBuf( self.rt.newBuf() ) ];
+      }
+      case "add" {
+         return [ setBuf( W.call( self.rt.fnBufAdd(), [ buf, lg( 1 ) ] ) ) ];
+      }
+      case "get_txt" {
+         return [ W.call( self.rt.fnBufToStr(), [ buf ] ) ];
+      }
+      case "len" {
+         return [ self.rt.bufLenI64( buf ) ];
+      }
+      case "clear" {
+         return [ self.rt.clearBuf( buf ) ];
+      }
+      case "flush" {
+         return [];
+      }
+   }
+   self.error( node, "unknown method of Str.Builder -- %s" (methodType.$rawTxt) );
 }
 
 /** メソッドの戻り値の表現 (スロットの関数型に合わせる) */
@@ -4981,8 +6115,9 @@ fn convFilter.compileMethodNode( node:&Nodes.Node, declInfo:&Nodes.DeclFuncInfo 
       self.compileMethod( node, declInfo, methodType, funcIndex, info, [] );
       return;
    }
+   // 実装の関数は、メソッド自身の型で生成している (vtable の型と異なる場合はアダプタを使う)
    self.compileMethod( node, declInfo, methodType, funcIndex, info,
-                       self.getSlotRetReps( info, methodType ) );
+                       self.getRepList( methodType.$retTypeInfoList ) );
 }
 
 /** 既定のコンストラクタ (メンバを引数の順に初期化する) */
@@ -5044,7 +6179,7 @@ fn convFilter.compileAccessors( node:&Nodes.DeclClassNode, info:&ClassInfo ) mut
                         let selfIns = W.refCast( info.$structType, lg( 0 ) );
                         let fieldIndex = self.getFieldIndex( node, info, member );
                         if name.find( "^get_" ## ) {
-                           let retReps = self.getSlotRetReps( info, methodType );
+                           let retReps = self.getRepList( methodType.$retTypeInfoList );
                            func.setBody( [
                               self.coerceRep( W.structGet( info.$structType, fieldIndex, selfIns ),
                                               info.$fieldReps[ fieldIndex - 1 ], retReps[ 1 ] ) ] );
@@ -5161,6 +6296,16 @@ fn convFilter.callMethodDyn( node:&Nodes.Node, obj:&W.Ins, objRep:&W.ValType, ob
 }
 
 fn convFilter.lowerDeclClass( node:&Nodes.DeclClassNode, mut out:List<&W.Ins> ) mut {
+   if node.isModule() {
+      // Lua のモジュール (module ... require)。Lua 版と同じく、遅延ロードでなければ読み込む。
+      // C のグルー (glue) のモジュールは wasm では読み込めないので、宣言の位置では読み込まない
+      if node.$lazyLoad == .Off and not node.$gluePrefix {
+         if! let modType = self.getExtModuleType( node.$expType ) {
+            out.insert( W.drop( self.lowerExtModuleVal( node, modType ) ) );
+         }
+      }
+      return;
+   }
    if node.$expType.$kind == .IF {
       self.getIfInfo( node.$expType );
       return;
@@ -5228,7 +6373,78 @@ fn convFilter.makeIfAdapter( ifMethodType:&Ast.TypeInfo, implMethodType:&Ast.Typ
 }
 
 /** vtable と itable を生成する処理を prologue に追加する */
+/** 実行時の型の _toMap を呼ぶ関数 (anyref → Map) */
+fn convFilter.fnToMapDyn() mut : int {
+   if self.toMapDynIndex < 0 {
+      let index, _ = self.mod.addFunc( [ W.typeAnyRef ], [ self.rt.$mapType ] );
+      self.mod.setFuncName( index, "toMapDyn" );
+      self.toMapDynIndex = index;
+   }
+   return self.toMapDynIndex;
+}
+
+/** クラスの継承の深さ */
+fn getClassDepth( info:&ClassInfo ) : int {
+   let mut depth = 0;
+   let mut work = info.$parent;
+   while true {
+      let! parent = work {
+         break;
+      };
+      depth = depth + 1;
+      work = parent.$parent;
+   }
+   return depth;
+}
+
+/**
+fnToMapDyn() の本体を生成する。
+
+Mapping を実装するクラスを、派生クラスから順に ref.test で判定し、そのクラスの _toMap を呼ぶ。
+*/
+fn convFilter.buildToMapDyn() mut {
+   let! node = self.toMapDynNode {
+      return;
+   };
+   let mut func = self.mod.getFunc( self.toMapDynIndex );
+   let mut body:List<&W.Ins> = [];
+   // _toMap の生成でクラスが増えることがあるので、増えなくなるまで繰り返す
+   let mut num = -1;
+   while num ~= #self.classInfoList {
+      num = #self.classInfoList;
+      let mut infoList:List<&ClassInfo> = [];
+      foreach info in self.classInfoList {
+         if info.$typeInfo.$kind == .Class and
+            info.$typeInfo.isInheritFrom( self.processInfo, Ast.builtinTypeMapping, nil )
+         {
+            infoList.insert( info );
+         }
+      }
+      // 深さが同じクラスは、型の番号の順にする
+      // (ソートは安定でなく、実装 (Lua 版、wasm 版など) によって順番が変わるので)
+      infoList.sort( fn ( info1:&ClassInfo, info2:&ClassInfo ) : bool {
+         let depth1 = getClassDepth( info1 );
+         let depth2 = getClassDepth( info2 );
+         if depth1 ~= depth2 {
+            return depth1 > depth2;
+         }
+         return info1.$structType < info2.$structType;
+      } );
+      body = [];
+      foreach info in infoList {
+         body.insert( W.ifElse(
+            W.refTest( info.$structType, lg( 0 ) ),
+            [ W.ret( [ W.call( self.fnToMap( node, info ),
+                               [ W.refCast( info.$structType, lg( 0 ) ) ] ) ] ) ],
+            nil, nil ) );
+      }
+   }
+   body.insert( self.rt.error( self.rt.strLiteral( "_toMap: not Mapping object" ) ) );
+   func.setBody( body );
+}
+
 fn convFilter.finalizeClasses() mut {
+   self.buildToMapDyn();
    foreach info in self.classInfoList {
       foreach ifType in info.$ifList {
          self.getIfInfo( ifType );
@@ -5308,9 +6524,24 @@ fn convFilter.collectDecl( node:&Nodes.Node ) mut {
       }, 0, alreadySet );
 }
 
+/** マクロを展開した文 (StmtExp の ExpMacroExp) なら、その ExpMacroExp。それ以外は nil */
+fn getMacroExp( stmt:&Nodes.Node ) : &Nodes.ExpMacroExpNode! {
+   if! let stmtExp = stmt@@@Nodes.StmtExpNode {
+      return stmtExp.$exp@@@Nodes.ExpMacroExpNode;
+   }
+   return nil;
+}
+
 /** モジュールレベルの変数を、グローバル変数として登録する (関数から参照するため) */
 fn convFilter.registerModuleVars( node:&Nodes.RootNode ) mut {
-   foreach child in node.$children {
+   self.registerModuleVarsIn( node.$children );
+}
+fn convFilter.registerModuleVarsIn( stmtList:&List<&Nodes.Node> ) mut {
+   foreach child in stmtList {
+      if! let macroNode = getMacroExp( child ) {
+         // マクロを展開した文
+         self.registerModuleVarsIn( macroNode.$stmtList );
+      }
       if! let declNode = child@@@Nodes.DeclVarNode {
          foreach symbol in declNode.$symbolInfoList {
             let orgSym = symbol.getOrg();
@@ -5322,6 +6553,49 @@ fn convFilter.registerModuleVars( node:&Nodes.RootNode ) mut {
          }
       }
    }
+}
+
+/**
+provide しているモジュールを import した場合、モジュールのシンボルを provide しているシンボルに対応付ける。
+*/
+fn convFilter.registerImportAlias( node:&Nodes.RootNode ) mut {
+   foreach child in node.$children {
+      if! let importNode = child@@@Nodes.ImportNode {
+         let info = importNode.$info;
+         if! let provideSym = self.module2provide[ info.$modulePath ] {
+            self.symAlias[ info.$symbolInfo.getOrg() ] = provideSym;
+         }
+         if info.$lazy ~= .Off {
+            self.lazySym2module[ info.$symbolInfo.getOrg() ] = info.$modulePath;
+         }
+      }
+   }
+}
+
+/**
+node が import.l で遅延ロードするモジュールのシンボルなら、モジュールの初期化の呼び出しを返す。
+
+Lua 版と同じく、モジュールは最初にアクセスした時に初期化する (初期化の関数は 2 回目以降は何もしない)。
+*/
+fn convFilter.getLazyInit( node:&Nodes.Node ) : &W.Ins! {
+   let! refNode = node@@@Nodes.ExpRefNode {
+      return nil;
+   };
+   let! modPath = self.lazySym2module[ refNode.$symbolInfo.getOrg() ] {
+      return nil;
+   };
+   if! let initIndex = self.module2init[ modPath ] {
+      return W.call( initIndex, [] );
+   }
+   return nil;
+}
+
+/** import したモジュールのシンボルを、provide しているシンボルにする */
+fn convFilter.resolveSym( symbol:&Ast.SymbolInfo ) : &Ast.SymbolInfo {
+   if! let provideSym = self.symAlias[ symbol ] {
+      return provideSym;
+   }
+   return symbol;
 }
 
 /**
@@ -5341,10 +6615,14 @@ fn convFilter.lowerImportedModules() mut {
       self.moduleScopeSet.add( self.moduleScope );
       self.collectDecl( root );
       self.registerModuleVars( root );
+      self.registerImportAlias( root );
+      if! let provideNode = root.$provideNode@@@Nodes.ProvideNode {
+         self.module2provide[ ast.$exportInfo.$fullName ] = provideNode.$symbol.getOrg();
+      }
 
       let initIndex, mut initFunc = self.mod.addFunc( [], [] );
       self.mod.setFuncName( initIndex, "init:" .. ast.$exportInfo.$fullName );
-      self.module2init[ moduleType ] = initIndex;
+      self.module2init[ ast.$exportInfo.$fullName ] = initIndex;
       let doneGlobal = self.mod.addGlobal( W.typeI32, W.i32Const( 0 ) );
 
       let mut saved = self.ctx;
@@ -5360,20 +6638,64 @@ fn convFilter.lowerImportedModules() mut {
    self.moduleTypeInfo = mainType;
 }
 
+/** dynGetterNameSet に、node で宣言・委譲している getter の名前を追加する */
+fn convFilter.collectDynGetters( node:&Nodes.Node ) mut {
+   let mut alreadySet:Set<&Nodes.Node> = (@);
+   node.visit(
+      fn ( workNode:&Nodes.Node, parent:&Nodes.Node, relation:str, depth:int )
+         : Nodes.NodeVisitMode
+      {
+         if! let methodNode = workNode@@@Nodes.DeclMethodNode {
+            let name = methodNode.$expType.$rawTxt;
+            if name.find( "^get_" ## ) {
+               self.dynGetterNameSet.add( name );
+            }
+         }
+         if! let classNode = workNode@@@Nodes.DeclClassNode {
+            foreach advertiseInfo in classNode.$advertiseList {
+               let memberType = self.getGenSrc( advertiseInfo.$member.$expType );
+               foreach mtdName in Ast.getAllMethodName( memberType, .Object ).$list {
+                  let name = advertiseInfo.$prefix .. mtdName;
+                  if name.find( "^get_" ## ) {
+                     self.dynGetterNameSet.add( name );
+                  }
+               }
+            }
+         }
+         return .Child;
+      }, 0, alreadySet );
+}
+
 pub override fn convFilter.processRoot( node: &Nodes.RootNode, opt: Opt ) mut
 {
+   foreach ast in self.importAstList {
+      self.collectDynGetters( ast.$node );
+   }
+   self.collectDynGetters( node );
    self.lowerImportedModules();
    self.collectDecl( node );
    self.registerModuleVars( node );
+   self.registerImportAlias( node );
    let mainBody = self.lowerStmtList( node.$children );
    self.finalizeClasses();
    let mut body:List<&W.Ins> = [];
    append( body, self.prologue );
    append( body, mainBody );
+   if! let mainSym = self.moduleScope.$symbol2SymbolInfoMap[ "__main" ] {
+      // Go 版と同じく、pub fn __main( argList ) : int があれば、
+      // コマンドの引数 (先頭は wasm のパス) で呼び出し、戻り値を終了コードにする
+      if mainSym.$kind == .Fun and mainSym.$accessMode == .Pub {
+         if! let funcIndex = self.func2index[ mainSym.$typeInfo ] {
+            body.insert( W.call( self.rt.fnOsExit(),
+                                 [ W.call( funcIndex, [ W.refNull( self.rt.$tClo ),
+                                                        W.call( self.rt.fnArgList(), [] ) ] ) ] ) );
+         }
+      }
+   }
    let mut mainFunc = self.mod.getFunc( self.mainIndex );
    mainFunc.setBody( body );
    self.mod.exportFunc( "main", self.mainIndex );
-   self.rt.exportHostFuncs();
+   self.rt.finalizeLazyLua();
    self.stream.write( self.mod.encode() );
 }
 
@@ -5381,8 +6703,13 @@ pub override fn convFilter.processRoot( node: &Nodes.RootNode, opt: Opt ) mut
 @param importAstList import しているモジュール (間接的なものを含む) の AST。依存される側が先。
    wasm では、これらのモジュールも 1 つの wasm にまとめて出力する。
 */
+/**
+@param embedLuaList wasm に埋め込む Lua のモジュール (lnsc 自身を変換する場合)
+@param bindLnsMap Depend.getBindLns で返す LuneScript のソース (モジュール名 → ソース)
+*/
 pub fn createFilter( streamName:str, stream:oStream, ast:&AstInfo.ASTInfo,
-                     importAstList:&List<&AstInfo.ASTInfo> ) : Nodes.Filter<Opt>
+                     importAstList:&List<&AstInfo.ASTInfo>,
+                     embedLuaList:&List<&EmbedLua>, bindLnsMap:&Map<str,str> ) : Nodes.Filter<Opt>
 {
-   return new convFilter( streamName, stream, ast, importAstList );
+   return new convFilter( streamName, stream, ast, importAstList, embedLuaList, bindLnsMap );
 }

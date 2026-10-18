@@ -816,8 +816,11 @@ fn Front.convertToLanguage(ast:&AstInfo.ASTInfo, stream:oStream, path:str ) mut
          ast.$node.processFilter( conv, new convPython.Opt( ast.$node ) );
       }
       case .Wasm {
+         let importAstList = self.getImportAstList( ast );
+         let embedLuaList, bindLnsMap =
+            Converter.createWasmEmbedInfo( ast, importAstList, self.option );
          let mut conv = convWasm.createFilter(
-            path, stream, ast, self.getImportAstList( ast ) );
+            path, stream, ast, importAstList, embedLuaList, bindLnsMap );
          ast.$node.processFilter( conv, new convWasm.Opt( ast.$node ) );
       }
    }

@@ -62,14 +62,14 @@ func (self *Front_BuildMode__Save) GetTxt() string {
 return "BuildMode.Save"
 }
 type Front_AstCallback func (_env *LnsEnv, arg1 *AstInfo_ASTInfo)
-// for 1740: ExpCast
+// for 1743: ExpCast
 func conv2Form0_2530( src func (_env *LnsEnv)) LnsForm {
     return func (_env *LnsEnv,  argList []LnsAny) []LnsAny {
         src(_env)
         return []LnsAny{}
     }
 }
-// for 1848: ExpCast
+// for 1851: ExpCast
 func conv2Form0_2629( src func (_env *LnsEnv)) LnsForm {
     return func (_env *LnsEnv,  argList []LnsAny) []LnsAny {
         src(_env)
@@ -90,21 +90,21 @@ func conv2Form0_2779( src func (_env *LnsEnv)) LnsForm {
         return []LnsAny{}
     }
 }
-// for 1940: ExpCast
+// for 1943: ExpCast
 func conv2Form0_2873( src func (_env *LnsEnv)) LnsForm {
     return func (_env *LnsEnv,  argList []LnsAny) []LnsAny {
         src(_env)
         return []LnsAny{}
     }
 }
-// for 1989: ExpCast
+// for 1992: ExpCast
 func conv2Form0_3117( src func (_env *LnsEnv)) LnsForm {
     return func (_env *LnsEnv,  argList []LnsAny) []LnsAny {
         src(_env)
         return []LnsAny{}
     }
 }
-// for 1296: ExpCast
+// for 1299: ExpCast
 func conv2Form4_131( src func (_env *LnsEnv)) LnsForm {
     return func (_env *LnsEnv,  argList []LnsAny) []LnsAny {
         src(_env)
@@ -119,11 +119,11 @@ func front_convExp1_869(arg1 []LnsAny) LnsAny {
 func front_convExp1_1255(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
-// for 875
-func front_convExp2_1387(arg1 []LnsAny) LnsAny {
+// for 878
+func front_convExp2_1411(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 1988
+// for 1991
 func front_convExp0_3128(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
@@ -159,51 +159,51 @@ func front_convExp2_762(arg1 []LnsAny) string {
 func front_convExp2_914(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
-// for 859
-func front_convExp2_1291(arg1 []LnsAny) string {
+// for 862
+func front_convExp2_1315(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
-// for 1182
+// for 1185
 func front_convExp3_1379(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 1940
+// for 1943
 func front_convExp0_2890(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
-// for 2005
+// for 2008
 func front_convExp0_3222(_env *LnsEnv, arg1 []LnsAny) (*LnsEnv, string, LnsAny) {
     return _env, Lns_getFromMulti( arg1, 0 ).(string), Lns_getFromMulti( arg1, 1 )
 }
-// for 2008
+// for 2011
 func front_convExp0_3248(_env *LnsEnv, arg1 []LnsAny) (*LnsEnv, LnsAny, string, *FrontInterface_ModuleId, LnsAny) {
     return _env, Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(string), Lns_getFromMulti( arg1, 2 ).(*FrontInterface_ModuleId), Lns_getFromMulti( arg1, 3 )
 }
-// for 2012
+// for 2015
 func front_convExp0_3274(_env *LnsEnv, arg1 []LnsAny) (*LnsEnv, LnsAny, string, *FrontInterface_ModuleId, LnsAny) {
     return _env, Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(string), Lns_getFromMulti( arg1, 2 ).(*FrontInterface_ModuleId), Lns_getFromMulti( arg1, 3 )
 }
-// for 2016
+// for 2019
 func front_convExp0_3300(_env *LnsEnv, arg1 []LnsAny) (*LnsEnv, LnsAny, string, *FrontInterface_ModuleId, LnsAny) {
     return _env, Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(string), Lns_getFromMulti( arg1, 2 ).(*FrontInterface_ModuleId), Lns_getFromMulti( arg1, 3 )
 }
-// for 2020
+// for 2023
 func front_convExp0_3326(_env *LnsEnv, arg1 []LnsAny) (*LnsEnv, LnsAny, string, *FrontInterface_ModuleId, LnsAny) {
     return _env, Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(string), Lns_getFromMulti( arg1, 2 ).(*FrontInterface_ModuleId), Lns_getFromMulti( arg1, 3 )
 }
-// for 2024
+// for 2027
 func front_convExp0_3352(_env *LnsEnv, arg1 []LnsAny) (*LnsEnv, LnsAny, string, *FrontInterface_ModuleId, LnsAny) {
     return _env, Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(string), Lns_getFromMulti( arg1, 2 ).(*FrontInterface_ModuleId), Lns_getFromMulti( arg1, 3 )
 }
-// for 2028
+// for 2031
 func front_convExp0_3378(_env *LnsEnv, arg1 []LnsAny) (*LnsEnv, LnsAny, string, *FrontInterface_ModuleId, LnsAny) {
     return _env, Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(string), Lns_getFromMulti( arg1, 2 ).(*FrontInterface_ModuleId), Lns_getFromMulti( arg1, 3 )
 }
-// for 2057
+// for 2060
 func front_convExp0_3526(_env *LnsEnv, arg1 []LnsAny) (*LnsEnv, string, LnsAny) {
     return _env, Lns_getFromMulti( arg1, 0 ).(string), Lns_getFromMulti( arg1, 1 )
 }
-// for 2084
+// for 2087
 func front_convExp0_3608(_env *LnsEnv, arg1 []LnsAny) (*LnsEnv, string, LnsAny) {
     return _env, Lns_getFromMulti( arg1, 0 ).(string), Lns_getFromMulti( arg1, 1 )
 }
@@ -251,151 +251,155 @@ func front_convExp2_704(arg1 []LnsAny) string {
 func front_convExp2_856(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
-// for 841
-func front_convExp2_1146(arg1 []LnsAny) (string, string, *LnsList2_[LnsInt]) {
+// for 821
+func front_convExp2_1076(arg1 []LnsAny) (*LnsList2_[*ConvWasm_EmbedLua], *LnsMap2_[string,string]) {
+    return Lns_getFromMulti( arg1, 0 ).(*LnsList2_[*ConvWasm_EmbedLua]), Lns_getFromMulti( arg1, 1 ).(*LnsMap2_[string,string])
+}
+// for 844
+func front_convExp2_1170(arg1 []LnsAny) (string, string, *LnsList2_[LnsInt]) {
     return Lns_getFromMulti( arg1, 0 ).(string), Lns_getFromMulti( arg1, 1 ).(string), Lns_getFromMulti( arg1, 2 ).(*LnsList2_[LnsInt])
 }
-// for 934
-func front_convExp2_1652(arg1 []LnsAny) (*FrontInterface_ModuleMeta, string) {
+// for 937
+func front_convExp2_1676(arg1 []LnsAny) (*FrontInterface_ModuleMeta, string) {
     return Lns_getFromMulti( arg1, 0 ).(*FrontInterface_ModuleMeta), Lns_getFromMulti( arg1, 1 ).(string)
 }
-// for 1001
+// for 1004
 func front_convExp3_365(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
-// for 1044
+// for 1047
 func front_convExp3_668(arg1 []LnsAny) (string, LnsAny, string) {
     return Lns_getFromMulti( arg1, 0 ).(string), Lns_getFromMulti( arg1, 1 ), Lns_getFromMulti( arg1, 2 ).(string)
 }
-// for 1061
+// for 1064
 func front_convExp3_767(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 1070
+// for 1073
 func front_convExp3_827(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
-// for 1092
+// for 1095
 func front_convExp3_945(arg1 []LnsAny) (*FrontInterface_ModuleMeta, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ).(*FrontInterface_ModuleMeta), Lns_getFromMulti( arg1, 1 )
 }
-// for 1179
+// for 1182
 func front_convExp3_1350(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 1209
+// for 1212
 func front_convExp3_1487(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
-// for 1246
+// for 1249
 func front_convExp3_1839(arg1 []LnsAny) (*FrontInterface_ModuleMeta, string) {
     return Lns_getFromMulti( arg1, 0 ).(*FrontInterface_ModuleMeta), Lns_getFromMulti( arg1, 1 ).(string)
 }
-// for 1257
+// for 1260
 func front_convExp3_1906(arg1 []LnsAny) (*FrontInterface_ModuleMeta, string) {
     return Lns_getFromMulti( arg1, 0 ).(*FrontInterface_ModuleMeta), Lns_getFromMulti( arg1, 1 ).(string)
 }
-// for 1381
+// for 1384
 func front_convExp4_432(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
-// for 1388
+// for 1391
 func front_convExp4_497(arg1 []LnsAny) (string, string) {
     return Lns_getFromMulti( arg1, 0 ).(string), Lns_getFromMulti( arg1, 1 ).(string)
 }
-// for 1471
+// for 1474
 func front_convExp4_769(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
-// for 1473
+// for 1476
 func front_convExp4_784(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 1477
+// for 1480
 func front_convExp4_798(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
-// for 1478
+// for 1481
 func front_convExp4_814(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 1487
+// for 1490
 func front_convExp4_839(arg1 []LnsAny) (string, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ).(string), Lns_getFromMulti( arg1, 1 )
 }
-// for 1517
+// for 1520
 func front_convExp4_928(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
-// for 1518
+// for 1521
 func front_convExp4_942(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
-// for 1519
+// for 1522
 func front_convExp4_955(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
-// for 1521
+// for 1524
 func front_convExp4_972(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
-// for 1690
+// for 1693
 func front_convExp0_1919(arg1 []LnsAny) (string, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ).(string), Lns_getFromMulti( arg1, 1 )
 }
-// for 1705
+// for 1708
 func front_convExp0_1988(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
-// for 1706
+// for 1709
 func front_convExp0_2001(arg1 []LnsAny) (*FrontInterface_ModuleId, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ).(*FrontInterface_ModuleId), Lns_getFromMulti( arg1, 1 )
 }
-// for 1713
+// for 1716
 func front_convExp0_2046(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
-// for 1770
+// for 1773
 func front_convExp0_2398(arg1 []LnsAny) (string, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ).(string), Lns_getFromMulti( arg1, 1 )
 }
-// for 1842
+// for 1845
 func front_convExp0_2605(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 1845
+// for 1848
 func front_convExp0_2623(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 1933
+// for 1936
 func front_convExp0_2841(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 1936
+// for 1939
 func front_convExp0_2859(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 1963
+// for 1966
 func front_convExp0_3001(arg1 []LnsAny) (*FrontInterface_ModuleMeta, string) {
     return Lns_getFromMulti( arg1, 0 ).(*FrontInterface_ModuleMeta), Lns_getFromMulti( arg1, 1 ).(string)
 }
-// for 1975
+// for 1978
 func front_convExp0_3081(arg1 []LnsAny) (LnsAny, string) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(string)
 }
-// for 1986
+// for 1989
 func front_convExp0_3100(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
-// for 2039
+// for 2042
 func front_convExp0_3430(arg1 []LnsAny) (string, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ).(string), Lns_getFromMulti( arg1, 1 )
 }
-// for 2056
+// for 2059
 func front_convExp0_3539(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 2093
+// for 2096
 func front_convExp0_3658(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
@@ -547,7 +551,7 @@ func front_getModuleId_13_(_env *LnsEnv, lnsPath string,mod string,outdir LnsAny
 
 
 
-// 1364: decl @lune.@base.@front.outputDependInfo
+// 1367: decl @lune.@base.@front.outputDependInfo
 func front_outputDependInfo_15_(_env *LnsEnv, stream LnsAny,metaInfo *front_MetaForBuildId,mod string) {
     if stream != nil{
         stream_21 := stream.(Lns_oStream)
@@ -566,7 +570,7 @@ func front_outputDependInfo_15_(_env *LnsEnv, stream LnsAny,metaInfo *front_Meta
 }
 
 
-// 1645: decl @lune.@base.@front.convertLnsCode2LuaCode
+// 1648: decl @lune.@base.@front.convertLnsCode2LuaCode
 func Front_convertLnsCode2LuaCode(_env *LnsEnv, lnsCode string,path string,baseDir LnsAny) string {
     var option *Option_Option
     option = NewOption_Option(_env)
@@ -578,7 +582,7 @@ func Front_convertLnsCode2LuaCode(_env *LnsEnv, lnsCode string,path string,baseD
     return front.FP.ConvertLnsCode2LuaCodeWithOpt(_env, lnsCode, path, baseDir)
 }
 
-// 1656: decl @lune.@base.@front.getBaseDir
+// 1659: decl @lune.@base.@front.getBaseDir
 func front_getBaseDir_18_(_env *LnsEnv, path string,userProjDir LnsAny)(string, LnsAny) {
     var projDir string
     if userProjDir != nil{
@@ -612,7 +616,7 @@ func front_getBaseDir_18_(_env *LnsEnv, path string,userProjDir LnsAny)(string, 
     return scriptPath, projDir
 }
 
-// 1687: decl @lune.@base.@front.getParseSrcAndBaseDir
+// 1690: decl @lune.@base.@front.getParseSrcAndBaseDir
 func front_getParseSrcAndBaseDir_19_(_env *LnsEnv, path string,userProjDir LnsAny)(LnsAny, string, *FrontInterface_ModuleId, LnsAny) {
     var workPath string
     var projDir LnsAny
@@ -628,16 +632,16 @@ func front_getParseSrcAndBaseDir_19_(_env *LnsEnv, path string,userProjDir LnsAn
 
 
 
-// 1791: decl @lune.@base.@front.buildWithBuildMode
+// 1794: decl @lune.@base.@front.buildWithBuildMode
 func Front_buildWithBuildMode(_env *LnsEnv, option *Option_Option,buildMode LnsAny,astCallback LnsAny) {
     var front *Front_Front
-    Lns_LockEnvSync( _env, 1795, func () {
+    Lns_LockEnvSync( _env, 1798, func () {
         front = NewFront_Front(_env, option, nil)
     })
     front.FP.Build(_env, buildMode, astCallback)
 }
 
-// 1801: decl @lune.@base.@front.build
+// 1804: decl @lune.@base.@front.build
 func Front_build(_env *LnsEnv, option *Option_Option,astCallback LnsAny) {
     Front_buildWithBuildMode(_env, option, Front_BuildMode__CreateAst_Obj, astCallback)
 }
@@ -651,7 +655,7 @@ func front_Front_exec___anonymous_2_(_env *LnsEnv, ast *AstInfo_ASTInfo) {
     indexer.FP.Start(_env, ast.FP.Get_node(_env), NewLnsSet2_[LnsInt](Lns_2DDDGen[LnsInt](Nodes_NodeKind_get_Switch(_env), Nodes_NodeKind_get_Match(_env), Nodes_NodeKind_get_For(_env), Nodes_NodeKind_get_Apply(_env))))
     indexer.FP.Dump(_env)
 }
-// 2130: decl @lune.@base.@front.exec
+// 2133: decl @lune.@base.@front.exec
 func Front_exec(_env *LnsEnv, args *LnsList2_[string]) {
     var version LnsReal
     version = Lns_unwrapDefault( Lns_tonumber(Lns_car(_env.GetVM().String_gsub(Depend_getLuaVersion(_env),"^[^%d]+", "")).(string), nil), 0.0).(LnsReal)
@@ -669,7 +673,7 @@ func Front_exec(_env *LnsEnv, args *LnsList2_[string]) {
     }
 }
 
-// 2152: decl @lune.@base.@front.__main
+// 2155: decl @lune.@base.@front.__main
 func Front___main(_env *LnsEnv, argList *LnsList) LnsInt {
     Lns_front_init( _env )
     var list *LnsList2_[string]
@@ -1151,12 +1155,17 @@ func (self *Front_Front) convertToLanguage(_env *LnsEnv, ast *AstInfo_ASTInfo,st
         conv = ConvPython_createFilter(_env, self.option.Testing, path, stream, ast, self.FP.createPythonOption(_env, path))
         ast.FP.Get_node(_env).FP.ProcessFilter(_env, conv, ConvPython_Opt2Stem(NewConvPython_Opt(_env, ast.FP.Get_node(_env))))
     } else if _switch0 == Types_Lang__Wasm {
+        var importAstList *LnsList2_[*AstInfo_ASTInfo]
+        importAstList = self.FP.getImportAstList(_env, ast)
+        var embedLuaList *LnsList2_[*ConvWasm_EmbedLua]
+        var bindLnsMap *LnsMap2_[string,string]
+        embedLuaList,bindLnsMap = Converter_createWasmEmbedInfo(_env, ast, importAstList, self.option)
         var conv *Nodes_Filter
-        conv = ConvWasm_createFilter(_env, path, stream, ast, self.FP.getImportAstList(_env, ast))
+        conv = ConvWasm_createFilter(_env, path, stream, ast, importAstList, embedLuaList, bindLnsMap)
         ast.FP.Get_node(_env).FP.ProcessFilter(_env, conv, ConvWasm_Opt2Stem(NewConvWasm_Opt(_env, ast.FP.Get_node(_env))))
     }
 }
-// 832: decl @lune.@base.@front.Front.loadTokenizerToLuaCode
+// 835: decl @lune.@base.@front.Front.loadTokenizerToLuaCode
 func (self *Front_Front) loadTokenizerToLuaCode(_env *LnsEnv, importModuleInfo *FrontInterface_ImportModuleInfo,tokenizerSrc LnsAny,path string,mod string,baseDir LnsAny)(*FrontInterface_ModuleMeta, string) {
     __func__ := "@lune.@base.@front.Front.loadTokenizerToLuaCode"
     var moduleId *FrontInterface_ModuleId
@@ -1167,7 +1176,7 @@ func (self *Front_Front) loadTokenizerToLuaCode(_env *LnsEnv, importModuleInfo *
     var luaTxt string
     var lineMap *LnsList2_[LnsInt]
     metaTxt,luaTxt,lineMap = self.FP.convertFromAst(_env, ast, path, ConvLua_ConvMode__ConvMeta)
-    Log_log(_env, Log_Level__Trace, __func__, 842, Log_CreateMessage(func(_env *LnsEnv) string {
+    Log_log(_env, Log_Level__Trace, __func__, 845, Log_CreateMessage(func(_env *LnsEnv) string {
         return _env.GetVM().String_format("Meta = %s", Lns_2DDD(metaTxt))
     }))
     
@@ -1185,7 +1194,7 @@ func (self *Front_Front) loadTokenizerToLuaCode(_env *LnsEnv, importModuleInfo *
                     dir := _dir.(string)
                     newpath = _env.GetVM().String_format("%s/%s%s", Lns_2DDD(dir, Lns_car(_env.GetVM().String_gsub(mod,"%.", "/")).(string), suffix))
                 } else {
-                    newpath = front_convExp2_1291(Lns_2DDD(_env.GetVM().String_gsub(path,".lns$", suffix)))
+                    newpath = front_convExp2_1315(Lns_2DDD(_env.GetVM().String_gsub(path,".lns$", suffix)))
                 }
             }
             var saveTxt string
@@ -1210,7 +1219,7 @@ func (self *Front_Front) loadTokenizerToLuaCode(_env *LnsEnv, importModuleInfo *
                 }
             }
             {
-                _fileObj := front_convExp2_1387(Lns_2DDD(Lns_io_open(newpath, "w")))
+                _fileObj := front_convExp2_1411(Lns_2DDD(Lns_io_open(newpath, "w")))
                 if !Lns_IsNil( _fileObj ) {
                     fileObj := _fileObj.(Lns_luaStream)
                     fileObj.Write(_env, saveTxt)
@@ -1243,8 +1252,8 @@ func (self *Front_Front) loadTokenizerToLuaCode(_env *LnsEnv, importModuleInfo *
                         suffix = ".wasm"
                     }
                     if suffix != nil{
-                        suffix_142 := suffix.(string)
-                        front_saveFile(_env, suffix_142, memStream.FP.Get_txt(_env), false, false, false)
+                        suffix_145 := suffix.(string)
+                        front_saveFile(_env, suffix_145, memStream.FP.Get_txt(_env), false, false, false)
                     }
                 }
             }
@@ -1252,10 +1261,10 @@ func (self *Front_Front) loadTokenizerToLuaCode(_env *LnsEnv, importModuleInfo *
     }
     return Lns_unwrap( self.moduleMgr.FP.GetMeta(_env, mod)).(*FrontInterface_ModuleMeta), luaTxt
 }
-// 928: decl @lune.@base.@front.Front.loadFile
+// 931: decl @lune.@base.@front.Front.loadFile
 func (self *Front_Front) loadFile(_env *LnsEnv, importModuleInfo *FrontInterface_ImportModuleInfo,baseDir LnsAny,path string,mod string)(*FrontInterface_ModuleMeta, LnsAny) {
     __func__ := "@lune.@base.@front.Front.loadFile"
-    Log_log(_env, Log_Level__Info, __func__, 932, Log_CreateMessage(func(_env *LnsEnv) string {
+    Log_log(_env, Log_Level__Info, __func__, 935, Log_CreateMessage(func(_env *LnsEnv) string {
         __func__ := "@lune.@base.@front.Front.loadFile.<anonymous>"
         return _env.GetVM().String_format("start %s:%s", Lns_2DDD(__func__, mod))
     }))
@@ -1272,15 +1281,15 @@ func (self *Front_Front) loadFile(_env *LnsEnv, importModuleInfo *FrontInterface
     }
     return meta, Lns_unwrap( Front_loadFromLuaTxt(_env, luaTxt))
 }
-// 946: decl @lune.@base.@front.Front.searchModule
+// 949: decl @lune.@base.@front.Front.searchModule
 func (self *Front_Front) SearchModule(_env *LnsEnv, mod string,baseDir LnsAny,addSearchPath LnsAny) LnsAny {
     return self.FP.searchModuleFile(_env, mod, ".lns", baseDir, addSearchPath)
 }
-// 950: decl @lune.@base.@front.Front.searchLuaFile
+// 953: decl @lune.@base.@front.Front.searchLuaFile
 func (self *Front_Front) searchLuaFile(_env *LnsEnv, moduleFullName string,baseDir LnsAny,addSearchPath LnsAny) LnsAny {
     return self.FP.searchModuleFile(_env, moduleFullName, ".lua", baseDir, addSearchPath)
 }
-// 962: decl @lune.@base.@front.Front.checkUptodateMeta
+// 965: decl @lune.@base.@front.Front.checkUptodateMeta
 func (self *Front_Front) checkUptodateMeta(_env *LnsEnv, lnsPath string,metaPath string,baseDir LnsAny,addSearchPath LnsAny) LnsAny {
     __func__ := "@lune.@base.@front.Front.checkUptodateMeta"
     var metaObj LnsAny
@@ -1288,7 +1297,7 @@ func (self *Front_Front) checkUptodateMeta(_env *LnsEnv, lnsPath string,metaPath
     {
         _metaObj := self.FP.loadLua(_env, metaPath)
         if _metaObj == nil{
-            Log_log(_env, Log_Level__Warn, __func__, 967, Log_CreateMessage(func(_env *LnsEnv) string {
+            Log_log(_env, Log_Level__Warn, __func__, 970, Log_CreateMessage(func(_env *LnsEnv) string {
                 return _env.GetVM().String_format("load error -- %s", Lns_2DDD(metaPath))
             }))
             
@@ -1300,10 +1309,10 @@ func (self *Front_Front) checkUptodateMeta(_env *LnsEnv, lnsPath string,metaPath
     var meta *Lns_luaValue
     var valid bool
     valid = true
-    Lns_LockEnvSync( _env, 973, func () {
+    Lns_LockEnvSync( _env, 976, func () {
         meta = metaObj.(*Lns_luaValue)
         if meta.GetAt( "__formatVersion" ).(string) != Ver_metaVersion{
-            Log_log(_env, Log_Level__Warn, __func__, 976, Log_CreateMessage(func(_env *LnsEnv) string {
+            Log_log(_env, Log_Level__Warn, __func__, 979, Log_CreateMessage(func(_env *LnsEnv) string {
                 return _env.GetVM().String_format("unmatch meta version -- %s", Lns_2DDD(metaPath))
             }))
             
@@ -1313,7 +1322,7 @@ func (self *Front_Front) checkUptodateMeta(_env *LnsEnv, lnsPath string,metaPath
             _env.SetStackVal( valid) &&
             _env.SetStackVal( meta.GetAt( "__hasTest" ).(bool)) ).(bool)){
             if meta.GetAt( "__enableTest" ).(bool) != self.option.Testing{
-                Log_log(_env, Log_Level__Warn, __func__, 982, Log_CreateMessage(func(_env *LnsEnv) string {
+                Log_log(_env, Log_Level__Warn, __func__, 985, Log_CreateMessage(func(_env *LnsEnv) string {
                     return _env.GetVM().String_format("unmatch test setting -- %s", Lns_2DDD(metaPath))
                 }))
                 
@@ -1335,7 +1344,7 @@ func (self *Front_Front) checkUptodateMeta(_env *LnsEnv, lnsPath string,metaPath
                                 if !Lns_IsNil( _moduleLuaPath ) {
                                     moduleLuaPath := _moduleLuaPath.(string)
                                     if Lns_op_not(Util_getReadyCode(_env, moduleLnsPath, metaPath)){
-                                        Log_log(_env, Log_Level__Warn, __func__, 996, Log_CreateMessage(func(_env *LnsEnv) string {
+                                        Log_log(_env, Log_Level__Warn, __func__, 999, Log_CreateMessage(func(_env *LnsEnv) string {
                                             return _env.GetVM().String_format("not ready -- %s, %s", Lns_2DDD(moduleLnsPath, metaPath))
                                         }))
                                         
@@ -1347,7 +1356,7 @@ func (self *Front_Front) checkUptodateMeta(_env *LnsEnv, lnsPath string,metaPath
                                     if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
                                         _env.SetStackVal( Depend_existFile(_env, moduleMetaPath)) &&
                                         _env.SetStackVal( Lns_op_not(Util_getReadyCode(_env, moduleMetaPath, metaPath))) ).(bool)){
-                                        Log_log(_env, Log_Level__Warn, __func__, 1005, Log_CreateMessage(func(_env *LnsEnv) string {
+                                        Log_log(_env, Log_Level__Warn, __func__, 1008, Log_CreateMessage(func(_env *LnsEnv) string {
                                             return _env.GetVM().String_format("not ready -- %s, %s", Lns_2DDD(moduleMetaPath, metaPath))
                                         }))
                                         
@@ -1355,7 +1364,7 @@ func (self *Front_Front) checkUptodateMeta(_env *LnsEnv, lnsPath string,metaPath
                                         break
                                     }
                                 } else {
-                                    Log_log(_env, Log_Level__Warn, __func__, 1011, Log_CreateMessage(func(_env *LnsEnv) string {
+                                    Log_log(_env, Log_Level__Warn, __func__, 1014, Log_CreateMessage(func(_env *LnsEnv) string {
                                         return _env.GetVM().String_format("not found .lua file for -- %s", Lns_2DDD(moduleFullName))
                                     }))
                                     
@@ -1364,7 +1373,7 @@ func (self *Front_Front) checkUptodateMeta(_env *LnsEnv, lnsPath string,metaPath
                                 }
                             }
                         } else {
-                            Log_log(_env, Log_Level__Warn, __func__, 1017, Log_CreateMessage(func(_env *LnsEnv) string {
+                            Log_log(_env, Log_Level__Warn, __func__, 1020, Log_CreateMessage(func(_env *LnsEnv) string {
                                 return _env.GetVM().String_format("not found .lns file -- %s", Lns_2DDD(moduleFullName))
                             }))
                             
@@ -1382,10 +1391,10 @@ func (self *Front_Front) checkUptodateMeta(_env *LnsEnv, lnsPath string,metaPath
     }
     return NewFrontInterface_ModuleMeta(_env, lnsPath, &FrontInterface_MetaOrModule__MetaRaw{meta})
 }
-// 1039: decl @lune.@base.@front.Front.loadModuleWithBaseDir
+// 1042: decl @lune.@base.@front.Front.loadModuleWithBaseDir
 func (self *Front_Front) loadModuleWithBaseDir(_env *LnsEnv, orgMod string,baseDir LnsAny)(LnsAny, *FrontInterface_ModuleMeta) {
     __func__ := "@lune.@base.@front.Front.loadModuleWithBaseDir"
-    Log_log(_env, Log_Level__Info, __func__, 1042, Log_CreateMessage(func(_env *LnsEnv) string {
+    Log_log(_env, Log_Level__Info, __func__, 1045, Log_CreateMessage(func(_env *LnsEnv) string {
         return _env.GetVM().String_format("loadModule  -- %s:%s", Lns_2DDD(orgMod, baseDir))
     }))
     
@@ -1462,12 +1471,12 @@ func (self *Front_Front) loadModuleWithBaseDir(_env *LnsEnv, orgMod string,baseD
                         }
                     } else {
                         if self.bindModuleSet.Has(mod){
-                            Log_log(_env, Log_Level__Warn, __func__, 1099, Log_CreateMessage(func(_env *LnsEnv) string {
+                            Log_log(_env, Log_Level__Warn, __func__, 1102, Log_CreateMessage(func(_env *LnsEnv) string {
                                 return _env.GetVM().String_format("load from the binding -- %s", Lns_2DDD(mod))
                             }))
                             
                             var workMod LnsAny
-                            Lns_LockEnvSync( _env, 1103, func () {
+                            Lns_LockEnvSync( _env, 1106, func () {
                                 workMod = Lns_require(mod)
                             })
                             var meta *FrontInterface_ModuleMeta
@@ -1490,15 +1499,15 @@ func (self *Front_Front) loadModuleWithBaseDir(_env *LnsEnv, orgMod string,baseD
 // insert a dummy
     return nil,nil
 }
-// 1130: decl @lune.@base.@front.Front.loadModule
+// 1133: decl @lune.@base.@front.Front.loadModule
 func (self *Front_Front) LoadModule(_env *LnsEnv, mod string)(LnsAny, *FrontInterface_ModuleMeta) {
     return self.FP.loadModuleWithBaseDir(_env, mod, nil)
 }
-// 1137: decl @lune.@base.@front.Front.getLuaModulePath
+// 1140: decl @lune.@base.@front.Front.getLuaModulePath
 func (self *Front_Front) GetLuaModulePath(_env *LnsEnv, mod string,baseDir LnsAny)(string, LnsAny, string) {
     return self.gomodMap.FP.GetLuaModulePath(_env, mod, baseDir)
 }
-// 1141: decl @lune.@base.@front.Front.loadMeta
+// 1144: decl @lune.@base.@front.Front.loadMeta
 func (self *Front_Front) LoadMeta(_env *LnsEnv, importModuleInfo *FrontInterface_ImportModuleInfo,mod string,orgMod string,baseDir LnsAny,loader FrontInterface_ModuleLoader) LnsAny {
     __func__ := "@lune.@base.@front.Front.loadMeta"
     {
@@ -1588,25 +1597,25 @@ func (self *Front_Front) LoadMeta(_env *LnsEnv, importModuleInfo *FrontInterface
                                         if Util_getReadyCode(_env, lnsPath, metaPath){
                                             meta = self.FP.checkUptodateMeta(_env, lnsPath, metaPath, baseDir, self.option.OutputDir)
                                         } else { 
-                                            Log_log(_env, Log_Level__Warn, __func__, 1214, Log_CreateMessage(func(_env *LnsEnv) string {
+                                            Log_log(_env, Log_Level__Warn, __func__, 1217, Log_CreateMessage(func(_env *LnsEnv) string {
                                                 return _env.GetVM().String_format("%s not ready meta %s, %s", Lns_2DDD(orgMod, lnsPath, metaPath))
                                             }))
                                             
                                         }
                                     } else { 
-                                        Log_log(_env, Log_Level__Warn, __func__, 1218, Log_CreateMessage(func(_env *LnsEnv) string {
+                                        Log_log(_env, Log_Level__Warn, __func__, 1221, Log_CreateMessage(func(_env *LnsEnv) string {
                                             return _env.GetVM().String_format("%s not ready lua %s, %s", Lns_2DDD(orgMod, lnsPath, luaPath_112))
                                         }))
                                         
                                     }
                                 } else { 
-                                    Log_log(_env, Log_Level__Warn, __func__, 1222, Log_CreateMessage(func(_env *LnsEnv) string {
+                                    Log_log(_env, Log_Level__Warn, __func__, 1225, Log_CreateMessage(func(_env *LnsEnv) string {
                                         return _env.GetVM().String_format("force analyze -- %s", Lns_2DDD(orgMod))
                                     }))
                                     
                                 }
                             } else {
-                                Log_log(_env, Log_Level__Warn, __func__, 1226, Log_CreateMessage(func(_env *LnsEnv) string {
+                                Log_log(_env, Log_Level__Warn, __func__, 1229, Log_CreateMessage(func(_env *LnsEnv) string {
                                     return _env.GetVM().String_format("%s not found lua in %s", Lns_2DDD(orgMod, self.option.OutputDir))
                                 }))
                                 
@@ -1660,7 +1669,7 @@ func (self *Front_Front) LoadMeta(_env *LnsEnv, importModuleInfo *FrontInterface
     }
     return nil
 }
-// 1275: decl @lune.@base.@front.Front.dumpTokenize
+// 1278: decl @lune.@base.@front.Front.dumpTokenize
 func (self *Front_Front) DumpTokenize(_env *LnsEnv, scriptPath string,baseDir LnsAny) {
     var tokenizer *Tokenizer_Tokenizer
     tokenizer = self.FP.createPaser(_env, scriptPath, baseDir)
@@ -1678,7 +1687,7 @@ func (self *Front_Front) DumpTokenize(_env *LnsEnv, scriptPath string,baseDir Ln
         Util_println(_env, Lns_2DDD(Types_TokenKind_getTxt( token.Kind), token.Consecutive, token.Pos.LineNo, token.Pos.Column, token.Txt))
     }
 }
-// 1289: decl @lune.@base.@front.Front.dumpAst
+// 1292: decl @lune.@base.@front.Front.dumpAst
 func (self *Front_Front) DumpAst(_env *LnsEnv, tokenizerSrc LnsAny,mod string,moduleId *FrontInterface_ModuleId,baseDir LnsAny) {
     Depend_profile(_env, self.option.ValidProf, conv2Form4_131(func(_env *LnsEnv) {
         var ast *AstInfo_ASTInfo
@@ -1686,30 +1695,30 @@ func (self *Front_Front) DumpAst(_env *LnsEnv, tokenizerSrc LnsAny,mod string,mo
         ast.FP.Get_node(_env).FP.ProcessFilter(_env, DumpNode_createFilter(_env, ast.FP.Get_exportInfo(_env).FP.Get_moduleTypeInfo(_env), ast.FP.Get_exportInfo(_env).FP.Get_processInfo(_env), Lns_io_stdout), DumpNode_Opt2Stem(NewDumpNode_Opt(_env, "", 0)))
     }), mod + ".profi")
 }
-// 1310: decl @lune.@base.@front.Front.format
+// 1313: decl @lune.@base.@front.Front.format
 func (self *Front_Front) Format(_env *LnsEnv, tokenizerSrc LnsAny,mod string,moduleId *FrontInterface_ModuleId,baseDir LnsAny) {
     var ast *AstInfo_ASTInfo
     ast = self.FP.createAst(_env, NewFrontInterface_ImportModuleInfo(_env), tokenizerSrc, baseDir, mod, moduleId, nil, TransUnit_AnalyzeMode__Compile, nil)
     ast.FP.Get_node(_env).FP.ProcessFilter(_env, Formatter_createFilter(_env, ast.FP.Get_exportInfo(_env).FP.Get_moduleTypeInfo(_env), Lns_io_stdout, false), Formatter_Opt2Stem(NewFormatter_Opt(_env, ast.FP.Get_node(_env))))
 }
-// 1323: decl @lune.@base.@front.Front.checkDiag
+// 1326: decl @lune.@base.@front.Front.checkDiag
 func (self *Front_Front) CheckDiag(_env *LnsEnv, tokenizerSrc LnsAny,mod string,moduleId *FrontInterface_ModuleId,baseDir LnsAny) {
     Util_setErrorCode(_env, 0)
     self.FP.createAst(_env, NewFrontInterface_ImportModuleInfo(_env), tokenizerSrc, baseDir, mod, moduleId, nil, TransUnit_AnalyzeMode__Diag, nil)
 }
-// 1331: decl @lune.@base.@front.Front.complete
+// 1334: decl @lune.@base.@front.Front.complete
 func (self *Front_Front) complete(_env *LnsEnv, tokenizerSrc LnsAny,mod string,moduleId *FrontInterface_ModuleId,baseDir LnsAny) {
     self.FP.createAst(_env, NewFrontInterface_ImportModuleInfo(_env), tokenizerSrc, baseDir, mod, moduleId, self.option.AnalyzeModule, TransUnit_AnalyzeMode__Complete, self.option.AnalyzePos)
 }
-// 1339: decl @lune.@base.@front.Front.completeFromCode
+// 1342: decl @lune.@base.@front.Front.completeFromCode
 func (self *Front_Front) CompleteFromCode(_env *LnsEnv, lnsCode string,mod string,baseDir LnsAny) {
     self.FP.complete(_env, &Types_TokenizerSrc__LnsCode{lnsCode, mod, nil}, mod, FrontInterface_ModuleId_createId(_env, 0.0, 0), baseDir)
 }
-// 1345: decl @lune.@base.@front.Front.inquire
+// 1348: decl @lune.@base.@front.Front.inquire
 func (self *Front_Front) Inquire(_env *LnsEnv, tokenizerSrc LnsAny,mod string,moduleId *FrontInterface_ModuleId,baseDir LnsAny) {
     self.FP.createAst(_env, NewFrontInterface_ImportModuleInfo(_env), tokenizerSrc, baseDir, mod, moduleId, self.option.AnalyzeModule, TransUnit_AnalyzeMode__Inquire, self.option.AnalyzePos)
 }
-// 1354: decl @lune.@base.@front.Front.createGlue
+// 1357: decl @lune.@base.@front.Front.createGlue
 func (self *Front_Front) CreateGlue(_env *LnsEnv, tokenizerSrc LnsAny,mod string,moduleId *FrontInterface_ModuleId,baseDir LnsAny) {
     var ast *AstInfo_ASTInfo
     ast = self.FP.createAst(_env, NewFrontInterface_ImportModuleInfo(_env), tokenizerSrc, baseDir, mod, moduleId, nil, TransUnit_AnalyzeMode__Compile, nil)
@@ -1717,7 +1726,7 @@ func (self *Front_Front) CreateGlue(_env *LnsEnv, tokenizerSrc LnsAny,mod string
     filter = GlueFilter_createFilter(_env, self.option.OutputDir)
     ast.FP.Get_node(_env).FP.ProcessFilter(_env, filter, 0)
 }
-// 1377: decl @lune.@base.@front.Front.convertToLua
+// 1380: decl @lune.@base.@front.Front.convertToLua
 func (self *Front_Front) convertToLua(_env *LnsEnv, scriptPath string,baseDir LnsAny,convMode LnsInt,streamLua Lns_oStream,streamMeta Lns_oStream) LnsAny {
     var mod string
     mod = front_convExp4_432(Lns_2DDD(self.FP.scriptPath2Module(_env, scriptPath, baseDir)))
@@ -1733,15 +1742,15 @@ func (self *Front_Front) convertToLua(_env *LnsEnv, scriptPath string,baseDir Ln
     self.FP.convertToLanguage(_env, ast, streamLua, scriptPath)
     return ast
 }
-// 1400: decl @lune.@base.@front.Front.saveToGo
+// 1403: decl @lune.@base.@front.Front.saveToGo
 func (self *Front_Front) saveToGo(_env *LnsEnv, scriptPath string,astResult LnsAny,mod string) LnsAny {
     return NewConverter_GoConverter(_env, scriptPath, astResult, mod, self.option, self.FP.createGoOption(_env, scriptPath))
 }
-// 1411: decl @lune.@base.@front.Front.saveToPython
+// 1414: decl @lune.@base.@front.Front.saveToPython
 func (self *Front_Front) saveToPython(_env *LnsEnv, scriptPath string,astResult LnsAny,mod string) LnsAny {
     return NewConverter_PythonConverter(_env, scriptPath, astResult, mod, self.option, self.FP.createPythonOption(_env, scriptPath))
 }
-// 1428: decl @lune.@base.@front.Front.getImportAstList
+// 1431: decl @lune.@base.@front.Front.getImportAstList
 func (self *Front_Front) getImportAstList(_env *LnsEnv, ast *AstInfo_ASTInfo) *LnsList2_[*AstInfo_ASTInfo] {
     var list *LnsList2_[*AstInfo_ASTInfo]
     list = NewLnsList2_[*AstInfo_ASTInfo]([]*AstInfo_ASTInfo{})
@@ -1750,7 +1759,7 @@ func (self *Front_Front) getImportAstList(_env *LnsEnv, ast *AstInfo_ASTInfo) *L
     self.FP.addImportAst(_env, ast, list, doneSet)
     return list
 }
-// 1436: decl @lune.@base.@front.Front.addImportAst
+// 1439: decl @lune.@base.@front.Front.addImportAst
 func (self *Front_Front) addImportAst(_env *LnsEnv, ast *AstInfo_ASTInfo,list *LnsList2_[*AstInfo_ASTInfo],doneSet *LnsSet2_[string]) {
     var root *Nodes_RootNode
     root = Lns_unwrap( Nodes_RootNodeDownCastF(ast.FP.Get_node(_env).FP)).(*Nodes_RootNode)
@@ -1781,11 +1790,11 @@ func (self *Front_Front) addImportAst(_env *LnsEnv, ast *AstInfo_ASTInfo,list *L
         list.Insert(subAst)
     }
 }
-// 1460: decl @lune.@base.@front.Front.saveToWasm
+// 1463: decl @lune.@base.@front.Front.saveToWasm
 func (self *Front_Front) saveToWasm(_env *LnsEnv, scriptPath string,astResult LnsAny,mod string) LnsAny {
     return NewConverter_WasmConverter(_env, scriptPath, astResult, mod, self.option)
 }
-// 1470: decl @lune.@base.@front.Front.saveToC
+// 1473: decl @lune.@base.@front.Front.saveToC
 func (self *Front_Front) SaveToC(_env *LnsEnv, scriptPath string,ast *AstInfo_ASTInfo) {
     var cPath string
     cPath = front_convExp4_769(Lns_2DDD(_env.GetVM().String_gsub(scriptPath,"%.lns$", ".c")))
@@ -1814,7 +1823,7 @@ func (self *Front_Front) SaveToC(_env *LnsEnv, scriptPath string,ast *AstInfo_AS
     file.Close(_env)
     hFile.Close(_env)
 }
-// 1486: decl @lune.@base.@front.Front.outputBuiltin
+// 1489: decl @lune.@base.@front.Front.outputBuiltin
 func (self *Front_Front) OutputBuiltin(_env *LnsEnv, scriptPath string) {
     var mod string
     var baseDir LnsAny
@@ -1823,7 +1832,7 @@ func (self *Front_Front) OutputBuiltin(_env *LnsEnv, scriptPath string) {
     ast = self.FP.createAst(_env, NewFrontInterface_ImportModuleInfo(_env), &Types_TokenizerSrc__LnsCode{"", mod, nil}, baseDir, mod, FrontInterface_ModuleId_createId(_env, 0.0, 0), nil, TransUnit_AnalyzeMode__Compile, nil)
     self.FP.SaveToC(_env, scriptPath, ast)
 }
-// 1508: decl @lune.@base.@front.Front.saveToLua
+// 1511: decl @lune.@base.@front.Front.saveToLua
 func (self *Front_Front) saveToLua(_env *LnsEnv, updateInfo *front_UpdateInfo,baseDir LnsAny) LnsAny {
     var scriptPath string
     scriptPath = updateInfo.FP.Get_scriptPath(_env)
@@ -1876,11 +1885,11 @@ func (self *Front_Front) saveToLua(_env *LnsEnv, updateInfo *front_UpdateInfo,ba
         }
         return Converter_ConverterFunc(func(_env *LnsEnv) {
             _env.NilAccFin(_env.NilAccPush(luaConv) && 
-            Lns_NilAccCall0( _env, func () {_env.NilAccPop().(*Converter_LuaConverter).FP.SaveLua(_env)})/* 1583:13 */)
+            Lns_NilAccCall0( _env, func () {_env.NilAccPop().(*Converter_LuaConverter).FP.SaveLua(_env)})/* 1586:13 */)
             _env.NilAccFin(_env.NilAccPush(goConv) && 
-            Lns_NilAccCall0( _env, func () {_env.NilAccPop().(*Converter_GoConverter).FP.SaveGo(_env)})/* 1584:13 */)
+            Lns_NilAccCall0( _env, func () {_env.NilAccPop().(*Converter_GoConverter).FP.SaveGo(_env)})/* 1587:13 */)
             _env.NilAccFin(_env.NilAccPush(pyConv) && 
-            Lns_NilAccCall0( _env, func () {_env.NilAccPop().(*Converter_PythonConverter).FP.SavePython(_env)})/* 1585:13 */)
+            Lns_NilAccCall0( _env, func () {_env.NilAccPop().(*Converter_PythonConverter).FP.SavePython(_env)})/* 1588:13 */)
             if wasmConv != nil{
                 wasmConv_90 := wasmConv.(*Converter_WasmConverter)
                 wasmConv_90.FP.SaveWasm(_env, self.FP.getImportAstList(_env, wasmConv_90.FP.GetAst(_env)))
@@ -1912,14 +1921,14 @@ func (self *Front_Front) saveToLua(_env *LnsEnv, updateInfo *front_UpdateInfo,ba
 // insert a dummy
     return nil
 }
-// 1618: decl @lune.@base.@front.Front.outputBootC
+// 1621: decl @lune.@base.@front.Front.outputBootC
 func (self *Front_Front) outputBootC(_env *LnsEnv, scriptPath string) {
 }
-// 1636: decl @lune.@base.@front.Front.convertLnsCode2LuaCodeWithOpt
+// 1639: decl @lune.@base.@front.Front.convertLnsCode2LuaCodeWithOpt
 func (self *Front_Front) ConvertLnsCode2LuaCodeWithOpt(_env *LnsEnv, lnsCode string,path string,baseDir LnsAny) string {
     return self.FP.ConvertLns2LuaCode(_env, NewFrontInterface_ImportModuleInfo(_env), TransUnit_AnalyzeMode__Compile, &Types_TokenizerSrc__LnsCode{lnsCode, path, nil}, baseDir, NewUtil_TxtStream(_env, lnsCode).FP, path)
 }
-// 1702: decl @lune.@base.@front.Front.build
+// 1705: decl @lune.@base.@front.Front.build
 func (self *Front_Front) Build(_env *LnsEnv, buildMode LnsAny,astCallback LnsAny) {
     var front_createUpdateInfo func(_env *LnsEnv, scriptPath string,dependsPath LnsAny,baseDir LnsAny) *front_UpdateInfo
     front_createUpdateInfo = func(_env *LnsEnv, scriptPath string,dependsPath LnsAny,baseDir LnsAny) *front_UpdateInfo {
@@ -2020,7 +2029,7 @@ func (self *Front_Front) Build(_env *LnsEnv, buildMode LnsAny,astCallback LnsAny
                         _exp := __exp.(*AstInfo_ASTInfo)
                         astCallback_636(_env, _exp)
                     } else {
-                        Log_log(_env, Log_Level__Err, __func__, 1783, Log_CreateMessage(func(_env *LnsEnv) string {
+                        Log_log(_env, Log_Level__Err, __func__, 1786, Log_CreateMessage(func(_env *LnsEnv) string {
                             return _env.GetVM().String_format("not found AST -- %s", Lns_2DDD(mod))
                         }))
                         
@@ -2031,7 +2040,7 @@ func (self *Front_Front) Build(_env *LnsEnv, buildMode LnsAny,astCallback LnsAny
         LnsLog(_env, "end profile")
     }), self.option.ScriptPath + ".profi")
 }
-// 1806: decl @lune.@base.@front.Front.setupPreloadWithImportedModules
+// 1809: decl @lune.@base.@front.Front.setupPreloadWithImportedModules
 func (self *Front_Front) SetupPreloadWithImportedModules(_env *LnsEnv, asyncFlag bool) {
     if asyncFlag{
             {
@@ -2060,7 +2069,7 @@ func (self *Front_Front) SetupPreloadWithImportedModules(_env *LnsEnv, asyncFlag
                 _env.GetVM().RunLoadedfunc((preloadFunc.(*Lns_luaValue)),Lns_2DDD(Lns_2DDD(self.convertedMap, Log_getLevel(_env) >= Log_Level__Debug)))
             }
     } else { 
-        Lns_LockEnvSync( _env, 1814, func () {
+        Lns_LockEnvSync( _env, 1817, func () {
             {
                 var subModPreLoad string
                 subModPreLoad = "return function( submod2Code, dumpCode )\n   local preloadFunc = function( mod )\n      code = submod2Code[ mod ]\n      local loadFunc = loadstring or load -- lua5.1 and lua5.2\n      local loaded, mess = loadFunc( code )\n      if not loaded then\n         error( mess )\n      end\n      return loaded()\n   end\n   for mod, code in pairs( submod2Code ) do\n      if dumpCode then\n         print( string.format( \"mod: %s %s\", mod, code ) )\n      end\n      package.preload[ mod ] = preloadFunc\n   end\nend\n"
@@ -2090,13 +2099,13 @@ func (self *Front_Front) SetupPreloadWithImportedModules(_env *LnsEnv, asyncFlag
     }
     
 }
-// 1862: decl @lune.@base.@front.Front.execLuaTxt
+// 1865: decl @lune.@base.@front.Front.execLuaTxt
 func (self *Front_Front) execLuaTxt(_env *LnsEnv, luaCode string) LnsAny {
     var code string
     code = "return function( code, lineMapMap )\n   -- chunk の名前 ([string \"...\"] の中身) と Lua の行番号から、lns の位置を返す。\n   -- Lua のコードの 1 行目は \"--<lns のパス>\" で、chunk の名前はそれを切り詰めたもの。\n   local function getLnsPos( chunkName, luaLine )\n      local prefix = chunkName:gsub( \"%.%.%.$\", \"\" )\n      local path, lineMap\n      if lineMapMap[ prefix:sub( 3 ) ] then\n         path = prefix:sub( 3 )\n         lineMap = lineMapMap[ path ]\n      else\n         for workPath, workMap in pairs( lineMapMap ) do\n            if (\"--\" .. workPath):sub( 1, #prefix ) == prefix then\n               if path then\n                  -- 切り詰めた名前が複数のパスに一致する場合は分からない\n                  return nil\n               end\n               path, lineMap = workPath, workMap\n            end\n         end\n         if not path then\n            return nil\n         end\n      end\n      for line = math.min( luaLine, #lineMap ), 1, -1 do\n         if lineMap[ line ] ~= 0 then\n            return string.format( \"%s:%d\", path, lineMap[ line ] )\n         end\n      end\n      return nil\n   end\n   local function convPos( txt )\n      return (txt:gsub(\n         '(%[string \"([^\"]*)\"%]:(%d+))',\n         function( luaPos, chunkName, luaLine )\n            local lnsPos = getLnsPos( chunkName, tonumber( luaLine ) )\n            if lnsPos then\n               return lnsPos .. \": \" .. luaPos\n            end\n            return luaPos\n      end ))\n   end\n   local function handler( err )\n      local mess = tostring( err )\n      if debug and debug.traceback then\n         mess = debug.traceback( mess, 2 )\n         -- xpcall より外側は lnsc の処理なので省く\n         local pos = mess:find( \"\\n[^\\n]*%[C%]: in function 'xpcall'\" )\n         if pos then\n            mess = mess:sub( 1, pos - 1 )\n         end\n      end\n      return convPos( mess )\n   end\n\n   local loadFunc = loadstring or load -- lua5.1 and lua5.2\n   local chunk, mess = loadFunc( code )\n   if not chunk then\n      return nil, mess\n   end\n   local ok, ret = xpcall( chunk, handler )\n   if not ok then\n      return nil, ret\n   end\n   return ret, nil\nend\n"
     var ret LnsAny
     var errMess LnsAny
-    Lns_LockEnvSync( _env, 1932, func () {
+    Lns_LockEnvSync( _env, 1935, func () {
         var loaded *Lns_luaValue
         
         {
@@ -2136,7 +2145,7 @@ func (self *Front_Front) execLuaTxt(_env *LnsEnv, luaCode string) LnsAny {
     }
     return ret
 }
-// 1954: decl @lune.@base.@front.Front.executeLns
+// 1957: decl @lune.@base.@front.Front.executeLns
 func (self *Front_Front) executeLns(_env *LnsEnv, path string,baseDir LnsAny)(LnsAny, string) {
     __func__ := "@lune.@base.@front.Front.executeLns"
     var mod string
@@ -2145,21 +2154,21 @@ func (self *Front_Front) executeLns(_env *LnsEnv, path string,baseDir LnsAny)(Ln
     tokenizerSrc = &Types_TokenizerSrc__LnsPath{baseDir, path, mod, nil}
     var luaCode string
     _,luaCode = self.FP.loadTokenizerToLuaCode(_env, NewFrontInterface_ImportModuleInfo(_env), tokenizerSrc, path, mod, baseDir)
-    Log_log(_env, Log_Level__Debug, __func__, 1965, Log_CreateMessage(func(_env *LnsEnv) string {
+    Log_log(_env, Log_Level__Debug, __func__, 1968, Log_CreateMessage(func(_env *LnsEnv) string {
         return "luacode: " + luaCode
     }))
     
     self.FP.SetupPreloadWithImportedModules(_env, false)
     return self.FP.execLuaTxt(_env, luaCode), mod
 }
-// 1974: decl @lune.@base.@front.Front.executeLnsAndTest
+// 1977: decl @lune.@base.@front.Front.executeLnsAndTest
 func (self *Front_Front) executeLnsAndTest(_env *LnsEnv, path string,baseDir LnsAny) {
     var mod string
     _,mod = self.FP.executeLns(_env, path, baseDir)
     if self.option.Testing{
         var code string
         code = "local Testing = require( \"lune.base.Testing\" )\nreturn function( path )\n  Testing.run( path );\n  Testing.outputAllResult( io.stdout );\nend\n"
-        Lns_LockEnvSync( _env, 1985, func () {
+        Lns_LockEnvSync( _env, 1988, func () {
             var loaded LnsAny
             var mess LnsAny
             loaded,mess = _env.GetVM().Load(code, nil)
@@ -2178,10 +2187,10 @@ func (self *Front_Front) executeLnsAndTest(_env *LnsEnv, path string,baseDir Lns
         })
     }
 }
-// 1998: decl @lune.@base.@front.Front.exec
+// 2001: decl @lune.@base.@front.Front.exec
 func (self *Front_Front) Exec(_env *LnsEnv) {
     __func__ := "@lune.@base.@front.Front.exec"
-    Log_log(_env, Log_Level__Trace, __func__, 2000, Log_CreateMessage(func(_env *LnsEnv) string {
+    Log_log(_env, Log_Level__Trace, __func__, 2003, Log_CreateMessage(func(_env *LnsEnv) string {
         return Option_ModeKind_getTxt( self.option.Mode)
     }))
     
@@ -2216,7 +2225,7 @@ func (self *Front_Front) Exec(_env *LnsEnv) {
         self.FP.Build(_env, Front_BuildMode__CreateAst_Obj, Front_AstCallback(front_Front_exec___anonymous_1_))
     } else if _switch0 == Option_ModeKind__Shebang {
         Depend_setupShebang(_env)
-        Lns_LockEnvSync( _env, 2055, func () {
+        Lns_LockEnvSync( _env, 2058, func () {
             var modObj LnsAny
             
             {

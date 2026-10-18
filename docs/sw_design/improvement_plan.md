@@ -95,14 +95,14 @@
 
 ### 10. wasm の変換の最適化
 
-`wasm_benchmark.md` で確認した要因に対応する。
+`wasm/wasm_benchmark.md` で確認した要因に対応する。
 
 - itable を anyref の配列ではなく型付きのフィールドにして、cast を無くす。
 - メソッドの先頭で `self` を 1 回だけ cast し、以降はその局所変数を使う。
 - 定数で割る `%` / `/` と定数のシフトは、補助の関数を呼ばずにその場で計算する。
 - `for` の増分が定数なら、符号の判定を省く。
 - b_closure が `--no-liftoff` で遅くなった原因を調べる。
-- 改善するたびに `make bench-wasm` で測り、`wasm_benchmark.md` に記録する。
+- 改善するたびに `make bench-wasm` で測り、`wasm/wasm_benchmark.md` に記録する。
 
 ### 11. `default_async_all` でのクロージャの制限
 

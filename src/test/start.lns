@@ -8,10 +8,10 @@ import lune.base.Writer; // skip-cross
 //import test.Sub2;
 import test.Sub2 as SUB2;
 import test.Sub6;
-import test.Class1; // skip-lua51
-import test.Class2; // skip-lua51
-import test.Class3; // skip-lua51
-import test.Class4; // skip-lua51
+import test.Class1; // skip-lua51 skip-wasm
+import test.Class2; // skip-lua51 skip-wasm
+import test.Class3; // skip-lua51 skip-wasm
+import test.Class4; // skip-lua51 skip-wasm
 import test.mapping;
 import test.test2.test2.test as TESTSUB;
 import.l test.Sub8;
@@ -568,28 +568,28 @@ class TestDest {
       }
       print( "%s" (__func__) );
    }
-   fn __free() {                                        // skip-lua51
-      self.val = self.val * 10;                         // skip-lua51
-      print( "__free(): %d %s" (self.val, __func__) );  // skip-lua51
-   }                                                    // skip-lua51
+   fn __free() {                                        // skip-lua51 skip-wasm
+      self.val = self.val * 10;                         // skip-lua51 skip-wasm
+      print( "__free(): %d %s" (self.val, __func__) );  // skip-lua51 skip-wasm
+   }                                                    // skip-lua51 skip-wasm
 }
 new TestDest( 100 );
 collectgarbage();
 
 
-module GlueTest require 'test.glueTest' glue 'hoge_' {
-   pub static fn create(val:int): GlueTest;
-   pub static fn func1( val:int, txt:str, list:&List<int> ) : int;
-   pub fn func2( val:int, val2:int!, val3:real!, val4:str! ): str;
-   //pub fn func2( val:int ): str;
-}
+module GlueTest require 'test.glueTest' glue 'hoge_' { // skip-wasm
+   pub static fn create(val:int): GlueTest; // skip-wasm
+   pub static fn func1( val:int, txt:str, list:&List<int> ) : int; // skip-wasm
+   pub fn func2( val:int, val2:int!, val3:real!, val4:str! ): str; // skip-wasm
+   //pub fn func2( val:int ): str; skip-wasm
+} // skip-wasm
 
-{
-   GlueTest.func1( 10, "abc", [] );
-   let age = GlueTest.create( 100 );
-   age.func2( 2 );
-   age.func2( 2, 3, 4.0, "xyz" );
-}
+{ // skip-wasm
+   GlueTest.func1( 10, "abc", [] ); // skip-wasm
+   let age = GlueTest.create( 100 ); // skip-wasm
+   age.func2( 2 ); // skip-wasm
+   age.func2( 2, 3, 4.0, "xyz" ); // skip-wasm
+} // skip-wasm
 
 
 _print( `{ "%X" (0x1 & 0x3 ) } ); // skip-lua51
@@ -824,8 +824,8 @@ Macro._section();
       return 1, 2;
    }
    print( func( 0 ) );
-   print( func( 1 ) );
-   print( func( 2 ) );
+   print( func( 1 ) ); // skip-wasm (## で省略した戻り値の数)
+   print( func( 2 ) ); // skip-wasm (## で省略した戻り値の数)
 }
 
 
@@ -1800,8 +1800,8 @@ class Test_ccc {
       let map = test._toMap();
       let test2 = unwrap Test222<str>._fromMap( map );
       print( test2.$val.$val );
-      let _, mess = Test222<Sub<str>>._fromMap( map );
-      print( mess );
+      let _, mess = Test222<Sub<str>>._fromMap( map ); // skip-wasm (型パラメータの型の検査)
+      print( mess ); // skip-wasm (型パラメータの型の検査)
    }
 }
 {
@@ -2105,9 +2105,9 @@ __test {
 {
    Macro._section();
    class AAA extend Sub11.Class {
-      fn __free() {             // skip-lua51
-         print( __func__ );     // skip-lua51
-      }                         // skip-lua51
+      fn __free() {             // skip-lua51 skip-wasm
+         print( __func__ );     // skip-lua51 skip-wasm
+      }                         // skip-lua51 skip-wasm
    }
    new AAA();
    collectgarbage();

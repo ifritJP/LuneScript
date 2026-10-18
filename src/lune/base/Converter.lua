@@ -201,6 +201,10 @@ local LuneControl = _lune.loadModule( 'lune.base.LuneControl' )
 
 local OutputDepend = _lune.loadModule( 'lune.base.OutputDepend' )
 
+local LuaMod = _lune.loadModule( 'lune.base.LuaMod' )
+
+local Ver = _lune.loadModule( 'lune.base.Ver' )
+
 
 local function createModuleInfo( ast, mod, moduleId )
 
@@ -277,7 +281,7 @@ function AstCreater:__init(frontAccessor, importModuleInfo, tokenizerSrc, mod, b
       local ast = self:createAst( frontAccessor, importModuleInfo, tokenizerSrc, baseDir, option:get_stdinFile(), analyzeModule, analyzeMode, pos )
       self.ast = ast
       self.moduleInfo = createModuleInfo( ast, self.mod, self.moduleId )
-      Log.log( Log.Level.Log, __func__, 155, function (  )
+      Log.log( Log.Level.Log, __func__, 157, function (  )
       
          return string.format( "generated AST -- %s", mod)
       end
@@ -341,7 +345,7 @@ function AstCreater:getExportInfo(  )
       end
    end
    if not self.exportInfo then
-      Log.log( Log.Level.Err, __func__, 197, function (  )
+      Log.log( Log.Level.Err, __func__, 199, function (  )
       
          return string.format( "exportInfo is nil -- %s", self.mod)
       end
@@ -445,7 +449,7 @@ local function closeStreams( stream, metaStream, dependStream, metaPath, saveMet
                end
             end
             if not cont then
-               Log.log( Log.Level.Debug, __func__, 293, function (  )
+               Log.log( Log.Level.Debug, __func__, 295, function (  )
                
                   return string.format( "<%s>, <%s>", oldLine, newLine)
                end
@@ -756,6 +760,48 @@ function PythonConverter._setmeta( obj )
   setmetatable( obj, { __index = PythonConverter  } )
 end
 
+local function createWasmEmbedInfo( ast, importAstList, option )
+
+   local astList = {}
+   local hasDepend = false
+   for __index, work in ipairs( importAstList ) do
+      table.insert( astList, work )
+      if work:get_exportInfo():get_fullName() == "lune.base.DependLuaOnLns" then
+         hasDepend = true
+      end
+   end
+   local embedLuaList = {}
+   local bindLnsMap = {}
+   if not hasDepend then
+      return embedLuaList, bindLnsMap
+   end
+   table.insert( astList, ast )
+   for __index, work in ipairs( astList ) do
+      local mod = work:get_exportInfo():get_fullName()
+      local stream = Util.memStream._new()
+      local metaStream = Util.memStream._new()
+      local conv = ast2LuaMain( work, work:get_streamName(), stream, metaStream, convLua.ConvMode.ConvMeta, false, option )
+      conv:outputLuaAndMeta( _lune.unwrap( _lune.__Cast( work:get_node(), 3, Nodes.RootNode )) )
+      table.insert( embedLuaList, convWasm.EmbedLua._new(mod, string.format( "@%s.lua", (mod:gsub( "%.", "/" ) )), stream:get_txt()) )
+      if mod == "lune.base.Testing" then
+         do
+            local code = Util.readFile( work:get_streamName() )
+            if code ~= nil then
+               bindLnsMap[mod] = code
+            end
+         end
+      end
+   end
+   local runtime = ""
+   for __index, kind in ipairs( LuaMod.CodeKind.get__allList() ) do
+      runtime = runtime .. LuaMod.getCode( kind )
+   end
+   local runtimeMod = string.format( "lune.base.runtime%d", Ver.luaModVersion)
+   table.insert( embedLuaList, convWasm.EmbedLua._new(runtimeMod, string.format( "@%s.lua", (runtimeMod:gsub( "%.", "/" ) )), runtime) )
+   return embedLuaList, bindLnsMap
+end
+_moduleObj.createWasmEmbedInfo = createWasmEmbedInfo
+
 
 local WasmConverter = {}
 setmetatable( WasmConverter, { __index = Runner.Runner } )
@@ -780,6 +826,7 @@ function WasmConverter:__init(scriptPath, astResult, mod, option)
    self.astResult = astResult
    self.ast = nil
    self.memStream = Util.memStream._new()
+   self.option = option
    self:start( 1, string.format( "convwasm -- %s", scriptPath) )
 end
 function WasmConverter:runMain(  )
@@ -794,7 +841,8 @@ end
 function WasmConverter:saveWasm( importAstList )
 
    local ast = self:getAst(  )
-   local conv = convWasm.createFilter( self.scriptPath, self.memStream, ast, importAstList )
+   local embedLuaList, bindLnsMap = createWasmEmbedInfo( ast, importAstList, self.option )
+   local conv = convWasm.createFilter( self.scriptPath, self.memStream, ast, importAstList, embedLuaList, bindLnsMap )
    ast:get_node():processFilter( conv, convWasm.Opt._new(ast:get_node()) )
    local file = io.open( self.path, "w" )
    if  nil == file then

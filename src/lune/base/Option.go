@@ -483,8 +483,9 @@ func Option_analyze(_env *LnsEnv, argList *LnsList2_[string]) *Option_Option {
                 } else if _switch2 == "-langWasm" {
                     option.ConvTo = Types_Lang__Wasm
                     option.TransCtrlInfo.OutputLua = false
-                    option.TransCtrlInfo.ValidLuaval = false
+                    option.TransCtrlInfo.ValidLuaval = true
                     option.TransCtrlInfo.ValidAsyncCtrl = false
+                    option.TransCtrlInfo.ThreadPerUnitThread = 0
                 } else if _switch2 == "-ol" {
                     {
                         _txt := Option_getNextOp(_env)
@@ -616,7 +617,7 @@ func Option_analyze(_env *LnsEnv, argList *LnsList2_[string]) *Option_Option {
             }
         }
     }
-    Log_log(_env, Log_Level__Log, __func__, 815, Log_CreateMessage(func(_env *LnsEnv) string {
+    Log_log(_env, Log_Level__Log, __func__, 819, Log_CreateMessage(func(_env *LnsEnv) string {
         return _env.GetVM().String_format("mode is '%s'", Lns_2DDD(Option_ModeKind_getTxt( option.Mode)))
     }))
     
@@ -632,7 +633,7 @@ func Option_analyze__printUsage_0_(_env *LnsEnv, code LnsInt) {
 
 
 
-// 820: decl @lune.@base.@Option.createDefaultOption
+// 824: decl @lune.@base.@Option.createDefaultOption
 func Option_createDefaultOption(_env *LnsEnv, pathList *LnsList2_[string],projDir LnsAny) *Option_Option {
     var option *Option_Option
     option = NewOption_Option(_env)

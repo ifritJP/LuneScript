@@ -672,8 +672,12 @@ usage:
                case "-langWasm" {
                   option.convTo = .Wasm;
                   option.transCtrlInfo.outputLua = false;
-                  option.transCtrlInfo.validLuaval = false;
+                  // Go 版と同じく、Lua の値を Luaval<T> として扱う
+                  option.transCtrlInfo.validLuaval = true;
                   option.transCtrlInfo.validAsyncCtrl = false;
+                  // 関数の本体の並列の解析では、クロージャが捕捉する変数の情報
+                  // (Scope の closureSymList) が揃わないので、並列に解析しない
+                  option.transCtrlInfo.threadPerUnitThread = 0;
                }
                case "-ol" {
                   if! let txt = getNextOp() {

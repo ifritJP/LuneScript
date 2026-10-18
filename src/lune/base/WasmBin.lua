@@ -252,11 +252,7 @@ _moduleObj.name = name
 
 local function vec( list )
 
-   local txt = uleb( #list )
-   for __index, item in ipairs( list ) do
-      txt = txt .. item
-   end
-   return txt
+   return uleb( #list ) .. table.concat( list, "" )
 end
 _moduleObj.vec = vec
 
@@ -1313,6 +1309,20 @@ local function encodeFuncType( params, results )
    return byte( 0x60 ) .. vec( paramList ) .. vec( resultList )
 end
 
+local function getExternalType( typeEntryList, typeMap, recNum, funcType )
+
+   do
+      local work = typeMap[funcType]
+      if work ~= nil then
+         return work
+      end
+   end
+   local typeIdx = recNum + #typeEntryList - 1
+   typeMap[funcType] = typeIdx
+   table.insert( typeEntryList, funcType )
+   return typeIdx
+end
+
 local Module = {}
 _moduleObj.Module = Module
 function Module._new(  )
@@ -1463,23 +1473,31 @@ function Module:encode(  )
    local stream = memStream._new()
    stream:write( string.format( "%sasm%s", byte( 0 ), byte( 1 ) .. byte( 0 ) .. byte( 0 ) .. byte( 0 )) )
    local typeEntryList = {byte( 0x4e ) .. vec( self.typeList )}
-   local importTypeMap = {}
+   local externalTypeMap = {}
    local importList = {}
    for index, entry in ipairs( self.importList ) do
-      local funcType = self.importTypeList[index]
-      local typeIdx
-      
-      do
-         local work = importTypeMap[funcType]
-         if work ~= nil then
-            typeIdx = work
-         else
-            typeIdx = #self.typeList + #typeEntryList - 1
-            importTypeMap[funcType] = typeIdx
-            table.insert( typeEntryList, funcType )
+      local typeIdx = getExternalType( typeEntryList, externalTypeMap, #self.typeList, self.importTypeList[index] )
+      table.insert( importList, entry .. byte( 0x00 ) .. uleb( typeIdx ) )
+   end
+   local index2funcType = {}
+   for funcType, index in pairs( self.funcTypeMap ) do
+      index2funcType[index] = funcType
+   end
+   local exportTypeMap = {}
+   for __index, funcId in ipairs( self.exportIdList ) do
+      if not _lune._Set_has(self.refFuncSet, funcId ) then
+         do
+            local func = self.id2func[funcId]
+            if func ~= nil then
+               do
+                  local funcType = index2funcType[func:get_typeIdx()]
+                  if funcType ~= nil then
+                     exportTypeMap[funcId] = getExternalType( typeEntryList, externalTypeMap, #self.typeList, funcType )
+                  end
+               end
+            end
          end
       end
-      table.insert( importList, entry .. byte( 0x00 ) .. uleb( typeIdx ) )
    end
    stream:write( section( 1, vec( typeEntryList ) ) )
    for __index, entry in ipairs( self.importMemList ) do
@@ -1490,8 +1508,8 @@ function Module:encode(  )
    end
    local funcTypeList = {}
    local codeList = {}
-   for __index, func in ipairs( self.funcList ) do
-      table.insert( funcTypeList, uleb( func:get_typeIdx() ) )
+   for index, func in ipairs( self.funcList ) do
+      table.insert( funcTypeList, uleb( exportTypeMap[self.funcIdList[index]] or func:get_typeIdx() ) )
       table.insert( codeList, func:encode( funcIndexList ) )
    end
    stream:write( section( 3, vec( funcTypeList ) ) )

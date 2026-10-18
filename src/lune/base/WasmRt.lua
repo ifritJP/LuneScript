@@ -165,6 +165,13 @@ local function i64c( val )
    return W.i64Const( val )
 end
 
+local function append( list, items )
+
+   for __index, item in ipairs( items ) do
+      table.insert( list, item )
+   end
+end
+
 local function p( code, args )
 
    return W.plain( code, args )
@@ -180,6 +187,14 @@ local function incr( index )
    return ls( index, p( W.opI32Add, {lg( index ), i32c( 1 )} ) )
 end
 
+local cModule = "lnsrt"
+_moduleObj.cModule = cModule
+
+
+local jsModule = "lnsjs"
+_moduleObj.jsModule = jsModule
+
+
 
 local Runtime = {}
 _moduleObj.Runtime = Runtime
@@ -192,6 +207,7 @@ end
 function Runtime:__init(mod) 
    self.mod = mod
    self.name2func = {}
+   self.lazyFuncMap = {}
    self.sig2cloInfo = {}
    self.name2luaFunc = {}
    self.tFile = -1
@@ -218,10 +234,12 @@ function Runtime:__init(mod)
    self.tCellF64 = mod:addStructType( nil, {W.field( W.typeF64, true )} )
    self.tCellI32 = mod:addStructType( nil, {W.field( W.typeI32, true )} )
    self.tCellRef = mod:addStructType( nil, {W.field( W.typeAnyRef, true )} )
-   self.fnHostWrite = mod:importFunc( "lns", "write", {self.strType}, {} )
-   mod:setFuncName( self.fnHostWrite, "host.write" )
-   self.fnHostWriteErr = mod:importFunc( "lns", "write_err", {self.strType}, {} )
-   self.fnHostError = mod:importFunc( "lns", "error", {self.strType}, {} )
+   self.tLuaVal = mod:addStructType( self.tBase, {hashField, W.field( W.typeI32, false ), W.field( W.typeI32, false )} )
+   mod:importMemory( _moduleObj.cModule, "memory" )
+   self.fnCBuf = mod:importFunc( _moduleObj.cModule, "lnsr_buf", {W.typeI32}, {W.typeI32} )
+   mod:setFuncName( self.fnCBuf, "lnsrt.buf" )
+   self.fnCRes = mod:importFunc( _moduleObj.cModule, "lnsr_res", {}, {W.typeI32} )
+   mod:setFuncName( self.fnCRes, "lnsrt.res" )
    self.gHashCounter = mod:addGlobal( W.typeI32, i32c( 0 ) )
    self.gTomb = mod:addGlobal( W.refType( self.tBase ), W.structNew( self.tBase, {i32c( -1 )} ) )
 end
@@ -273,6 +291,9 @@ end
 function Runtime:get_tCellRef()
    return self.tCellRef
 end
+function Runtime:get_tLuaVal()
+   return self.tLuaVal
+end
 function Runtime:get_strType()
    return self.strType
 end
@@ -290,15 +311,6 @@ function Runtime:get_objType()
 end
 function Runtime:get_cloType()
    return self.cloType
-end
-function Runtime:get_fnHostWrite()
-   return self.fnHostWrite
-end
-function Runtime:get_fnHostWriteErr()
-   return self.fnHostWriteErr
-end
-function Runtime:get_fnHostError()
-   return self.fnHostError
 end
 function Runtime:get_luaImported()
    return self.luaImported
@@ -408,9 +420,19 @@ function Runtime:strLen( val )
    return W.arrayLen( val )
 end
 
+function Runtime:fnHostWrite(  )
+
+   return self:hostFunc( "write", {self.strType}, {} )
+end
+
+function Runtime:fnHostWriteErr(  )
+
+   return self:hostFunc( "write_err", {self.strType}, {} )
+end
+
 function Runtime:error( mess )
 
-   return W.seq( {W.call( self.fnHostError, {mess} ), W.unreachable(  )} )
+   return W.seq( {W.call( self:hostFunc( "error", {self.strType}, {} ), {mess} ), W.unreachable(  )} )
 end
 
 function Runtime:fnStrConcat(  )
@@ -548,7 +570,7 @@ function Runtime:fnToStr(  )
    local strType = self.strType
    local index, func = self:newFunc( "toStr", {W.typeAnyRef}, {strType} )
    local concat = self:fnStrConcat(  )
-   func:setBody( {when_( W.refIsNull( lg( 0 ) ), {W.ret( {self:strLiteral( "nil" )} )} ), when_( W.refTest( self.tStr, lg( 0 ) ), {W.ret( {W.refCast( self.tStr, lg( 0 ) )} )} ), when_( W.refTest( self.tBoxI64, lg( 0 ) ), {W.ret( {W.call( self:fnI64ToStr(  ), {self:unboxI64( lg( 0 ) )} )} )} ), when_( W.refTest( self.tBoxF64, lg( 0 ) ), {W.ret( {W.call( self:fnRealToStr(  ), {W.structGet( self.tBoxF64, 0, W.refCast( self.tBoxF64, lg( 0 ) ) )} )} )} ), when_( W.refTest( self.tBoxBool, lg( 0 ) ), {W.ret( {W.ifElse( self:unboxBool( lg( 0 ) ), {self:strLiteral( "true" )}, {self:strLiteral( "false" )}, strType )} )} ), when_( W.refTest( self.tClo, lg( 0 ) ), {W.ret( {W.call( concat, {self:strLiteral( "function: 0x" ), W.call( self:fnHex8(  ), {W.call( self:fnIdHash(  ), {W.refCast( self.tBase, lg( 0 ) )} )} )} )} )} ), when_( W.refTest( self.tBase, lg( 0 ) ), {W.ret( {W.call( concat, {self:strLiteral( "table: 0x" ), W.call( self:fnHex8(  ), {W.call( self:fnIdHash(  ), {W.refCast( self.tBase, lg( 0 ) )} )} )} )} )} ), self:strLiteral( "userdata" )} )
+   func:setBody( {when_( W.refIsNull( lg( 0 ) ), {W.ret( {self:strLiteral( "nil" )} )} ), when_( W.refTest( self.tStr, lg( 0 ) ), {W.ret( {W.refCast( self.tStr, lg( 0 ) )} )} ), when_( W.refTest( self.tBoxI64, lg( 0 ) ), {W.ret( {W.call( self:fnI64ToStr(  ), {self:unboxI64( lg( 0 ) )} )} )} ), when_( W.refTest( self.tBoxF64, lg( 0 ) ), {W.ret( {W.call( self:fnRealToStr(  ), {W.structGet( self.tBoxF64, 0, W.refCast( self.tBoxF64, lg( 0 ) ) )} )} )} ), when_( W.refTest( self.tBoxBool, lg( 0 ) ), {W.ret( {W.ifElse( self:unboxBool( lg( 0 ) ), {self:strLiteral( "true" )}, {self:strLiteral( "false" )}, strType )} )} ), when_( p( W.opI32Or, {W.refTest( self.tClo, lg( 0 ) ), W.ifElse( W.refTest( self.tLuaVal, lg( 0 ) ), {p( W.opI32Eq, {self:luaValType( lg( 0 ) ), i32c( _moduleObj.luaTFunction )} )}, {i32c( 0 )}, W.typeI32 )} ), {W.ret( {W.call( concat, {self:strLiteral( "function: 0x" ), W.call( self:fnHex8(  ), {W.call( self:fnIdHash(  ), {W.refCast( self.tBase, lg( 0 ) )} )} )} )} )} ), when_( W.refTest( self.tBase, lg( 0 ) ), {W.ret( {W.call( concat, {self:strLiteral( "table: 0x" ), W.call( self:fnHex8(  ), {W.call( self:fnIdHash(  ), {W.refCast( self.tBase, lg( 0 ) )} )} )} )} )} ), self:strLiteral( "userdata" )} )
    return index
 end
 
@@ -838,7 +860,7 @@ function Runtime:fnPrintList(  )
    local index, func = self:newFunc( "printList", {self.listType}, {} )
    local pos = func:addLocal( W.typeI32 )
    local tab = self:strLiteral( "\t" )
-   func:setBody( {W.block( {W.loop( {W.brIf( 1, p( W.opI32GeS, {lg( pos ), W.structGet( self.tList, _moduleObj.fListLen, lg( 0 ) )} ) ), when_( lg( pos ), {W.call( self.fnHostWrite, {tab} )} ), W.call( self.fnHostWrite, {W.call( self:fnToStr(  ), {W.arrayGet( self.tAnyArr, W.structGet( self.tList, _moduleObj.fListItems, lg( 0 ) ), lg( pos ) )} )} ), incr( pos ), W.br( 0 )}, nil )}, nil ), W.call( self.fnHostWrite, {self:strLiteral( "\n" )} )} )
+   func:setBody( {W.block( {W.loop( {W.brIf( 1, p( W.opI32GeS, {lg( pos ), W.structGet( self.tList, _moduleObj.fListLen, lg( 0 ) )} ) ), when_( lg( pos ), {W.call( self:fnHostWrite(  ), {tab} )} ), W.call( self:fnHostWrite(  ), {W.call( self:fnToStr(  ), {W.arrayGet( self.tAnyArr, W.structGet( self.tList, _moduleObj.fListItems, lg( 0 ) ), lg( pos ) )} )} ), incr( pos ), W.br( 0 )}, nil )}, nil ), W.call( self:fnHostWrite(  ), {self:strLiteral( "\n" )} )} )
    return index
 end
 
@@ -928,30 +950,6 @@ function Runtime:fnListSort(  )
    return index
 end
 
-function Runtime:exportHostFuncs(  )
-
-   do
-      local index, func = self.mod:addFunc( {W.typeI32}, {self.strType} )
-      func:setBody( {W.arrayNewDefault( self.tStr, lg( 0 ) )} )
-      self.mod:exportFunc( "lns_str_new", index )
-   end
-   do
-      local index, func = self.mod:addFunc( {self.strType, W.typeI32, W.typeI32}, {} )
-      func:setBody( {W.arraySet( self.tStr, lg( 0 ), lg( 1 ), lg( 2 ) )} )
-      self.mod:exportFunc( "lns_str_set", index )
-   end
-   do
-      local index, func = self.mod:addFunc( {self.strType}, {W.typeI32} )
-      func:setBody( {W.arrayLen( lg( 0 ) )} )
-      self.mod:exportFunc( "lns_str_len", index )
-   end
-   do
-      local index, func = self.mod:addFunc( {self.strType, W.typeI32}, {W.typeI32} )
-      func:setBody( {W.arrayGetU( self.tStr, lg( 0 ), lg( 1 ) )} )
-      self.mod:exportFunc( "lns_str_get", index )
-   end
-end
-
 local luaFormat = 0
 _moduleObj.luaFormat = luaFormat
 
@@ -1020,6 +1018,54 @@ local luaSub = 16
 _moduleObj.luaSub = luaSub
 
 
+local luaRandom = 17
+_moduleObj.luaRandom = luaRandom
+
+
+local luaRandomseed = 18
+_moduleObj.luaRandomseed = luaRandomseed
+
+
+local luaLoad = 19
+_moduleObj.luaLoad = luaLoad
+
+
+local luaRequire = 20
+_moduleObj.luaRequire = luaRequire
+
+
+local luaPackagePath = 21
+_moduleObj.luaPackagePath = luaPackagePath
+
+
+local luaSearchpath = 22
+_moduleObj.luaSearchpath = luaSearchpath
+
+
+local luaDump = 23
+_moduleObj.luaDump = luaDump
+
+
+local luaGlobals = 24
+_moduleObj.luaGlobals = luaGlobals
+
+
+local luaRunLuaOnLns = 25
+_moduleObj.luaRunLuaOnLns = luaRunLuaOnLns
+
+
+local luaPreload = 26
+_moduleObj.luaPreload = luaPreload
+
+
+local luaTTable = 5
+_moduleObj.luaTTable = luaTTable
+
+
+local luaTFunction = 6
+_moduleObj.luaTFunction = luaTFunction
+
+
 function Runtime:luaFunc( name, params, results )
 
    do
@@ -1028,11 +1074,8 @@ function Runtime:luaFunc( name, params, results )
          return funcId
       end
    end
-   if not self.luaImported then
-      self.mod:importMemory( "lua", "memory" )
-      self.luaImported = true
-   end
-   local funcId = self.mod:importFunc( "lua", "lnsl_" .. name, params, results )
+   self.luaImported = true
+   local funcId = self.mod:importFunc( _moduleObj.cModule, "lnsl_" .. name, params, results )
    self.mod:setFuncName( funcId, "lua." .. name )
    self.name2luaFunc[name] = funcId
    return funcId
@@ -1086,8 +1129,14 @@ function Runtime:fnLuaPushAny(  )
    local fnPushInt = self:luaFunc( "push_int", {W.typeI64}, {} )
    local fnPushReal = self:luaFunc( "push_real", {W.typeF64}, {} )
    local fnPushBool = self:luaFunc( "push_bool", {W.typeI32}, {} )
+   local fnPushRef = self:luaFunc( "push_ref", {W.typeI32}, {} )
+   local fnNewTable = self:luaFunc( "new_table", {}, {} )
+   local fnSetTable = self:luaFunc( "set_table", {W.typeI32}, {} )
    local index, func = self:newFunc( "luaPushAny", {W.typeAnyRef}, {} )
-   func:setBody( {when_( W.refIsNull( lg( 0 ) ), {W.call( fnPushNil, {} ), W.ret( {} )} ), when_( W.refTest( self.tBoxI64, lg( 0 ) ), {W.call( fnPushInt, {self:unboxI64( lg( 0 ) )} ), W.ret( {} )} ), when_( W.refTest( self.tBoxF64, lg( 0 ) ), {W.call( fnPushReal, {W.structGet( self.tBoxF64, 0, W.refCast( self.tBoxF64, lg( 0 ) ) )} ), W.ret( {} )} ), when_( W.refTest( self.tBoxBool, lg( 0 ) ), {W.call( fnPushBool, {self:unboxBool( lg( 0 ) )} ), W.ret( {} )} ), W.call( self:fnLuaPushStr(  ), {W.call( self:fnToStr(  ), {lg( 0 )} )} )} )
+   local list = func:addLocal( self.listType )
+   local map = func:addLocal( self.mapType )
+   local pos = func:addLocal( W.typeI32 )
+   func:setBody( {when_( W.refIsNull( lg( 0 ) ), {W.call( fnPushNil, {} ), W.ret( {} )} ), when_( W.refTest( self.tLuaVal, lg( 0 ) ), {W.call( fnPushRef, {self:luaValRef( lg( 0 ) )} ), W.ret( {} )} ), when_( W.refTest( self.tList, lg( 0 ) ), {ls( list, W.refCast( self.tList, lg( 0 ) ) ), W.call( fnNewTable, {} ), W.block( {W.loop( {W.brIf( 1, p( W.opI32GeS, {lg( pos ), W.structGet( self.tList, _moduleObj.fListLen, lg( list ) )} ) ), incr( pos ), W.call( fnPushInt, {p( W.opI64ExtendI32S, {lg( pos )} )} ), W.call( index, {W.arrayGet( self.tAnyArr, W.structGet( self.tList, _moduleObj.fListItems, lg( list ) ), p( W.opI32Sub, {lg( pos ), i32c( 1 )} ) )} ), W.call( fnSetTable, {i32c( -3 )} ), W.br( 0 )}, nil )}, nil ), W.ret( {} )} ), when_( W.refTest( self.tMap, lg( 0 ) ), {ls( map, W.refCast( self.tMap, lg( 0 ) ) ), W.call( fnNewTable, {} ), W.block( {W.loop( {ls( pos, W.call( self:fnMapNext(  ), {lg( map ), lg( pos )} ) ), W.brIf( 1, p( W.opI32LtS, {lg( pos ), i32c( 0 )} ) ), W.call( index, {self:mapKeyAt( lg( map ), lg( pos ) )} ), W.call( index, {self:mapValAt( lg( map ), lg( pos ) )} ), W.call( fnSetTable, {i32c( -3 )} ), incr( pos ), W.br( 0 )}, nil )}, nil ), W.ret( {} )} ), when_( W.refTest( self.tBoxI64, lg( 0 ) ), {W.call( fnPushInt, {self:unboxI64( lg( 0 ) )} ), W.ret( {} )} ), when_( W.refTest( self.tBoxF64, lg( 0 ) ), {W.call( fnPushReal, {W.structGet( self.tBoxF64, 0, W.refCast( self.tBoxF64, lg( 0 ) ) )} ), W.ret( {} )} ), when_( W.refTest( self.tBoxBool, lg( 0 ) ), {W.call( fnPushBool, {self:unboxBool( lg( 0 ) )} ), W.ret( {} )} ), W.call( self:fnLuaPushStr(  ), {W.call( self:fnToStr(  ), {lg( 0 )} )} )} )
    return index
 end
 
@@ -1103,13 +1152,17 @@ function Runtime:fnLuaGetAny(  )
    local fnToInt = self:luaFunc( "to_int", {W.typeI32}, {W.typeI64} )
    local fnToReal = self:luaFunc( "to_real", {W.typeI32}, {W.typeF64} )
    local fnToBool = self:luaFunc( "to_bool", {W.typeI32}, {W.typeI32} )
+   local fnRef = self:luaFunc( "ref", {W.typeI32}, {W.typeI32} )
+   local fnType = self:luaFunc( "type", {W.typeI32}, {W.typeI32} )
+   local fnRegister = self:jsFunc( "luaval_new", {W.typeAnyRef, W.typeI32}, {} )
    local index, func = self:newFunc( "luaGetAny", {W.typeI32}, {W.typeAnyRef} )
    local kind = func:addLocal( W.typeI32 )
+   local luaVal = func:addLocal( W.refType( self.tLuaVal ) )
    local function isKind( val )
    
       return p( W.opI32Eq, {lg( kind ), i32c( val )} )
    end
-   func:setBody( {ls( kind, W.call( fnKind, {lg( 0 )} ) ), when_( isKind( 1 ), {W.ret( {self:boxI64( W.call( fnToInt, {lg( 0 )} ) )} )} ), when_( isKind( 2 ), {W.ret( {self:boxF64( W.call( fnToReal, {lg( 0 )} ) )} )} ), when_( isKind( 3 ), {W.ret( {self:boxBool( W.call( fnToBool, {lg( 0 )} ) )} )} ), when_( isKind( 4 ), {W.ret( {W.call( self:fnLuaToStr(  ), {lg( 0 )} )} )} ), W.refNull( W.htAny )} )
+   func:setBody( {ls( kind, W.call( fnKind, {lg( 0 )} ) ), when_( isKind( 0 ), {W.ret( {W.refNull( W.htAny )} )} ), when_( isKind( 1 ), {W.ret( {self:boxI64( W.call( fnToInt, {lg( 0 )} ) )} )} ), when_( isKind( 2 ), {W.ret( {self:boxF64( W.call( fnToReal, {lg( 0 )} ) )} )} ), when_( isKind( 3 ), {W.ret( {self:boxBool( W.call( fnToBool, {lg( 0 )} ) )} )} ), when_( isKind( 4 ), {W.ret( {W.call( self:fnLuaToStr(  ), {lg( 0 )} )} )} ), ls( luaVal, W.structNew( self.tLuaVal, {i32c( 0 ), W.call( fnRef, {lg( 0 )} ), W.call( fnType, {lg( 0 )} )} ) ), W.call( fnRegister, {lg( luaVal ), self:luaValRef( lg( luaVal ) )} ), lg( luaVal )} )
    return index
 end
 
@@ -1122,21 +1175,242 @@ function Runtime:fnLuaCall(  )
       end
    end
    local fnPushBuiltin = self:luaFunc( "push_builtin", {W.typeI32}, {} )
+   local index, func = self:newFunc( "luaCall", {W.typeI32, self.listType}, {self.listType} )
+   func:setBody( {W.call( fnPushBuiltin, {lg( 0 )} ), W.call( self:fnLuaCallPushed(  ), {lg( 1 )} )} )
+   return index
+end
+
+function Runtime:fnLuaCallVal(  )
+
+   do
+      local index = self:getFunc( "luaCallVal" )
+      if index ~= nil then
+         return index
+      end
+   end
+   local index, func = self:newFunc( "luaCallVal", {W.typeAnyRef, self.listType}, {self.listType} )
+   func:setBody( {W.call( self:fnLuaPushAny(  ), {lg( 0 )} ), W.call( self:fnLuaCallPushed(  ), {lg( 1 )} )} )
+   return index
+end
+
+function Runtime:fnLuaCallPushed(  )
+
+   do
+      local index = self:getFunc( "luaCallPushed" )
+      if index ~= nil then
+         return index
+      end
+   end
    local fnCall = self:luaFunc( "call", {W.typeI32}, {W.typeI32} )
    local fnSettop = self:luaFunc( "settop", {W.typeI32}, {} )
-   local index, func = self:newFunc( "luaCall", {W.typeI32, self.listType}, {self.listType} )
+   local index, func = self:newFunc( "luaCallPushed", {self.listType}, {self.listType} )
    local argNum = func:addLocal( W.typeI32 )
    local num = func:addLocal( W.typeI32 )
    local pos = func:addLocal( W.typeI32 )
    local result = func:addLocal( self.listType )
    local mess = func:addLocal( self.strType )
-   func:setBody( {W.call( fnPushBuiltin, {lg( 0 )} ), ls( argNum, W.structGet( self.tList, _moduleObj.fListLen, lg( 1 ) ) ), W.block( {W.loop( {W.brIf( 1, p( W.opI32GeS, {lg( pos ), lg( argNum )} ) ), W.call( self:fnLuaPushAny(  ), {W.arrayGet( self.tAnyArr, W.structGet( self.tList, _moduleObj.fListItems, lg( 1 ) ), lg( pos ) )} ), incr( pos ), W.br( 0 )}, nil )}, nil ), ls( num, W.call( fnCall, {lg( argNum )} ) ), when_( p( W.opI32LtS, {lg( num ), i32c( 0 )} ), {ls( mess, W.call( self:fnLuaToStr(  ), {i32c( -1 )} ) ), W.call( fnSettop, {i32c( 0 )} ), self:error( lg( mess ) )} ), ls( result, W.call( self:fnListNew(  ), {lg( num )} ) ), ls( pos, i32c( 1 ) ), W.block( {W.loop( {W.brIf( 1, p( W.opI32GtS, {lg( pos ), lg( num )} ) ), W.call( self:fnListPush(  ), {lg( result ), W.call( self:fnLuaGetAny(  ), {lg( pos )} )} ), incr( pos ), W.br( 0 )}, nil )}, nil ), W.call( fnSettop, {i32c( 0 )} ), lg( result )} )
+   func:setBody( {ls( argNum, W.structGet( self.tList, _moduleObj.fListLen, lg( 0 ) ) ), W.block( {W.loop( {W.brIf( 1, p( W.opI32GeS, {lg( pos ), lg( argNum )} ) ), W.call( self:fnLuaPushAny(  ), {W.arrayGet( self.tAnyArr, W.structGet( self.tList, _moduleObj.fListItems, lg( 0 ) ), lg( pos ) )} ), incr( pos ), W.br( 0 )}, nil )}, nil ), ls( num, W.call( fnCall, {lg( argNum )} ) ), when_( p( W.opI32LtS, {lg( num ), i32c( 0 )} ), {ls( mess, W.call( self:fnLuaToStr(  ), {i32c( -1 )} ) ), W.call( fnSettop, {i32c( 0 )} ), self:error( lg( mess ) )} ), ls( result, W.call( self:fnListNew(  ), {lg( num )} ) ), ls( pos, i32c( 1 ) ), W.block( {W.loop( {W.brIf( 1, p( W.opI32GtS, {lg( pos ), lg( num )} ) ), W.call( self:fnListPush(  ), {lg( result ), W.call( self:fnLuaGetAny(  ), {lg( pos )} )} ), incr( pos ), W.br( 0 )}, nil )}, nil ), W.call( fnSettop, {i32c( 0 )} ), lg( result )} )
    return index
 end
 
 function Runtime:listItem( list, index )
 
    return W.arrayGet( self.tAnyArr, W.structGet( self.tList, _moduleObj.fListItems, list ), i32c( index ) )
+end
+
+function Runtime:fnLuaGetAtLazy(  )
+
+   do
+      local index = self:getFunc( "luaGetAtLazy" )
+      if index ~= nil then
+         return index
+      end
+   end
+   local index, func = self:newFunc( "luaGetAtLazy", {W.typeAnyRef, W.typeAnyRef}, {W.typeAnyRef} )
+   self.lazyFuncMap["luaGetAtLazy"] = func
+   return index
+end
+
+function Runtime:fnLuaCallValLazy(  )
+
+   do
+      local index = self:getFunc( "luaCallValLazy" )
+      if index ~= nil then
+         return index
+      end
+   end
+   local index, func = self:newFunc( "luaCallValLazy", {W.typeAnyRef, self.listType}, {self.listType} )
+   self.lazyFuncMap["luaCallValLazy"] = func
+   return index
+end
+
+function Runtime:finalizeLazyLua(  )
+
+   local lazyList = {{"luaGetAtLazy", "getAt"}, {"luaCallValLazy", "callVal"}}
+   for __index, item in ipairs( lazyList ) do
+      do
+         local func = self.lazyFuncMap[item[1]]
+         if  nil == func then
+            local _func = func
+         
+            goto __continue1
+         end
+         
+         local body = {}
+         if self.luaImported then
+            local target
+            
+            if item[2] == "getAt" then
+               target = self:fnLuaGetAt(  )
+            else
+             
+               target = self:fnLuaCallVal(  )
+            end
+            table.insert( body, W.call( target, {lg( 0 ), lg( 1 )} ) )
+         else
+          
+            table.insert( body, W.unreachable(  ) )
+         end
+         func:setBody( body )
+      end
+      ::__continue1::
+   end
+end
+
+function Runtime:luaValRef( val )
+
+   return W.structGet( self.tLuaVal, 1, W.refCast( self.tLuaVal, val ) )
+end
+
+function Runtime:luaValType( val )
+
+   return W.structGet( self.tLuaVal, 2, W.refCast( self.tLuaVal, val ) )
+end
+
+function Runtime:fnLuaGetAt(  )
+
+   do
+      local index = self:getFunc( "luaGetAt" )
+      if index ~= nil then
+         return index
+      end
+   end
+   local fnPushRef = self:luaFunc( "push_ref", {W.typeI32}, {} )
+   local fnGetTable = self:luaFunc( "get_table", {W.typeI32}, {} )
+   local fnSettop = self:luaFunc( "settop", {W.typeI32}, {} )
+   local index, func = self:newFunc( "luaGetAt", {W.typeAnyRef, W.typeAnyRef}, {W.typeAnyRef} )
+   local result = func:addLocal( W.typeAnyRef )
+   func:setBody( {W.call( fnPushRef, {self:luaValRef( lg( 0 ) )} ), W.call( self:fnLuaPushAny(  ), {lg( 1 )} ), W.call( fnGetTable, {i32c( -2 )} ), ls( result, W.call( self:fnLuaGetAny(  ), {i32c( -1 )} ) ), W.call( fnSettop, {i32c( 0 )} ), lg( result )} )
+   return index
+end
+
+function Runtime:fnLuaLen(  )
+
+   do
+      local index = self:getFunc( "luaLen" )
+      if index ~= nil then
+         return index
+      end
+   end
+   local fnPushRef = self:luaFunc( "push_ref", {W.typeI32}, {} )
+   local fnLen = self:luaFunc( "len", {W.typeI32}, {W.typeI64} )
+   local fnSettop = self:luaFunc( "settop", {W.typeI32}, {} )
+   local index, func = self:newFunc( "luaLen", {W.typeAnyRef}, {W.typeI64} )
+   local result = func:addLocal( W.typeI64 )
+   func:setBody( {W.call( fnPushRef, {self:luaValRef( lg( 0 ) )} ), ls( result, W.call( fnLen, {i32c( -1 )} ) ), W.call( fnSettop, {i32c( 0 )} ), lg( result )} )
+   return index
+end
+
+function Runtime:fnLuaToList(  )
+
+   do
+      local index = self:getFunc( "luaToList" )
+      if index ~= nil then
+         return index
+      end
+   end
+   local fnPushRef = self:luaFunc( "push_ref", {W.typeI32}, {} )
+   local fnPushInt = self:luaFunc( "push_int", {W.typeI64}, {} )
+   local fnGetTable = self:luaFunc( "get_table", {W.typeI32}, {} )
+   local fnSettop = self:luaFunc( "settop", {W.typeI32}, {} )
+   local index, func = self:newFunc( "luaToList", {W.typeAnyRef}, {self.listType} )
+   local list = func:addLocal( self.listType )
+   local pos = func:addLocal( W.typeI64 )
+   local val = func:addLocal( W.typeAnyRef )
+   func:setBody( {ls( list, W.call( self:fnListNew(  ), {i32c( 4 )} ) ), W.call( fnPushRef, {self:luaValRef( lg( 0 ) )} ), W.block( {W.loop( {ls( pos, p( W.opI64Add, {lg( pos ), i64c( 1 )} ) ), W.call( fnPushInt, {lg( pos )} ), W.call( fnGetTable, {i32c( 1 )} ), ls( val, W.call( self:fnLuaGetAny(  ), {i32c( 2 )} ) ), W.call( fnSettop, {i32c( 1 )} ), W.brIf( 1, W.refIsNull( lg( val ) ) ), W.call( self:fnListPush(  ), {lg( list ), lg( val )} ), W.br( 0 )}, nil )}, nil ), W.call( fnSettop, {i32c( 0 )} ), lg( list )} )
+   return index
+end
+
+function Runtime:fnLuaTableToMap(  )
+
+   do
+      local index = self:getFunc( "luaTableToMap" )
+      if index ~= nil then
+         return index
+      end
+   end
+   local fnPushNil = self:luaFunc( "push_nil", {}, {} )
+   local fnNext = self:luaFunc( "next", {W.typeI32}, {W.typeI32} )
+   local fnGettop = self:luaFunc( "gettop", {}, {W.typeI32} )
+   local fnSettop = self:luaFunc( "settop", {W.typeI32}, {} )
+   local fnType = self:luaFunc( "type", {W.typeI32}, {W.typeI32} )
+   local index, func = self:newFunc( "luaTableToMap", {W.typeI32, W.typeI32}, {self.mapType} )
+   local map = func:addLocal( self.mapType )
+   local top = func:addLocal( W.typeI32 )
+   local key = func:addLocal( W.typeAnyRef )
+   local val = func:addLocal( W.typeAnyRef )
+   local function getVal( pos )
+   
+      return W.ifElse( p( W.opI32And, {lg( 1 ), p( W.opI32Eq, {W.call( fnType, {pos} ), i32c( _moduleObj.luaTTable )} )} ), {W.call( index, {pos, i32c( 1 )} )}, {W.call( self:fnLuaGetAny(  ), {pos} )}, W.typeAnyRef )
+   end
+   func:setBody( {ls( map, self:newMap(  ) ), W.call( fnPushNil, {} ), W.block( {W.loop( {W.brIf( 1, p( W.opI32Eqz, {W.call( fnNext, {lg( 0 )} )} ) ), ls( top, W.call( fnGettop, {} ) ), ls( key, getVal( p( W.opI32Sub, {lg( top ), i32c( 1 )} ) ) ), ls( val, getVal( lg( top ) ) ), W.call( self:fnMapSet(  ), {lg( map ), lg( key ), lg( val )} ), W.call( fnSettop, {p( W.opI32Sub, {lg( top ), i32c( 1 )} )} ), W.br( 0 )}, nil )}, nil ), lg( map )} )
+   return index
+end
+
+function Runtime:fnLuaToMap(  )
+
+   do
+      local index = self:getFunc( "luaToMap" )
+      if index ~= nil then
+         return index
+      end
+   end
+   local fnPushRef = self:luaFunc( "push_ref", {W.typeI32}, {} )
+   local fnSettop = self:luaFunc( "settop", {W.typeI32}, {} )
+   local index, func = self:newFunc( "luaToMap", {W.typeAnyRef, W.typeI32}, {self.mapType} )
+   local map = func:addLocal( self.mapType )
+   func:setBody( {W.call( fnPushRef, {self:luaValRef( lg( 0 ) )} ), ls( map, W.call( self:fnLuaTableToMap(  ), {i32c( 1 ), lg( 1 )} ) ), W.call( fnSettop, {i32c( 0 )} ), lg( map )} )
+   return index
+end
+
+function Runtime:fnLuaExpand(  )
+
+   do
+      local index = self:getFunc( "luaExpand" )
+      if index ~= nil then
+         return index
+      end
+   end
+   local index, func = self:newFunc( "luaExpand", {W.typeAnyRef}, {W.typeAnyRef} )
+   func:setBody( {when_( W.refTest( self.tLuaVal, lg( 0 ) ), {when_( p( W.opI32Eq, {self:luaValType( lg( 0 ) ), i32c( _moduleObj.luaTTable )} ), {W.ret( {W.call( self:fnLuaToMap(  ), {lg( 0 ), i32c( 1 )} )} )} )} ), lg( 0 )} )
+   return index
+end
+
+function Runtime:fnLuaLoadfile(  )
+
+   do
+      local index = self:getFunc( "luaLoadfile" )
+      if index ~= nil then
+         return index
+      end
+   end
+   local index, func = self:newFunc( "luaLoadfile", {self.strType}, {self.listType} )
+   local file = func:addLocal( self.objType )
+   local mess = func:addLocal( self.strType )
+   local txt = func:addLocal( self.strType )
+   local args = func:addLocal( self.listType )
+   func:setBody( {W.call( self:fnIoOpen(  ), {lg( 0 ), W.refNull( self.tStr )} ), ls( mess, W.nop(  ) ), ls( file, W.nop(  ) ), ls( args, W.call( self:fnListNew(  ), {i32c( 2 )} ) ), W.ifElse( W.refIsNull( lg( file ) ), {W.call( self:fnListPush(  ), {lg( args ), W.refNull( W.htAny )} ), W.call( self:fnListPush(  ), {lg( args ), W.call( self:fnStrConcat(  ), {self:strLiteral( "cannot open " ), lg( mess )} )} ), W.ret( {lg( args )} )}, nil, nil ), ls( txt, W.call( self:fnFileRead(  ), {lg( file ), self:strLiteral( "a" )} ) ), W.call( self:fnFileClose(  ), {lg( file )} ), W.call( self:fnListPush(  ), {lg( args ), lg( txt )} ), W.call( self:fnListPush(  ), {lg( args ), W.refNull( W.htAny )} ), W.call( self:fnListPush(  ), {lg( args ), W.call( self:fnStrConcat(  ), {self:strLiteral( "@" ), lg( 0 )} )} ), W.call( self:fnLuaCall(  ), {i32c( _moduleObj.luaLoad ), lg( args )} )} )
+   return index
 end
 
 function Runtime:fnRealToStr(  )
@@ -1157,6 +1431,43 @@ function Runtime:fnRealToStr(  )
    return index
 end
 
+function Runtime:fnFormatLua(  )
+
+   do
+      local index = self:getFunc( "formatLua" )
+      if index ~= nil then
+         return index
+      end
+   end
+   local index, func = self:newFunc( "formatLua", {self.strType, self.listType}, {self.strType} )
+   local args = func:addLocal( self.listType )
+   func:setBody( {ls( args, W.call( self:fnListNew(  ), {i32c( 8 )} ) ), W.call( self:fnListPush(  ), {lg( args ), lg( 0 )} ), W.call( self:fnListAppend(  ), {lg( args ), lg( 1 )} ), W.refCast( self.tStr, self:listItem( W.call( self:fnLuaCall(  ), {i32c( _moduleObj.luaFormat ), lg( args )} ), 0 ) )} )
+   return index
+end
+
+function Runtime:fnStrJoin(  )
+
+   do
+      local index = self:getFunc( "strJoin" )
+      if index ~= nil then
+         return index
+      end
+   end
+   local strIdx = self.tStr
+   local index, func = self:newFunc( "strJoin", {self.listType}, {self.strType} )
+   local num = func:addLocal( W.typeI32 )
+   local pos = func:addLocal( W.typeI32 )
+   local total = func:addLocal( W.typeI32 )
+   local work = func:addLocal( self.strType )
+   local item = func:addLocal( self.strType )
+   local function itemAt(  )
+   
+      return W.refCast( strIdx, W.arrayGet( self.tAnyArr, W.structGet( self.tList, _moduleObj.fListItems, lg( 0 ) ), lg( pos ) ) )
+   end
+   func:setBody( {ls( num, W.structGet( self.tList, _moduleObj.fListLen, lg( 0 ) ) ), W.block( {W.loop( {W.brIf( 1, p( W.opI32GeS, {lg( pos ), lg( num )} ) ), ls( total, p( W.opI32Add, {lg( total ), W.arrayLen( itemAt(  ) )} ) ), incr( pos ), W.br( 0 )}, nil )}, nil ), ls( work, W.arrayNewDefault( strIdx, lg( total ) ) ), ls( total, i32c( 0 ) ), ls( pos, i32c( 0 ) ), W.block( {W.loop( {W.brIf( 1, p( W.opI32GeS, {lg( pos ), lg( num )} ) ), ls( item, itemAt(  ) ), W.arrayCopy( strIdx, strIdx, lg( work ), lg( total ), lg( item ), i32c( 0 ), W.arrayLen( lg( item ) ) ), ls( total, p( W.opI32Add, {lg( total ), W.arrayLen( lg( item ) )} ) ), incr( pos ), W.br( 0 )}, nil )}, nil ), lg( work )} )
+   return index
+end
+
 function Runtime:fnFormat(  )
 
    do
@@ -1165,9 +1476,104 @@ function Runtime:fnFormat(  )
          return index
       end
    end
+   local strIdx = self.tStr
    local index, func = self:newFunc( "format", {self.strType, self.listType}, {self.strType} )
-   local args = func:addLocal( self.listType )
-   func:setBody( {ls( args, W.call( self:fnListNew(  ), {i32c( 8 )} ) ), W.call( self:fnListPush(  ), {lg( args ), lg( 0 )} ), W.call( self:fnListAppend(  ), {lg( args ), lg( 1 )} ), W.refCast( self.tStr, self:listItem( W.call( self:fnLuaCall(  ), {i32c( _moduleObj.luaFormat ), lg( args )} ), 0 ) )} )
+   local len = func:addLocal( W.typeI32 )
+   local pos = func:addLocal( W.typeI32 )
+   local start = func:addLocal( W.typeI32 )
+   local argPos = func:addLocal( W.typeI32 )
+   local code = func:addLocal( W.typeI32 )
+   local arg = func:addLocal( W.typeAnyRef )
+   local pieces = func:addLocal( self.listType )
+   local fallback = W.ret( {W.call( self:fnFormatLua(  ), {lg( 0 ), lg( 1 )} )} )
+   local function pushSeg( from, to )
+   
+      return W.call( self:fnListPush(  ), {lg( pieces ), W.call( self:fnStrSub(  ), {lg( 0 ), p( W.opI64ExtendI32S, {from} ), p( W.opI64ExtendI32S, {to} )} )} )
+   end
+   func:setBody( {ls( len, W.arrayLen( lg( 0 ) ) ), ls( pieces, W.call( self:fnListNew(  ), {i32c( 8 )} ) ), W.block( {W.loop( {W.brIf( 1, p( W.opI32GeS, {lg( pos ), lg( len )} ) ), when_( p( W.opI32Eq, {W.arrayGetU( strIdx, lg( 0 ), lg( pos ) ), i32c( 0x25 )} ), {when_( p( W.opI32GeS, {p( W.opI32Add, {lg( pos ), i32c( 1 )} ), lg( len )} ), {fallback} ), ls( code, W.arrayGetU( strIdx, lg( 0 ), p( W.opI32Add, {lg( pos ), i32c( 1 )} ) ) ), W.ifElse( p( W.opI32Eq, {lg( code ), i32c( 0x25 )} ), {pushSeg( p( W.opI32Add, {lg( start ), i32c( 1 )} ), p( W.opI32Add, {lg( pos ), i32c( 1 )} ) )}, {when_( p( W.opI32GeS, {lg( argPos ), W.structGet( self.tList, _moduleObj.fListLen, lg( 1 ) )} ), {fallback} ), ls( arg, W.arrayGet( self.tAnyArr, W.structGet( self.tList, _moduleObj.fListItems, lg( 1 ) ), lg( argPos ) ) ), incr( argPos ), pushSeg( p( W.opI32Add, {lg( start ), i32c( 1 )} ), lg( pos ) ), W.ifElse( p( W.opI32Eq, {lg( code ), i32c( 0x73 )} ), {when_( W.refTest( self.tLuaVal, lg( arg ) ), {fallback} ), W.call( self:fnListPush(  ), {lg( pieces ), W.call( self:fnToStr(  ), {lg( arg )} )} )}, {when_( p( W.opI32Eqz, {W.refTest( self.tBoxI64, lg( arg ) )} ), {fallback} ), W.ifElse( p( W.opI32Eq, {lg( code ), i32c( 0x64 )} ), {W.call( self:fnListPush(  ), {lg( pieces ), W.call( self:fnI64ToStr(  ), {self:unboxI64( lg( arg ) )} )} )}, {when_( p( W.opI32Ne, {lg( code ), i32c( 0x63 )} ), {fallback} ), W.call( self:fnListPush(  ), {lg( pieces ), W.arrayNewFixed( self.tStr, {p( W.opI32WrapI64, {self:unboxI64( lg( arg ) )} )} )} )}, nil )}, nil )}, nil ), ls( pos, p( W.opI32Add, {lg( pos ), i32c( 2 )} ) ), ls( start, lg( pos ) ), W.br( 1 )} ), incr( pos ), W.br( 0 )}, nil )}, nil ), pushSeg( p( W.opI32Add, {lg( start ), i32c( 1 )} ), lg( len ) ), W.call( self:fnStrJoin(  ), {lg( pieces )} )} )
+   return index
+end
+
+function Runtime:bufLen( buf )
+
+   return p( W.opI32Or, {p( W.opI32Or, {W.arrayGetU( self.tStr, buf, i32c( 0 ) ), p( W.opI32Shl, {W.arrayGetU( self.tStr, buf, i32c( 1 ) ), i32c( 8 )} )} ), p( W.opI32Or, {p( W.opI32Shl, {W.arrayGetU( self.tStr, buf, i32c( 2 ) ), i32c( 16 )} ), p( W.opI32Shl, {W.arrayGetU( self.tStr, buf, i32c( 3 ) ), i32c( 24 )} )} )} )
+end
+
+function Runtime:setBufLen( buf, len )
+
+   local list = {}
+   for index = 0, 3 do
+      table.insert( list, W.arraySet( self.tStr, buf, i32c( index ), p( W.opI32ShrU, {len, i32c( index * 8 )} ) ) )
+   end
+   return W.seq( list )
+end
+
+function Runtime:newBuf(  )
+
+   return W.arrayNewDefault( self.tStr, i32c( 4 + 256 ) )
+end
+
+function Runtime:bufLenI64( buf )
+
+   return p( W.opI64ExtendI32U, {self:bufLen( buf )} )
+end
+
+function Runtime:clearBuf( buf )
+
+   return self:setBufLen( buf, i32c( 0 ) )
+end
+
+function Runtime:fnBufAdd(  )
+
+   do
+      local index = self:getFunc( "bufAdd" )
+      if index ~= nil then
+         return index
+      end
+   end
+   local strIdx = self.tStr
+   local index, func = self:newFunc( "bufAdd", {self.strType, self.strType}, {self.strType} )
+   local len = func:addLocal( W.typeI32 )
+   local need = func:addLocal( W.typeI32 )
+   local cap = func:addLocal( W.typeI32 )
+   local work = func:addLocal( self.strType )
+   func:setBody( {ls( len, self:bufLen( lg( 0 ) ) ), ls( need, p( W.opI32Add, {p( W.opI32Add, {lg( len ), W.arrayLen( lg( 1 ) )} ), i32c( 4 )} ) ), when_( p( W.opI32GtU, {lg( need ), W.arrayLen( lg( 0 ) )} ), {ls( cap, p( W.opI32Shl, {W.arrayLen( lg( 0 ) ), i32c( 1 )} ) ), when_( p( W.opI32GtU, {lg( need ), lg( cap )} ), {ls( cap, lg( need ) )} ), ls( work, W.arrayNewDefault( strIdx, lg( cap ) ) ), W.arrayCopy( strIdx, strIdx, lg( work ), i32c( 0 ), lg( 0 ), i32c( 0 ), p( W.opI32Add, {lg( len ), i32c( 4 )} ) ), ls( 0, lg( work ) )} ), W.arrayCopy( strIdx, strIdx, lg( 0 ), p( W.opI32Add, {lg( len ), i32c( 4 )} ), lg( 1 ), i32c( 0 ), W.arrayLen( lg( 1 ) ) ), self:setBufLen( lg( 0 ), p( W.opI32Sub, {lg( need ), i32c( 4 )} ) ), lg( 0 )} )
+   return index
+end
+
+function Runtime:fnBufToStr(  )
+
+   do
+      local index = self:getFunc( "bufToStr" )
+      if index ~= nil then
+         return index
+      end
+   end
+   local strIdx = self.tStr
+   local index, func = self:newFunc( "bufToStr", {self.strType}, {self.strType} )
+   local work = func:addLocal( self.strType )
+   func:setBody( {ls( work, W.arrayNewDefault( strIdx, self:bufLen( lg( 0 ) ) ) ), W.arrayCopy( strIdx, strIdx, lg( work ), i32c( 0 ), lg( 0 ), i32c( 4 ), W.arrayLen( lg( work ) ) ), lg( work )} )
+   return index
+end
+
+function Runtime:fnStrLineList(  )
+
+   do
+      local index = self:getFunc( "strLineList" )
+      if index ~= nil then
+         return index
+      end
+   end
+   local index, func = self:newFunc( "strLineList", {self.strType}, {self.listType} )
+   local len = func:addLocal( W.typeI32 )
+   local pos = func:addLocal( W.typeI32 )
+   local start = func:addLocal( W.typeI32 )
+   local list = func:addLocal( self.listType )
+   local function pushSeg( to )
+   
+      return W.call( self:fnListPush(  ), {lg( list ), W.call( self:fnStrSub(  ), {lg( 0 ), p( W.opI64ExtendI32S, {p( W.opI32Add, {lg( start ), i32c( 1 )} )} ), p( W.opI64ExtendI32S, {to} )} )} )
+   end
+   func:setBody( {ls( len, W.arrayLen( lg( 0 ) ) ), ls( list, W.call( self:fnListNew(  ), {i32c( 8 )} ) ), W.block( {W.loop( {W.brIf( 1, p( W.opI32GeS, {lg( pos ), lg( len )} ) ), incr( pos ), when_( p( W.opI32Eq, {W.arrayGetU( self.tStr, lg( 0 ), p( W.opI32Sub, {lg( pos ), i32c( 1 )} ) ), i32c( 0x0a )} ), {pushSeg( lg( pos ) ), ls( start, lg( pos ) )} ), W.br( 0 )}, nil )}, nil ), when_( p( W.opI32LtS, {lg( start ), lg( len )} ), {pushSeg( lg( len ) )} ), lg( list )} )
    return index
 end
 
@@ -1181,7 +1587,200 @@ function Runtime:fnStrFind(  )
    end
    local index, func = self:newFunc( "strFind", {self.strType, self.strType, W.typeI64, W.typeI32}, {self.listType} )
    local args = func:addLocal( self.listType )
-   func:setBody( {ls( args, W.call( self:fnListNew(  ), {i32c( 4 )} ) ), W.call( self:fnListPush(  ), {lg( args ), lg( 0 )} ), W.call( self:fnListPush(  ), {lg( args ), lg( 1 )} ), W.call( self:fnListPush(  ), {lg( args ), self:boxI64( lg( 2 ) )} ), W.call( self:fnListPush(  ), {lg( args ), self:boxBool( lg( 3 ) )} ), W.call( self:fnLuaCall(  ), {i32c( _moduleObj.luaFind ), lg( args )} )} )
+   local len = func:addLocal( W.typeI64 )
+   local found = func:addLocal( W.typeI32 )
+   local result = func:addLocal( self.listType )
+   func:setBody( {when_( p( W.opI32Or, {lg( 3 ), p( W.opI32Eqz, {W.call( self:fnHasLuaSpecials(  ), {lg( 1 )} )} )} ), {ls( len, p( W.opI64ExtendI32U, {W.arrayLen( lg( 0 ) )} ) ), ls( 2, W.call( self:fnPosRelat(  ), {lg( 2 ), lg( len )} ) ), when_( p( W.opI64LtS, {lg( 2 ), i64c( 1 )} ), {ls( 2, i64c( 1 ) )} ), ls( result, W.call( self:fnListNew(  ), {i32c( 2 )} ) ), when_( p( W.opI64GtS, {lg( 2 ), p( W.opI64Add, {lg( len ), i64c( 1 )} )} ), {W.call( self:fnListPush(  ), {lg( result ), W.refNull( W.htAny )} ), W.ret( {lg( result )} )} ), ls( found, W.call( self:fnStrIndexOf(  ), {lg( 0 ), lg( 1 ), p( W.opI32WrapI64, {p( W.opI64Sub, {lg( 2 ), i64c( 1 )} )} )} ) ), W.ifElse( p( W.opI32LtS, {lg( found ), i32c( 0 )} ), {W.call( self:fnListPush(  ), {lg( result ), W.refNull( W.htAny )} )}, {W.call( self:fnListPush(  ), {lg( result ), self:boxI64( p( W.opI64ExtendI32S, {p( W.opI32Add, {lg( found ), i32c( 1 )} )} ) )} ), W.call( self:fnListPush(  ), {lg( result ), self:boxI64( p( W.opI64ExtendI32S, {p( W.opI32Add, {lg( found ), W.arrayLen( lg( 1 ) )} )} ) )} )}, nil ), W.ret( {lg( result )} )} ), ls( args, W.call( self:fnListNew(  ), {i32c( 4 )} ) ), W.call( self:fnListPush(  ), {lg( args ), lg( 0 )} ), W.call( self:fnListPush(  ), {lg( args ), lg( 1 )} ), W.call( self:fnListPush(  ), {lg( args ), self:boxI64( lg( 2 ) )} ), W.call( self:fnListPush(  ), {lg( args ), self:boxBool( lg( 3 ) )} ), W.call( self:fnLuaCall(  ), {i32c( _moduleObj.luaFind ), lg( args )} )} )
+   return index
+end
+
+function Runtime:fnPosRelat(  )
+
+   do
+      local index = self:getFunc( "posRelat" )
+      if index ~= nil then
+         return index
+      end
+   end
+   local index, func = self:newFunc( "posRelat", {W.typeI64, W.typeI64}, {W.typeI64} )
+   func:setBody( {when_( p( W.opI64GeS, {lg( 0 ), i64c( 0 )} ), {W.ret( {lg( 0 )} )} ), when_( p( W.opI64GtS, {p( W.opI64Sub, {i64c( 0 ), lg( 0 )} ), lg( 1 )} ), {W.ret( {i64c( 0 )} )} ), p( W.opI64Add, {p( W.opI64Add, {lg( 1 ), lg( 0 )} ), i64c( 1 )} )} )
+   return index
+end
+
+function Runtime:fnHasLuaSpecials(  )
+
+   do
+      local index = self:getFunc( "hasLuaSpecials" )
+      if index ~= nil then
+         return index
+      end
+   end
+   local index, func = self:newFunc( "hasLuaSpecials", {self.strType}, {W.typeI32} )
+   local pos = func:addLocal( W.typeI32 )
+   local code = func:addLocal( W.typeI32 )
+   local checks = {}
+   for __index, ch in ipairs( {0x5e, 0x24, 0x2a, 0x2b, 0x3f, 0x2e, 0x28, 0x5b, 0x25, 0x2d} ) do
+      table.insert( checks, when_( p( W.opI32Eq, {lg( code ), i32c( ch )} ), {W.ret( {i32c( 1 )} )} ) )
+   end
+   local loopBody = {W.brIf( 1, p( W.opI32GeS, {lg( pos ), W.arrayLen( lg( 0 ) )} ) ), ls( code, W.arrayGetU( self.tStr, lg( 0 ), lg( pos ) ) )}
+   for __index, check in ipairs( checks ) do
+      table.insert( loopBody, check )
+   end
+   table.insert( loopBody, incr( pos ) )
+   table.insert( loopBody, W.br( 0 ) )
+   func:setBody( {W.block( {W.loop( loopBody, nil )}, nil ), i32c( 0 )} )
+   return index
+end
+
+function Runtime:fnStrIndexOf(  )
+
+   do
+      local index = self:getFunc( "strIndexOf" )
+      if index ~= nil then
+         return index
+      end
+   end
+   local strIdx = self.tStr
+   local index, func = self:newFunc( "strIndexOf", {self.strType, self.strType, W.typeI32}, {W.typeI32} )
+   local last = func:addLocal( W.typeI32 )
+   local ptnLen = func:addLocal( W.typeI32 )
+   local first = func:addLocal( W.typeI32 )
+   local pos = func:addLocal( W.typeI32 )
+   func:setBody( {ls( ptnLen, W.arrayLen( lg( 1 ) ) ), ls( last, p( W.opI32Sub, {W.arrayLen( lg( 0 ) ), lg( ptnLen )} ) ), when_( p( W.opI32Eqz, {lg( ptnLen )} ), {W.ret( {lg( 2 )} )} ), ls( first, W.arrayGetU( strIdx, lg( 1 ), i32c( 0 ) ) ), W.block( {W.loop( {W.brIf( 1, p( W.opI32GtS, {lg( 2 ), lg( last )} ) ), when_( p( W.opI32Eq, {W.arrayGetU( strIdx, lg( 0 ), lg( 2 ) ), lg( first )} ), {ls( pos, i32c( 1 ) ), W.block( {W.loop( {when_( p( W.opI32GeS, {lg( pos ), lg( ptnLen )} ), {W.ret( {lg( 2 )} )} ), W.brIf( 1, p( W.opI32Ne, {W.arrayGetU( strIdx, lg( 0 ), p( W.opI32Add, {lg( 2 ), lg( pos )} ) ), W.arrayGetU( strIdx, lg( 1 ), lg( pos ) )} ) ), incr( pos ), W.br( 0 )}, nil )}, nil )} ), incr( 2 ), W.br( 0 )}, nil )}, nil ), i32c( -1 )} )
+   return index
+end
+
+function Runtime:getNativeStrFunc( luaId )
+
+   local name
+   
+   do
+      local _switchExp = luaId
+      if _switchExp == _moduleObj.luaByte then
+         name = "strByte"
+      elseif _switchExp == _moduleObj.luaRep then
+         name = "strRep"
+      elseif _switchExp == _moduleObj.luaLower then
+         name = "strLower"
+      elseif _switchExp == _moduleObj.luaUpper then
+         name = "strUpper"
+      elseif _switchExp == _moduleObj.luaReverse then
+         name = "strReverse"
+      elseif _switchExp == _moduleObj.luaLen then
+         name = "strLen"
+      elseif _switchExp == _moduleObj.luaReplace then
+         name = "strReplace"
+      elseif _switchExp == _moduleObj.luaFind then
+         name = "strFindL"
+      elseif _switchExp == _moduleObj.luaSub then
+         name = "strSubL"
+      else 
+         
+            return nil
+      end
+   end
+   do
+      local index = self:getFunc( name )
+      if index ~= nil then
+         return index
+      end
+   end
+   local strIdx = self.tStr
+   local index, func = self:newFunc( name, {self.listType}, {self.listType} )
+   local txt = func:addLocal( self.strType )
+   local len = func:addLocal( W.typeI32 )
+   local pos = func:addLocal( W.typeI32 )
+   local work = func:addLocal( self.strType )
+   local result = func:addLocal( self.listType )
+   local num1 = func:addLocal( W.typeI64 )
+   local num2 = func:addLocal( W.typeI64 )
+   local str1 = func:addLocal( self.strType )
+   local str2 = func:addLocal( self.strType )
+   local found = func:addLocal( W.typeI32 )
+   local code = func:addLocal( W.typeI32 )
+   local fallback = W.ret( {W.call( self:fnLuaCall(  ), {i32c( luaId ), lg( 0 )} )} )
+   local argNum = W.structGet( self.tList, _moduleObj.fListLen, lg( 0 ) )
+   local function arg( argIdx )
+   
+      return W.ifElse( p( W.opI32GtS, {argNum, i32c( argIdx )} ), {self:listItem( lg( 0 ), argIdx )}, {W.refNull( W.htAny )}, W.typeAnyRef )
+   end
+   local function optInt( argIdx, dst, def )
+   
+      return W.ifElse( W.refIsNull( arg( argIdx ) ), {ls( dst, def )}, {when_( p( W.opI32Eqz, {W.refTest( self.tBoxI64, arg( argIdx ) )} ), {fallback} ), ls( dst, self:unboxI64( arg( argIdx ) ) )}, nil )
+   end
+   local function needStr( argIdx, dst )
+   
+      return W.seq( {when_( p( W.opI32Eqz, {W.refTest( strIdx, arg( argIdx ) )} ), {fallback} ), ls( dst, W.refCast( strIdx, arg( argIdx ) ) )} )
+   end
+   local function mapBytes( conv )
+   
+      return {ls( work, W.arrayNewDefault( strIdx, lg( len ) ) ), W.block( {W.loop( {W.brIf( 1, p( W.opI32GeS, {lg( pos ), lg( len )} ) ), ls( code, W.arrayGetU( strIdx, lg( txt ), lg( pos ) ) ), W.arraySet( strIdx, lg( work ), lg( pos ), conv ), incr( pos ), W.br( 0 )}, nil )}, nil )}
+   end
+   local function shiftRange( from, to, diff )
+   
+      return W.select( p( W.opI32Add, {lg( code ), i32c( diff )} ), lg( code ), p( W.opI32LeU, {p( W.opI32Sub, {lg( code ), i32c( from )} ), i32c( to - from )} ) )
+   end
+   local function ret1( val )
+   
+      return {ls( result, W.call( self:fnListNew(  ), {i32c( 1 )} ) ), W.call( self:fnListPush(  ), {lg( result ), val} ), lg( result )}
+   end
+   local body = {needStr( 0, txt ), ls( len, W.arrayLen( lg( txt ) ) )}
+   do
+      local _switchExp = luaId
+      if _switchExp == _moduleObj.luaByte then
+         table.insert( body, optInt( 1, num1, i64c( 1 ) ) )
+         table.insert( body, ls( num1, W.call( self:fnPosRelat(  ), {lg( num1 ), p( W.opI64ExtendI32U, {lg( len )} )} ) ) )
+         table.insert( body, optInt( 2, num2, lg( num1 ) ) )
+         table.insert( body, ls( num2, W.call( self:fnPosRelat(  ), {lg( num2 ), p( W.opI64ExtendI32U, {lg( len )} )} ) ) )
+         table.insert( body, when_( p( W.opI64LtS, {lg( num1 ), i64c( 1 )} ), {ls( num1, i64c( 1 ) )} ) )
+         table.insert( body, when_( p( W.opI64GtS, {lg( num2 ), p( W.opI64ExtendI32U, {lg( len )} )} ), {ls( num2, p( W.opI64ExtendI32U, {lg( len )} ) )} ) )
+         table.insert( body, ls( result, W.call( self:fnListNew(  ), {i32c( 1 )} ) ) )
+         table.insert( body, W.block( {W.loop( {W.brIf( 1, p( W.opI64GtS, {lg( num1 ), lg( num2 )} ) ), W.call( self:fnListPush(  ), {lg( result ), self:boxI64( p( W.opI64ExtendI32U, {W.arrayGetU( strIdx, lg( txt ), p( W.opI32WrapI64, {p( W.opI64Sub, {lg( num1 ), i64c( 1 )} )} ) )} ) )} ), ls( num1, p( W.opI64Add, {lg( num1 ), i64c( 1 )} ) ), W.br( 0 )}, nil )}, nil ) )
+         table.insert( body, lg( result ) )
+      elseif _switchExp == _moduleObj.luaRep then
+         table.insert( body, when_( p( W.opI32Eqz, {W.refTest( self.tBoxI64, arg( 1 ) )} ), {fallback} ) )
+         table.insert( body, ls( num1, self:unboxI64( arg( 1 ) ) ) )
+         table.insert( body, W.ifElse( W.refIsNull( arg( 2 ) ), {ls( str1, W.arrayNewDefault( strIdx, i32c( 0 ) ) )}, {needStr( 2, str1 )}, nil ) )
+         table.insert( body, when_( p( W.opI64LeS, {lg( num1 ), i64c( 0 )} ), {W.ret( {W.seq( ret1( W.arrayNewDefault( strIdx, i32c( 0 ) ) ) )} )} ) )
+         table.insert( body, ls( num2, p( W.opI64Sub, {p( W.opI64Mul, {lg( num1 ), p( W.opI64ExtendI32U, {p( W.opI32Add, {lg( len ), W.arrayLen( lg( str1 ) )} )} )} ), p( W.opI64ExtendI32U, {W.arrayLen( lg( str1 ) )} )} ) ) )
+         table.insert( body, when_( p( W.opI32Or, {p( W.opI64GtS, {lg( num1 ), i64c( 0x10000000 )} ), p( W.opI64GtS, {lg( num2 ), i64c( 0x10000000 )} )} ), {fallback} ) )
+         table.insert( body, ls( work, W.arrayNewDefault( strIdx, p( W.opI32WrapI64, {lg( num2 )} ) ) ) )
+         table.insert( body, W.block( {W.loop( {W.arrayCopy( strIdx, strIdx, lg( work ), lg( pos ), lg( txt ), i32c( 0 ), lg( len ) ), ls( pos, p( W.opI32Add, {lg( pos ), lg( len )} ) ), ls( num1, p( W.opI64Sub, {lg( num1 ), i64c( 1 )} ) ), W.brIf( 1, p( W.opI64Eqz, {lg( num1 )} ) ), W.arrayCopy( strIdx, strIdx, lg( work ), lg( pos ), lg( str1 ), i32c( 0 ), W.arrayLen( lg( str1 ) ) ), ls( pos, p( W.opI32Add, {lg( pos ), W.arrayLen( lg( str1 ) )} ) ), W.br( 0 )}, nil )}, nil ) )
+         append( body, ret1( lg( work ) ) )
+      elseif _switchExp == _moduleObj.luaLower then
+         append( body, mapBytes( shiftRange( 0x41, 0x5a, 0x20 ) ) )
+         append( body, ret1( lg( work ) ) )
+      elseif _switchExp == _moduleObj.luaUpper then
+         append( body, mapBytes( shiftRange( 0x61, 0x7a, -0x20 ) ) )
+         append( body, ret1( lg( work ) ) )
+      elseif _switchExp == _moduleObj.luaReverse then
+         table.insert( body, ls( work, W.arrayNewDefault( strIdx, lg( len ) ) ) )
+         table.insert( body, W.block( {W.loop( {W.brIf( 1, p( W.opI32GeS, {lg( pos ), lg( len )} ) ), W.arraySet( strIdx, lg( work ), lg( pos ), W.arrayGetU( strIdx, lg( txt ), p( W.opI32Sub, {p( W.opI32Sub, {lg( len ), lg( pos )} ), i32c( 1 )} ) ) ), incr( pos ), W.br( 0 )}, nil )}, nil ) )
+         append( body, ret1( lg( work ) ) )
+      elseif _switchExp == _moduleObj.luaLen then
+         append( body, ret1( self:boxI64( p( W.opI64ExtendI32U, {lg( len )} ) ) ) )
+      elseif _switchExp == _moduleObj.luaFind then
+         table.insert( body, needStr( 1, str1 ) )
+         table.insert( body, optInt( 2, num1, i64c( 1 ) ) )
+         table.insert( body, ls( code, W.ifElse( W.refIsNull( arg( 3 ) ), {i32c( 0 )}, {W.ifElse( W.refTest( self.tBoxBool, arg( 3 ) ), {self:unboxBool( arg( 3 ) )}, {i32c( 1 )}, W.typeI32 )}, W.typeI32 ) ) )
+         table.insert( body, W.call( self:fnStrFind(  ), {lg( txt ), lg( str1 ), lg( num1 ), lg( code )} ) )
+      elseif _switchExp == _moduleObj.luaSub then
+         table.insert( body, when_( p( W.opI32Eqz, {W.refTest( self.tBoxI64, arg( 1 ) )} ), {fallback} ) )
+         table.insert( body, ls( num1, self:unboxI64( arg( 1 ) ) ) )
+         table.insert( body, optInt( 2, num2, i64c( -1 ) ) )
+         append( body, ret1( W.call( self:fnStrSub(  ), {lg( txt ), lg( num1 ), lg( num2 )} ) ) )
+      elseif _switchExp == _moduleObj.luaReplace then
+         table.insert( body, needStr( 1, str1 ) )
+         table.insert( body, needStr( 2, str2 ) )
+         table.insert( body, when_( p( W.opI32Eqz, {W.arrayLen( lg( str1 ) )} ), {fallback} ) )
+         table.insert( body, ls( result, W.call( self:fnListNew(  ), {i32c( 8 )} ) ) )
+         table.insert( body, W.block( {W.loop( {ls( found, W.call( self:fnStrIndexOf(  ), {lg( txt ), lg( str1 ), lg( pos )} ) ), W.brIf( 1, p( W.opI32LtS, {lg( found ), i32c( 0 )} ) ), W.call( self:fnListPush(  ), {lg( result ), W.call( self:fnStrSub(  ), {lg( txt ), p( W.opI64ExtendI32S, {p( W.opI32Add, {lg( pos ), i32c( 1 )} )} ), p( W.opI64ExtendI32S, {lg( found )} )} )} ), W.call( self:fnListPush(  ), {lg( result ), lg( str2 )} ), ls( pos, p( W.opI32Add, {lg( found ), W.arrayLen( lg( str1 ) )} ) ), W.br( 0 )}, nil )}, nil ) )
+         table.insert( body, W.call( self:fnListPush(  ), {lg( result ), W.call( self:fnStrSub(  ), {lg( txt ), p( W.opI64ExtendI32S, {p( W.opI32Add, {lg( pos ), i32c( 1 )} )} ), p( W.opI64ExtendI32S, {lg( len )} )} )} ) )
+         table.insert( body, ls( work, W.call( self:fnStrJoin(  ), {lg( result )} ) ) )
+         append( body, ret1( lg( work ) ) )
+      end
+   end
+   func:setBody( body )
    return index
 end
 
@@ -1208,7 +1807,6 @@ function Runtime:getFileType(  )
    return self.tFile
 end
 
-
 function Runtime:hostFunc( name, params, results )
 
    do
@@ -1217,9 +1815,100 @@ function Runtime:hostFunc( name, params, results )
          return index
       end
    end
-   local index = self.mod:importFunc( "lns", name, params, results )
-   self.mod:setFuncName( index, "host." .. name )
-   self.name2func["host." .. name] = index
+   local function isStr( valType )
+   
+      return valType == self.strType
+   end
+   local cParams = {}
+   for __index, param in ipairs( params ) do
+      if isStr( param ) then
+         table.insert( cParams, W.typeI32 )
+         table.insert( cParams, W.typeI32 )
+      else
+       
+         table.insert( cParams, param )
+      end
+   end
+   local strResult = #results == 1 and isStr( results[1] )
+   local cResults = strResult and {W.typeI32} or results
+   local cFunc = self.mod:importFunc( _moduleObj.cModule, "lnsr_" .. name, cParams, cResults )
+   self.mod:setFuncName( cFunc, "lnsrt." .. name )
+   local index, func = self:newFunc( "host." .. name, params, results )
+   local addr = func:addLocal( W.typeI32 )
+   local len = func:addLocal( W.typeI32 )
+   local body = {}
+   local args = {}
+   local total = i32c( 0 )
+   for pos, param in ipairs( params ) do
+      if isStr( param ) then
+         total = p( W.opI32Add, {total, W.arrayLen( lg( pos - 1 ) )} )
+      end
+   end
+   table.insert( body, ls( addr, W.call( self.fnCBuf, {total} ) ) )
+   local offset = lg( addr )
+   for pos, param in ipairs( params ) do
+      if isStr( param ) then
+         table.insert( args, offset )
+         table.insert( args, W.arrayLen( lg( pos - 1 ) ) )
+         table.insert( body, W.call( self:fnCopyToC(  ), {lg( pos - 1 ), offset} ) )
+         offset = p( W.opI32Add, {offset, W.arrayLen( lg( pos - 1 ) )} )
+      else
+       
+         table.insert( args, lg( pos - 1 ) )
+      end
+   end
+   if strResult then
+      table.insert( body, ls( len, W.call( cFunc, args ) ) )
+      table.insert( body, W.ifElse( p( W.opI32LtS, {lg( len ), i32c( 0 )} ), {W.refNull( self.tStr )}, {W.call( self:fnStrFromC(  ), {W.call( self.fnCRes, {} ), lg( len )} )}, self.strType ) )
+   else
+    
+      table.insert( body, W.call( cFunc, args ) )
+   end
+   func:setBody( body )
+   return index
+end
+
+function Runtime:jsFunc( name, params, results )
+
+   do
+      local index = self:getFunc( "js." .. name )
+      if index ~= nil then
+         return index
+      end
+   end
+   local index = self.mod:importFunc( _moduleObj.jsModule, name, params, results )
+   self.mod:setFuncName( index, "js." .. name )
+   self.name2func["js." .. name] = index
+   return index
+end
+
+function Runtime:fnCopyToC(  )
+
+   do
+      local index = self:getFunc( "copyToC" )
+      if index ~= nil then
+         return index
+      end
+   end
+   local index, func = self:newFunc( "copyToC", {self.strType, W.typeI32}, {} )
+   local len = func:addLocal( W.typeI32 )
+   local pos = func:addLocal( W.typeI32 )
+   func:setBody( {ls( len, W.arrayLen( lg( 0 ) ) ), W.block( {W.loop( {W.brIf( 1, p( W.opI32GeS, {lg( pos ), lg( len )} ) ), W.i32Store8( p( W.opI32Add, {lg( 1 ), lg( pos )} ), W.arrayGetU( self.tStr, lg( 0 ), lg( pos ) ) ), incr( pos ), W.br( 0 )}, nil )}, nil )} )
+   return index
+end
+
+function Runtime:fnStrFromC(  )
+
+   do
+      local index = self:getFunc( "strFromC" )
+      if index ~= nil then
+         return index
+      end
+   end
+   local index, func = self:newFunc( "strFromC", {W.typeI32, W.typeI32}, {self.strType} )
+   local work = func:addLocal( self.strType )
+   local pos = func:addLocal( W.typeI32 )
+   func:setBody( {ls( work, W.arrayNewDefault( self.tStr, lg( 1 ) ) ), W.block( {W.loop( {W.brIf( 1, p( W.opI32GeS, {lg( pos ), lg( 1 )} ) ), W.arraySet( self.tStr, lg( work ), lg( pos ), W.i32Load8U( p( W.opI32Add, {lg( 0 ), lg( pos )} ) ) ), incr( pos ), W.br( 0 )}, nil )}, nil ), lg( work )} )
    return index
 end
 
@@ -1244,6 +1933,98 @@ function Runtime:fnIoOpen(  )
    local fd = func:addLocal( W.typeI32 )
    func:setBody( {when_( W.refIsNull( lg( 1 ) ), {ls( 1, self:strLiteral( "r" ) )} ), ls( fd, W.call( fnOpen, {lg( 0 ), lg( 1 )} ) ), when_( p( W.opI32LtS, {lg( fd ), i32c( 0 )} ), {W.ret( {W.refNull( self.tObj ), W.call( fnError, {} )} )} ), W.structNew( tFile, {i32c( 0 ), W.structNew( self.tVT, {W.refNull( self.tAnyArr )} ), lg( fd )} ), W.refNull( self.tStr )} )
    return index
+end
+
+function Runtime:fnIoPopen(  )
+
+   do
+      local index = self:getFunc( "ioPopen" )
+      if index ~= nil then
+         return index
+      end
+   end
+   local fnPopen = self:hostFunc( "file_popen", {self.strType}, {W.typeI32} )
+   local tFile = self:getFileType(  )
+   local index, func = self:newFunc( "ioPopen", {self.strType}, {self.objType} )
+   local fd = func:addLocal( W.typeI32 )
+   func:setBody( {ls( fd, W.call( fnPopen, {lg( 0 )} ) ), when_( p( W.opI32LtS, {lg( fd ), i32c( 0 )} ), {W.ret( {W.refNull( self.tObj )} )} ), W.structNew( tFile, {i32c( 0 ), W.structNew( self.tVT, {W.refNull( self.tAnyArr )} ), lg( fd )} )} )
+   return index
+end
+
+function Runtime:fnIoStdin(  )
+
+   do
+      local index = self:getFunc( "ioStdin" )
+      if index ~= nil then
+         return index
+      end
+   end
+   local fnStdin = self:hostFunc( "file_stdin", {}, {W.typeI32} )
+   local tFile = self:getFileType(  )
+   local index, func = self:newFunc( "ioStdin", {}, {self.objType} )
+   func:setBody( {W.structNew( tFile, {i32c( 0 ), W.structNew( self.tVT, {W.refNull( self.tAnyArr )} ), W.call( fnStdin, {} )} )} )
+   return index
+end
+
+function Runtime:fnArgList(  )
+
+   do
+      local index = self:getFunc( "argList" )
+      if index ~= nil then
+         return index
+      end
+   end
+   local fnCount = self:hostFunc( "arg_count", {}, {W.typeI32} )
+   local fnGet = self:hostFunc( "arg_get", {W.typeI32}, {self.strType} )
+   local index, func = self:newFunc( "argList", {}, {self.listType} )
+   local list = func:addLocal( self.listType )
+   local num = func:addLocal( W.typeI32 )
+   local pos = func:addLocal( W.typeI32 )
+   func:setBody( {ls( num, W.call( fnCount, {} ) ), ls( list, W.call( self:fnListNew(  ), {lg( num )} ) ), W.block( {W.loop( {W.brIf( 1, p( W.opI32GeS, {lg( pos ), lg( num )} ) ), W.call( self:fnListPush(  ), {lg( list ), W.call( fnGet, {lg( pos )} )} ), incr( pos ), W.br( 0 )}, nil )}, nil ), lg( list )} )
+   return index
+end
+
+function Runtime:fnOsExit(  )
+
+   return self:hostFunc( "os_exit", {W.typeI64}, {} )
+end
+
+function Runtime:fnOsFileOp( name )
+
+   do
+      local index = self:getFunc( "os_" .. name )
+      if index ~= nil then
+         return index
+      end
+   end
+   local params = {self.strType}
+   if name == "rename" then
+      table.insert( params, self.strType )
+   end
+   local fnHost = self:hostFunc( "os_" .. name, params, {self.strType} )
+   local index, func = self:newFunc( "os_" .. name, params, {W.typeAnyRef, self.strType} )
+   local mess = func:addLocal( self.strType )
+   local args = {}
+   for pos, _1 in ipairs( params ) do
+      table.insert( args, lg( pos - 1 ) )
+   end
+   func:setBody( {ls( mess, W.call( fnHost, args ) ), when_( W.refIsNull( lg( mess ) ), {W.ret( {self:boxBool( i32c( 1 ) ), W.refNull( self.tStr )} )} ), W.refNull( W.htAny ), lg( mess )} )
+   return index
+end
+
+function Runtime:fnOsTime(  )
+
+   return self:hostFunc( "os_time", {}, {W.typeI64} )
+end
+
+function Runtime:fnFileMtime(  )
+
+   return self:hostFunc( "file_mtime", {self.strType}, {W.typeF64} )
+end
+
+function Runtime:fnOsClock(  )
+
+   return self:hostFunc( "os_clock", {}, {W.typeF64} )
 end
 
 function Runtime:isFile( obj )

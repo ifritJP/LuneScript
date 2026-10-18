@@ -933,8 +933,9 @@ end
                elseif _switchExp == "-langWasm" then
                   option.convTo = Types.Lang.Wasm
                   option.transCtrlInfo.outputLua = false
-                  option.transCtrlInfo.validLuaval = false
+                  option.transCtrlInfo.validLuaval = true
                   option.transCtrlInfo.validAsyncCtrl = false
+                  option.transCtrlInfo.threadPerUnitThread = 0
                elseif _switchExp == "-ol" then
                   do
                      local txt = getNextOp(  )
@@ -1067,7 +1068,7 @@ end
          end
       end
    end
-   Log.log( Log.Level.Log, __func__, 815, function (  )
+   Log.log( Log.Level.Log, __func__, 819, function (  )
    
       return string.format( "mode is '%s'", ModeKind:_getTxt( option.mode)
       )

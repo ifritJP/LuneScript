@@ -87,6 +87,11 @@ fn i32c( val:int ) : &W.Ins {
 fn i64c( val:int ) : &W.Ins {
    return W.i64Const( val );
 }
+fn append( mut list:List<&W.Ins>, items:&List<&W.Ins> ) {
+   foreach item in items {
+      list.insert( item );
+   }
+}
 fn p( code:int, args:&List<&W.Ins> ) : &W.Ins {
    return W.plain( code, args );
 }
@@ -98,6 +103,11 @@ fn when_( cond:&W.Ins, thenBody:&List<&W.Ins> ) : &W.Ins {
 fn incr( index:int ) : &W.Ins {
    return ls( index, p( W.opI32Add, [ lg( index ), i32c( 1 ) ] ) );
 }
+
+/** C のランタイム (lnsrt.c、Lua を使う場合は lnslua.c も) のモジュール名 */
+pub let cModule = "lnsrt";
+/** Node.js でだけ使える関数のモジュール名 (WASI のランタイムでは何もしない関数を使う) */
+pub let jsModule = "lnsjs";
 
 pub class Runtime {
    let mut mod:W.Module;
@@ -117,6 +127,12 @@ pub class Runtime {
    pri let tCellF64:int {pub};
    pri let tCellI32:int {pub};
    pri let tCellRef:int {pub};
+   /**
+   Lua の値 (テーブル・関数など。Luaval) の参照 ($Base の部分型)。
+   Lua の registry の参照番号 (luaL_ref) と、Lua の型 (lua_type) を持つ。
+   GC で回収された時に、ホスト (JavaScript の FinalizationRegistry) が registry の登録を解除する。
+   */
+   pri let tLuaVal:int {pub};
    /** io.open で開いたファイル ($Obj の部分型。ホストのファイル番号を持つ)。使う場合だけ生成する */
    pri let mut tFile:int;
 
@@ -127,27 +143,28 @@ pub class Runtime {
    pri let objType:&W.ValType {pub};
    pri let cloType:&W.ValType {pub};
 
-   // ホストの関数
-   pri let fnHostWrite:int {pub};
-   pri let fnHostWriteErr:int {pub};
-   pri let fnHostError:int {pub};
-
    /** import した Lua (lnslua.c) の関数 (名前 → 関数の ID) */
    let mut name2luaFunc:Map<str,int>;
    /** Lua を import したかどうか */
    let mut luaImported:bool {pub};
+   /** C のランタイム (lnsrt.c) の lnsr_buf・lnsr_res */
+   let mut fnCBuf:int;
+   let mut fnCRes:int;
 
    let mut gHashCounter:int;
    let mut gTomb:int;
 
    /** 生成済みの関数 (名前 → 関数インデックス) */
    let mut name2func:Map<str,int>;
+   /** 本体を finalizeLazyLua() で生成する関数 (名前 → 関数) */
+   let mut lazyFuncMap:Map<str,W.Func>;
    /** クロージャの型 (関数型のエンコード → 情報) */
    let mut sig2cloInfo:Map<str,&CloInfo>;
 
    pub fn __init( mod:W.Module ) {
       self.mod = mod;
       self.name2func = {};
+      self.lazyFuncMap = {};
       self.sig2cloInfo = {};
       self.name2luaFunc = {};
       self.tFile = -1;
@@ -180,11 +197,15 @@ pub class Runtime {
       self.tCellF64 = mod.addStructType( nil, [ W.field( W.typeF64, true ) ] );
       self.tCellI32 = mod.addStructType( nil, [ W.field( W.typeI32, true ) ] );
       self.tCellRef = mod.addStructType( nil, [ W.field( W.typeAnyRef, true ) ] );
+      self.tLuaVal = mod.addStructType(
+         self.tBase, [ hashField, W.field( W.typeI32, false ), W.field( W.typeI32, false ) ] );
 
-      self.fnHostWrite = mod.importFunc( "lns", "write", [ self.strType ], [] );
-      mod.setFuncName( self.fnHostWrite, "host.write" );
-      self.fnHostWriteErr = mod.importFunc( "lns", "write_err", [ self.strType ], [] );
-      self.fnHostError = mod.importFunc( "lns", "error", [ self.strType ], [] );
+      // 入出力などは、C のランタイム (lnsrt.c) の memory と関数を import して使う
+      mod.importMemory( cModule, "memory" );
+      self.fnCBuf = mod.importFunc( cModule, "lnsr_buf", [ W.typeI32 ], [ W.typeI32 ] );
+      mod.setFuncName( self.fnCBuf, "lnsrt.buf" );
+      self.fnCRes = mod.importFunc( cModule, "lnsr_res", [], [ W.typeI32 ] );
+      mod.setFuncName( self.fnCRes, "lnsrt.res" );
 
       self.gHashCounter = mod.addGlobal( W.typeI32, i32c( 0 ) );
       // Map の削除済みの印
@@ -294,9 +315,19 @@ pub fn Runtime.strLen( val:&W.Ins ) : &W.Ins {
    return W.arrayLen( val );
 }
 
+/** 標準出力に文字列を出力する関数 (引数: 文字列) */
+pub fn Runtime.fnHostWrite() mut : int {
+   return self.hostFunc( "write", [ self.strType ], [] );
+}
+/** 標準エラーに文字列を出力する関数 (引数: 文字列) */
+pub fn Runtime.fnHostWriteErr() mut : int {
+   return self.hostFunc( "write_err", [ self.strType ], [] );
+}
+
 /** エラーを出して停止する */
-pub fn Runtime.error( mess:&W.Ins ) : &W.Ins {
-   return W.seq( [ W.call( self.fnHostError, [ mess ] ), W.unreachable() ] );
+pub fn Runtime.error( mess:&W.Ins ) mut : &W.Ins {
+   return W.seq( [ W.call( self.hostFunc( "error", [ self.strType ], [] ), [ mess ] ),
+                   W.unreachable() ] );
 }
 
 /** 文字列の連結 */
@@ -512,7 +543,12 @@ pub fn Runtime.fnToStr() mut : int {
              [ W.ret( [ W.ifElse( self.unboxBool( lg( 0 ) ),
                                   [ self.strLiteral( "true" ) ],
                                   [ self.strLiteral( "false" ) ], strType ) ] ) ] ),
-      when_( W.refTest( self.tClo, lg( 0 ) ),
+      when_( p( W.opI32Or,
+                [ W.refTest( self.tClo, lg( 0 ) ),
+                  // Lua の関数 (wasm の i32.and は両辺を評価するので、if で判定する)
+                  W.ifElse( W.refTest( self.tLuaVal, lg( 0 ) ),
+                            [ p( W.opI32Eq, [ self.luaValType( lg( 0 ) ), i32c( luaTFunction ) ] ) ],
+                            [ i32c( 0 ) ], W.typeI32 ) ] ),
              [ W.ret( [ W.call( concat, [ self.strLiteral( "function: 0x" ),
                                           W.call( self.fnHex8(),
                                                   [ W.call( self.fnIdHash(),
@@ -995,15 +1031,15 @@ pub fn Runtime.fnPrintList() mut : int {
       W.block( [
          W.loop( [
             W.brIf( 1, p( W.opI32GeS, [ lg( pos ), W.structGet( self.tList, fListLen, lg( 0 ) ) ] ) ),
-            when_( lg( pos ), [ W.call( self.fnHostWrite, [ tab ] ) ] ),
-            W.call( self.fnHostWrite,
+            when_( lg( pos ), [ W.call( self.fnHostWrite(), [ tab ] ) ] ),
+            W.call( self.fnHostWrite(),
                     [ W.call( self.fnToStr(),
                               [ W.arrayGet( self.tAnyArr,
                                             W.structGet( self.tList, fListItems, lg( 0 ) ),
                                             lg( pos ) ) ] ) ] ),
             incr( pos ),
             W.br( 0 ) ], nil ) ], nil ),
-      W.call( self.fnHostWrite, [ self.strLiteral( "\n" ) ] ) ] );
+      W.call( self.fnHostWrite(), [ self.strLiteral( "\n" ) ] ) ] );
    return index;
 }
 
@@ -1161,31 +1197,6 @@ pub fn Runtime.fnListSort() mut : int {
 
 // ======== ホストに公開する関数 ========
 
-/** ホストが値を読み書きするための関数を export する */
-pub fn Runtime.exportHostFuncs() mut {
-   // ホストで文字列を生成するための関数 (ファイルの読み込みなどで使う)
-   {
-      let index, mut func = self.mod.addFunc( [ W.typeI32 ], [ self.strType ] );
-      func.setBody( [ W.arrayNewDefault( self.tStr, lg( 0 ) ) ] );
-      self.mod.exportFunc( "lns_str_new", index );
-   }
-   {
-      let index, mut func = self.mod.addFunc( [ self.strType, W.typeI32, W.typeI32 ], [] );
-      func.setBody( [ W.arraySet( self.tStr, lg( 0 ), lg( 1 ), lg( 2 ) ) ] );
-      self.mod.exportFunc( "lns_str_set", index );
-   }
-   {
-      let index, mut func = self.mod.addFunc( [ self.strType ], [ W.typeI32 ] );
-      func.setBody( [ W.arrayLen( lg( 0 ) ) ] );
-      self.mod.exportFunc( "lns_str_len", index );
-   }
-   {
-      let index, mut func = self.mod.addFunc( [ self.strType, W.typeI32 ], [ W.typeI32 ] );
-      func.setBody( [ W.arrayGetU( self.tStr, lg( 0 ), lg( 1 ) ) ] );
-      self.mod.exportFunc( "lns_str_get", index );
-   }
-}
-
 // ======== Lua ランタイム ========
 
 /** Lua の builtin の関数の ID (lnslua.c の s_builtinList の順番) */
@@ -1208,6 +1219,26 @@ pub let luaGmatchAll = 14;
 /** str.replace (lnslua.c で Lua で書いた関数。Lua 版の _lune.replace と同じ) */
 pub let luaReplace = 15;
 pub let luaSub = 16;
+pub let luaRandom = 17;
+pub let luaRandomseed = 18;
+/** _load (Lua 版の _lune.loadstring52 と同じ。引数: txt, env, chunkname) */
+pub let luaLoad = 19;
+/** require (lnslua.c の l_require) */
+pub let luaRequire = 20;
+/** package.path の値を返す関数 */
+pub let luaPackagePath = 21;
+pub let luaSearchpath = 22;
+pub let luaDump = 23;
+/** Lua の _G を返す関数 */
+pub let luaGlobals = 24;
+/** DependLuaOnLns.runLuaOnLns (マクロの実行。Lua 版の LuneScript を使う) */
+pub let luaRunLuaOnLns = 25;
+/** Lua の package.preload にモジュールを登録する (引数: モジュール名、コード、chunkname) */
+pub let luaPreload = 26;
+
+/** Lua の型 (lua_type() の値) */
+pub let luaTTable = 5;
+pub let luaTFunction = 6;
 
 /**
 Lua (lnslua.c) の関数を import し、関数の ID を返す。
@@ -1220,11 +1251,8 @@ fn Runtime.luaFunc( name:str, params:&List<&W.ValType>,
    if! let funcId = self.name2luaFunc[ name ] {
       return funcId;
    }
-   if not self.luaImported {
-      self.mod.importMemory( "lua", "memory" );
-      self.luaImported = true;
-   }
-   let funcId = self.mod.importFunc( "lua", "lnsl_" .. name, params, results );
+   self.luaImported = true;
+   let funcId = self.mod.importFunc( cModule, "lnsl_" .. name, params, results );
    self.mod.setFuncName( funcId, "lua." .. name );
    self.name2luaFunc[ name ] = funcId;
    return funcId;
@@ -1283,7 +1311,8 @@ fn Runtime.fnLuaToStr() mut : int {
 /**
 値を Lua のスタックに push する。
 
-nil・数値・bool・文字列以外は、tostring() した文字列を push する。
+Lua の値 (Luaval) はその値、List・Map (Set) は Lua のテーブルに変換して push する。
+それ以外は、tostring() した文字列を push する。
 */
 fn Runtime.fnLuaPushAny() mut : int {
    if! let index = self.getFunc( "luaPushAny" ) {
@@ -1293,9 +1322,45 @@ fn Runtime.fnLuaPushAny() mut : int {
    let fnPushInt = self.luaFunc( "push_int", [ W.typeI64 ], [] );
    let fnPushReal = self.luaFunc( "push_real", [ W.typeF64 ], [] );
    let fnPushBool = self.luaFunc( "push_bool", [ W.typeI32 ], [] );
+   let fnPushRef = self.luaFunc( "push_ref", [ W.typeI32 ], [] );
+   let fnNewTable = self.luaFunc( "new_table", [], [] );
+   let fnSetTable = self.luaFunc( "set_table", [ W.typeI32 ], [] );
    let index, mut func = self.newFunc( "luaPushAny", [ W.typeAnyRef ], [] );
+   let list = func.addLocal( self.listType );
+   let map = func.addLocal( self.mapType );
+   let pos = func.addLocal( W.typeI32 );
    func.setBody( [
       when_( W.refIsNull( lg( 0 ) ), [ W.call( fnPushNil, [] ), W.ret( [] ) ] ),
+      when_( W.refTest( self.tLuaVal, lg( 0 ) ),
+             [ W.call( fnPushRef, [ self.luaValRef( lg( 0 ) ) ] ), W.ret( [] ) ] ),
+      when_( W.refTest( self.tList, lg( 0 ) ), [
+         ls( list, W.refCast( self.tList, lg( 0 ) ) ),
+         W.call( fnNewTable, [] ),
+         W.block( [
+            W.loop( [
+               W.brIf( 1, p( W.opI32GeS, [ lg( pos ),
+                                           W.structGet( self.tList, fListLen, lg( list ) ) ] ) ),
+               incr( pos ),
+               W.call( fnPushInt, [ p( W.opI64ExtendI32S, [ lg( pos ) ] ) ] ),
+               W.call( index, [ W.arrayGet( self.tAnyArr,
+                                            W.structGet( self.tList, fListItems, lg( list ) ),
+                                            p( W.opI32Sub, [ lg( pos ), i32c( 1 ) ] ) ) ] ),
+               W.call( fnSetTable, [ i32c( -3 ) ] ),
+               W.br( 0 ) ], nil ) ], nil ),
+         W.ret( [] ) ] ),
+      when_( W.refTest( self.tMap, lg( 0 ) ), [
+         ls( map, W.refCast( self.tMap, lg( 0 ) ) ),
+         W.call( fnNewTable, [] ),
+         W.block( [
+            W.loop( [
+               ls( pos, W.call( self.fnMapNext(), [ lg( map ), lg( pos ) ] ) ),
+               W.brIf( 1, p( W.opI32LtS, [ lg( pos ), i32c( 0 ) ] ) ),
+               W.call( index, [ self.mapKeyAt( lg( map ), lg( pos ) ) ] ),
+               W.call( index, [ self.mapValAt( lg( map ), lg( pos ) ) ] ),
+               W.call( fnSetTable, [ i32c( -3 ) ] ),
+               incr( pos ),
+               W.br( 0 ) ], nil ) ], nil ),
+         W.ret( [] ) ] ),
       when_( W.refTest( self.tBoxI64, lg( 0 ) ),
              [ W.call( fnPushInt, [ self.unboxI64( lg( 0 ) ) ] ), W.ret( [] ) ] ),
       when_( W.refTest( self.tBoxF64, lg( 0 ) ),
@@ -1311,7 +1376,7 @@ fn Runtime.fnLuaPushAny() mut : int {
 /**
 Lua のスタックの index の値を取得する。
 
-nil・数値・bool・文字列以外は null にする。
+nil・数値・bool・文字列以外 (テーブル・関数など) は、Lua の値の参照 ($LuaVal) にする。
 */
 fn Runtime.fnLuaGetAny() mut : int {
    if! let index = self.getFunc( "luaGetAny" ) {
@@ -1321,18 +1386,27 @@ fn Runtime.fnLuaGetAny() mut : int {
    let fnToInt = self.luaFunc( "to_int", [ W.typeI32 ], [ W.typeI64 ] );
    let fnToReal = self.luaFunc( "to_real", [ W.typeI32 ], [ W.typeF64 ] );
    let fnToBool = self.luaFunc( "to_bool", [ W.typeI32 ], [ W.typeI32 ] );
+   let fnRef = self.luaFunc( "ref", [ W.typeI32 ], [ W.typeI32 ] );
+   let fnType = self.luaFunc( "type", [ W.typeI32 ], [ W.typeI32 ] );
+   let fnRegister = self.jsFunc( "luaval_new", [ W.typeAnyRef, W.typeI32 ], [] );
    let index, mut func = self.newFunc( "luaGetAny", [ W.typeI32 ], [ W.typeAnyRef ] );
    let kind = func.addLocal( W.typeI32 );
+   let luaVal = func.addLocal( W.refType( self.tLuaVal ) );
    let isKind = fn ( val:int ) : &W.Ins {
       return p( W.opI32Eq, [ lg( kind ), i32c( val ) ] );
    };
    func.setBody( [
       ls( kind, W.call( fnKind, [ lg( 0 ) ] ) ),
+      when_( isKind( 0 ), [ W.ret( [ W.refNull( W.htAny ) ] ) ] ),
       when_( isKind( 1 ), [ W.ret( [ self.boxI64( W.call( fnToInt, [ lg( 0 ) ] ) ) ] ) ] ),
       when_( isKind( 2 ), [ W.ret( [ self.boxF64( W.call( fnToReal, [ lg( 0 ) ] ) ) ] ) ] ),
       when_( isKind( 3 ), [ W.ret( [ self.boxBool( W.call( fnToBool, [ lg( 0 ) ] ) ) ] ) ] ),
       when_( isKind( 4 ), [ W.ret( [ W.call( self.fnLuaToStr(), [ lg( 0 ) ] ) ] ) ] ),
-      W.refNull( W.htAny ) ] );
+      ls( luaVal, W.structNew( self.tLuaVal, [ i32c( 0 ), W.call( fnRef, [ lg( 0 ) ] ),
+                                               W.call( fnType, [ lg( 0 ) ] ) ] ) ),
+      // GC で回収された時に Lua の registry の登録を解除するように、ホストに登録する
+      W.call( fnRegister, [ lg( luaVal ), self.luaValRef( lg( luaVal ) ) ] ),
+      lg( luaVal ) ] );
    return index;
 }
 
@@ -1348,23 +1422,56 @@ pub fn Runtime.fnLuaCall() mut : int {
       return index;
    }
    let fnPushBuiltin = self.luaFunc( "push_builtin", [ W.typeI32 ], [] );
+   let index, mut func = self.newFunc(
+      "luaCall", [ W.typeI32, self.listType ], [ self.listType ] );
+   func.setBody( [
+      W.call( fnPushBuiltin, [ lg( 0 ) ] ),
+      W.call( self.fnLuaCallPushed(), [ lg( 1 ) ] ) ] );
+   return index;
+}
+
+/**
+Lua の値 (関数など) を呼び出し、戻り値を List で返す。
+
+引数: 関数 (anyref)、引数の List
+*/
+pub fn Runtime.fnLuaCallVal() mut : int {
+   if! let index = self.getFunc( "luaCallVal" ) {
+      return index;
+   }
+   let index, mut func = self.newFunc(
+      "luaCallVal", [ W.typeAnyRef, self.listType ], [ self.listType ] );
+   func.setBody( [
+      W.call( self.fnLuaPushAny(), [ lg( 0 ) ] ),
+      W.call( self.fnLuaCallPushed(), [ lg( 1 ) ] ) ] );
+   return index;
+}
+
+/**
+push 済みの Lua の関数を呼び出し、戻り値を List で返す。
+
+引数: 引数の List
+*/
+fn Runtime.fnLuaCallPushed() mut : int {
+   if! let index = self.getFunc( "luaCallPushed" ) {
+      return index;
+   }
    let fnCall = self.luaFunc( "call", [ W.typeI32 ], [ W.typeI32 ] );
    let fnSettop = self.luaFunc( "settop", [ W.typeI32 ], [] );
    let index, mut func = self.newFunc(
-      "luaCall", [ W.typeI32, self.listType ], [ self.listType ] );
+      "luaCallPushed", [ self.listType ], [ self.listType ] );
    let argNum = func.addLocal( W.typeI32 );
    let num = func.addLocal( W.typeI32 );
    let pos = func.addLocal( W.typeI32 );
    let result = func.addLocal( self.listType );
    let mess = func.addLocal( self.strType );
    func.setBody( [
-      W.call( fnPushBuiltin, [ lg( 0 ) ] ),
-      ls( argNum, W.structGet( self.tList, fListLen, lg( 1 ) ) ),
+      ls( argNum, W.structGet( self.tList, fListLen, lg( 0 ) ) ),
       W.block( [
          W.loop( [
             W.brIf( 1, p( W.opI32GeS, [ lg( pos ), lg( argNum ) ] ) ),
             W.call( self.fnLuaPushAny(),
-                    [ W.arrayGet( self.tAnyArr, W.structGet( self.tList, fListItems, lg( 1 ) ),
+                    [ W.arrayGet( self.tAnyArr, W.structGet( self.tList, fListItems, lg( 0 ) ),
                                   lg( pos ) ) ] ),
             incr( pos ),
             W.br( 0 ) ], nil ) ], nil ),
@@ -1391,6 +1498,266 @@ pub fn Runtime.listItem( list:&W.Ins, index:int ) : &W.Ins {
    return W.arrayGet( self.tAnyArr, W.structGet( self.tList, fListItems, list ), i32c( index ) );
 }
 
+// ======== Lua の値 (Luaval) ========
+
+/**
+Lua の値の要素 (fnLuaGetAt) を呼び出す関数。
+
+stem の値の要素の参照など、Lua を使わないプログラムでも生成する処理から呼ぶ。
+本体は finalizeLazyLua() で生成し、Lua を import していない場合は Lua を import しない
+(その場合 Lua の値は存在しないので、呼ばれることは無い)。
+*/
+pub fn Runtime.fnLuaGetAtLazy() mut : int {
+   if! let index = self.getFunc( "luaGetAtLazy" ) {
+      return index;
+   }
+   let index, mut func = self.newFunc(
+      "luaGetAtLazy", [ W.typeAnyRef, W.typeAnyRef ], [ W.typeAnyRef ] );
+   self.lazyFuncMap[ "luaGetAtLazy" ] = func;
+   return index;
+}
+/** Lua の値の関数の呼び出し (fnLuaCallVal) を呼び出す関数。fnLuaGetAtLazy() と同じ */
+pub fn Runtime.fnLuaCallValLazy() mut : int {
+   if! let index = self.getFunc( "luaCallValLazy" ) {
+      return index;
+   }
+   let index, mut func = self.newFunc(
+      "luaCallValLazy", [ W.typeAnyRef, self.listType ], [ self.listType ] );
+   self.lazyFuncMap[ "luaCallValLazy" ] = func;
+   return index;
+}
+/** fnLuaGetAtLazy() などの本体を生成する。モジュールの全ての関数を生成した後に呼ぶ */
+pub fn Runtime.finalizeLazyLua() mut {
+   let lazyList:&List<&List<str>> = [ [ "luaGetAtLazy", "getAt" ], [ "luaCallValLazy", "callVal" ] ];
+   foreach item in lazyList {
+      let! mut func = self.lazyFuncMap[ item[ 1 ] ] {
+         continue;
+      };
+      let mut body:List<&W.Ins> = [];
+      if self.luaImported {
+         let target;
+         if item[ 2 ] == "getAt" {
+            target = self.fnLuaGetAt();
+         } else {
+            target = self.fnLuaCallVal();
+         }
+         body.insert( W.call( target, [ lg( 0 ), lg( 1 ) ] ) );
+      } else {
+         body.insert( W.unreachable() );
+      }
+      func.setBody( body );
+   }
+}
+
+/** Lua の値の registry の参照番号 (i32) */
+pub fn Runtime.luaValRef( val:&W.Ins ) : &W.Ins {
+   return W.structGet( self.tLuaVal, 1, W.refCast( self.tLuaVal, val ) );
+}
+/** Lua の値の Lua の型 (i32) */
+pub fn Runtime.luaValType( val:&W.Ins ) : &W.Ins {
+   return W.structGet( self.tLuaVal, 2, W.refCast( self.tLuaVal, val ) );
+}
+
+/**
+Lua の値の要素 (Lua の obj[key])。
+
+引数: Lua の値、キー (anyref)
+*/
+pub fn Runtime.fnLuaGetAt() mut : int {
+   if! let index = self.getFunc( "luaGetAt" ) {
+      return index;
+   }
+   let fnPushRef = self.luaFunc( "push_ref", [ W.typeI32 ], [] );
+   let fnGetTable = self.luaFunc( "get_table", [ W.typeI32 ], [] );
+   let fnSettop = self.luaFunc( "settop", [ W.typeI32 ], [] );
+   let index, mut func = self.newFunc(
+      "luaGetAt", [ W.typeAnyRef, W.typeAnyRef ], [ W.typeAnyRef ] );
+   let result = func.addLocal( W.typeAnyRef );
+   func.setBody( [
+      W.call( fnPushRef, [ self.luaValRef( lg( 0 ) ) ] ),
+      W.call( self.fnLuaPushAny(), [ lg( 1 ) ] ),
+      W.call( fnGetTable, [ i32c( -2 ) ] ),
+      ls( result, W.call( self.fnLuaGetAny(), [ i32c( -1 ) ] ) ),
+      W.call( fnSettop, [ i32c( 0 ) ] ),
+      lg( result ) ] );
+   return index;
+}
+
+/** Lua の値の長さ (Lua の # 演算子)。引数: Lua の値 */
+pub fn Runtime.fnLuaLen() mut : int {
+   if! let index = self.getFunc( "luaLen" ) {
+      return index;
+   }
+   let fnPushRef = self.luaFunc( "push_ref", [ W.typeI32 ], [] );
+   let fnLen = self.luaFunc( "len", [ W.typeI32 ], [ W.typeI64 ] );
+   let fnSettop = self.luaFunc( "settop", [ W.typeI32 ], [] );
+   let index, mut func = self.newFunc( "luaLen", [ W.typeAnyRef ], [ W.typeI64 ] );
+   let result = func.addLocal( W.typeI64 );
+   func.setBody( [
+      W.call( fnPushRef, [ self.luaValRef( lg( 0 ) ) ] ),
+      ls( result, W.call( fnLen, [ i32c( -1 ) ] ) ),
+      W.call( fnSettop, [ i32c( 0 ) ] ),
+      lg( result ) ] );
+   return index;
+}
+
+/**
+Lua のテーブルの 1 からの連続した要素を List にする (Lua の ipairs と同じ範囲)。
+
+要素のテーブルは Lua の値のまま (変換しない)。引数: Lua の値
+*/
+pub fn Runtime.fnLuaToList() mut : int {
+   if! let index = self.getFunc( "luaToList" ) {
+      return index;
+   }
+   let fnPushRef = self.luaFunc( "push_ref", [ W.typeI32 ], [] );
+   let fnPushInt = self.luaFunc( "push_int", [ W.typeI64 ], [] );
+   let fnGetTable = self.luaFunc( "get_table", [ W.typeI32 ], [] );
+   let fnSettop = self.luaFunc( "settop", [ W.typeI32 ], [] );
+   let index, mut func = self.newFunc( "luaToList", [ W.typeAnyRef ], [ self.listType ] );
+   let list = func.addLocal( self.listType );
+   let pos = func.addLocal( W.typeI64 );
+   let val = func.addLocal( W.typeAnyRef );
+   func.setBody( [
+      ls( list, W.call( self.fnListNew(), [ i32c( 4 ) ] ) ),
+      W.call( fnPushRef, [ self.luaValRef( lg( 0 ) ) ] ),
+      W.block( [
+         W.loop( [
+            ls( pos, p( W.opI64Add, [ lg( pos ), i64c( 1 ) ] ) ),
+            W.call( fnPushInt, [ lg( pos ) ] ),
+            W.call( fnGetTable, [ i32c( 1 ) ] ),
+            ls( val, W.call( self.fnLuaGetAny(), [ i32c( 2 ) ] ) ),
+            W.call( fnSettop, [ i32c( 1 ) ] ),
+            W.brIf( 1, W.refIsNull( lg( val ) ) ),
+            W.call( self.fnListPush(), [ lg( list ), lg( val ) ] ),
+            W.br( 0 ) ], nil ) ], nil ),
+      W.call( fnSettop, [ i32c( 0 ) ] ),
+      lg( list ) ] );
+   return index;
+}
+
+/**
+Lua のテーブルの全ての要素を Map にする (Lua の pairs と同じ順番)。
+
+expand が true なら、要素のテーブルも再帰的に Map にする (expandLuavalMap)。
+false なら、要素のテーブルは Lua の値のまま。
+
+引数: スタックのテーブルの位置 (i32)、expand (i32)
+*/
+fn Runtime.fnLuaTableToMap() mut : int {
+   if! let index = self.getFunc( "luaTableToMap" ) {
+      return index;
+   }
+   let fnPushNil = self.luaFunc( "push_nil", [], [] );
+   let fnNext = self.luaFunc( "next", [ W.typeI32 ], [ W.typeI32 ] );
+   let fnGettop = self.luaFunc( "gettop", [], [ W.typeI32 ] );
+   let fnSettop = self.luaFunc( "settop", [ W.typeI32 ], [] );
+   let fnType = self.luaFunc( "type", [ W.typeI32 ], [ W.typeI32 ] );
+   let index, mut func = self.newFunc(
+      "luaTableToMap", [ W.typeI32, W.typeI32 ], [ self.mapType ] );
+   let map = func.addLocal( self.mapType );
+   let top = func.addLocal( W.typeI32 );
+   let key = func.addLocal( W.typeAnyRef );
+   let val = func.addLocal( W.typeAnyRef );
+   let getVal = fn ( pos:&W.Ins ) : &W.Ins {
+      return W.ifElse(
+         p( W.opI32And, [ lg( 1 ),
+                          p( W.opI32Eq, [ W.call( fnType, [ pos ] ), i32c( luaTTable ) ] ) ] ),
+         [ W.call( index, [ pos, i32c( 1 ) ] ) ],
+         [ W.call( self.fnLuaGetAny(), [ pos ] ) ], W.typeAnyRef );
+   };
+   func.setBody( [
+      ls( map, self.newMap() ),
+      W.call( fnPushNil, [] ),
+      W.block( [
+         W.loop( [
+            W.brIf( 1, p( W.opI32Eqz, [ W.call( fnNext, [ lg( 0 ) ] ) ] ) ),
+            ls( top, W.call( fnGettop, [] ) ),
+            ls( key, getVal( p( W.opI32Sub, [ lg( top ), i32c( 1 ) ] ) ) ),
+            ls( val, getVal( lg( top ) ) ),
+            W.call( self.fnMapSet(), [ lg( map ), lg( key ), lg( val ) ] ),
+            // 値を取り除き、キーを次の lua_next() のために残す
+            W.call( fnSettop, [ p( W.opI32Sub, [ lg( top ), i32c( 1 ) ] ) ] ),
+            W.br( 0 ) ], nil ) ], nil ),
+      lg( map ) ] );
+   return index;
+}
+
+/**
+Lua の値を Map にする。
+
+引数: Lua の値、expand (i32。fnLuaTableToMap を参照)
+*/
+pub fn Runtime.fnLuaToMap() mut : int {
+   if! let index = self.getFunc( "luaToMap" ) {
+      return index;
+   }
+   let fnPushRef = self.luaFunc( "push_ref", [ W.typeI32 ], [] );
+   let fnSettop = self.luaFunc( "settop", [ W.typeI32 ], [] );
+   let index, mut func = self.newFunc(
+      "luaToMap", [ W.typeAnyRef, W.typeI32 ], [ self.mapType ] );
+   let map = func.addLocal( self.mapType );
+   func.setBody( [
+      W.call( fnPushRef, [ self.luaValRef( lg( 0 ) ) ] ),
+      ls( map, W.call( self.fnLuaTableToMap(), [ i32c( 1 ), lg( 1 ) ] ) ),
+      W.call( fnSettop, [ i32c( 0 ) ] ),
+      lg( map ) ] );
+   return index;
+}
+
+/**
+expandLuavalMap。Lua のテーブルを再帰的に Map にする。
+
+テーブル以外の値は、そのまま返す。引数: 値
+*/
+pub fn Runtime.fnLuaExpand() mut : int {
+   if! let index = self.getFunc( "luaExpand" ) {
+      return index;
+   }
+   let index, mut func = self.newFunc( "luaExpand", [ W.typeAnyRef ], [ W.typeAnyRef ] );
+   func.setBody( [
+      when_( W.refTest( self.tLuaVal, lg( 0 ) ), [
+         when_( p( W.opI32Eq, [ self.luaValType( lg( 0 ) ), i32c( luaTTable ) ] ),
+                [ W.ret( [ W.call( self.fnLuaToMap(), [ lg( 0 ), i32c( 1 ) ] ) ] ) ] ) ] ),
+      lg( 0 ) ] );
+   return index;
+}
+
+/**
+loadfile。ファイルを読み込み、Lua の load でロードする。
+
+引数: パス。戻り値は Lua と同じく、[関数] または [nil, エラー] の List
+*/
+pub fn Runtime.fnLuaLoadfile() mut : int {
+   if! let index = self.getFunc( "luaLoadfile" ) {
+      return index;
+   }
+   let index, mut func = self.newFunc( "luaLoadfile", [ self.strType ], [ self.listType ] );
+   let file = func.addLocal( self.objType );
+   let mess = func.addLocal( self.strType );
+   let txt = func.addLocal( self.strType );
+   let args = func.addLocal( self.listType );
+   func.setBody( [
+      W.call( self.fnIoOpen(), [ lg( 0 ), W.refNull( self.tStr ) ] ),
+      ls( mess, W.nop() ),
+      ls( file, W.nop() ),
+      ls( args, W.call( self.fnListNew(), [ i32c( 2 ) ] ) ),
+      W.ifElse( W.refIsNull( lg( file ) ), [
+         W.call( self.fnListPush(), [ lg( args ), W.refNull( W.htAny ) ] ),
+         W.call( self.fnListPush(),
+                 [ lg( args ), W.call( self.fnStrConcat(),
+                                       [ self.strLiteral( "cannot open " ), lg( mess ) ] ) ] ),
+         W.ret( [ lg( args ) ] ) ], nil, nil ),
+      ls( txt, W.call( self.fnFileRead(), [ lg( file ), self.strLiteral( "a" ) ] ) ),
+      W.call( self.fnFileClose(), [ lg( file ) ] ),
+      W.call( self.fnListPush(), [ lg( args ), lg( txt ) ] ),
+      W.call( self.fnListPush(), [ lg( args ), W.refNull( W.htAny ) ] ),
+      W.call( self.fnListPush(),
+              [ lg( args ), W.call( self.fnStrConcat(), [ self.strLiteral( "@" ), lg( 0 ) ] ) ] ),
+      W.call( self.fnLuaCall(), [ i32c( luaLoad ), lg( args ) ] ) ] );
+   return index;
+}
+
 /** 実数を文字列にする (Lua の tostring) */
 pub fn Runtime.fnRealToStr() mut : int {
    if! let index = self.getFunc( "realToStr" ) {
@@ -1412,13 +1779,13 @@ pub fn Runtime.fnRealToStr() mut : int {
    return index;
 }
 
-/** string.format。引数: 書式、値の List */
-pub fn Runtime.fnFormat() mut : int {
-   if! let index = self.getFunc( "format" ) {
+/** string.format を Lua で実行する。引数: 書式、値の List */
+fn Runtime.fnFormatLua() mut : int {
+   if! let index = self.getFunc( "formatLua" ) {
       return index;
    }
    let index, mut func = self.newFunc(
-      "format", [ self.strType, self.listType ], [ self.strType ] );
+      "formatLua", [ self.strType, self.listType ], [ self.strType ] );
    let args = func.addLocal( self.listType );
    func.setBody( [
       ls( args, W.call( self.fnListNew(), [ i32c( 8 ) ] ) ),
@@ -1427,6 +1794,250 @@ pub fn Runtime.fnFormat() mut : int {
       W.refCast( self.tStr,
                  self.listItem( W.call( self.fnLuaCall(), [ i32c( luaFormat ), lg( args ) ] ),
                                 0 ) ) ] );
+   return index;
+}
+
+/** 文字列の List を連結する */
+fn Runtime.fnStrJoin() mut : int {
+   if! let index = self.getFunc( "strJoin" ) {
+      return index;
+   }
+   let strIdx = self.tStr;
+   let index, mut func = self.newFunc( "strJoin", [ self.listType ], [ self.strType ] );
+   let num = func.addLocal( W.typeI32 );
+   let pos = func.addLocal( W.typeI32 );
+   let total = func.addLocal( W.typeI32 );
+   let work = func.addLocal( self.strType );
+   let item = func.addLocal( self.strType );
+   let itemAt = fn () : &W.Ins {
+      return W.refCast( strIdx, W.arrayGet( self.tAnyArr,
+                                            W.structGet( self.tList, fListItems, lg( 0 ) ),
+                                            lg( pos ) ) );
+   };
+   func.setBody( [
+      ls( num, W.structGet( self.tList, fListLen, lg( 0 ) ) ),
+      W.block( [
+         W.loop( [
+            W.brIf( 1, p( W.opI32GeS, [ lg( pos ), lg( num ) ] ) ),
+            ls( total, p( W.opI32Add, [ lg( total ), W.arrayLen( itemAt() ) ] ) ),
+            incr( pos ),
+            W.br( 0 ) ], nil ) ], nil ),
+      ls( work, W.arrayNewDefault( strIdx, lg( total ) ) ),
+      ls( total, i32c( 0 ) ),
+      ls( pos, i32c( 0 ) ),
+      W.block( [
+         W.loop( [
+            W.brIf( 1, p( W.opI32GeS, [ lg( pos ), lg( num ) ] ) ),
+            ls( item, itemAt() ),
+            W.arrayCopy( strIdx, strIdx, lg( work ), lg( total ), lg( item ), i32c( 0 ),
+                         W.arrayLen( lg( item ) ) ),
+            ls( total, p( W.opI32Add, [ lg( total ), W.arrayLen( lg( item ) ) ] ) ),
+            incr( pos ),
+            W.br( 0 ) ], nil ) ], nil ),
+      lg( work ) ] );
+   return index;
+}
+
+/**
+string.format。引数: 書式、値の List
+
+書式が %s・%d・%c・%% だけの場合は wasm の中で処理する。
+それ以外の書式や、Lua の値 (%s) や int 以外 (%d・%c) の引数などは、Lua の string.format で処理する
+(エラーのメッセージも Lua と同じにするため)。
+*/
+pub fn Runtime.fnFormat() mut : int {
+   if! let index = self.getFunc( "format" ) {
+      return index;
+   }
+   let strIdx = self.tStr;
+   let index, mut func = self.newFunc(
+      "format", [ self.strType, self.listType ], [ self.strType ] );
+   let len = func.addLocal( W.typeI32 );
+   let pos = func.addLocal( W.typeI32 );
+   let start = func.addLocal( W.typeI32 );
+   let argPos = func.addLocal( W.typeI32 );
+   let code = func.addLocal( W.typeI32 );
+   let arg = func.addLocal( W.typeAnyRef );
+   let pieces = func.addLocal( self.listType );
+   let fallback = W.ret( [ W.call( self.fnFormatLua(), [ lg( 0 ), lg( 1 ) ] ) ] );
+   // fmt[ from, to ) を pieces に追加する
+   let pushSeg = fn ( from:&W.Ins, to:&W.Ins ) : &W.Ins {
+      return W.call( self.fnListPush(), [
+         lg( pieces ), W.call( self.fnStrSub(), [ lg( 0 ), p( W.opI64ExtendI32S, [ from ] ),
+                                                  p( W.opI64ExtendI32S, [ to ] ) ] ) ] );
+   };
+   func.setBody( [
+      ls( len, W.arrayLen( lg( 0 ) ) ),
+      ls( pieces, W.call( self.fnListNew(), [ i32c( 8 ) ] ) ),
+      W.block( [
+         W.loop( [
+            W.brIf( 1, p( W.opI32GeS, [ lg( pos ), lg( len ) ] ) ),
+            when_( p( W.opI32Eq, [ W.arrayGetU( strIdx, lg( 0 ), lg( pos ) ), i32c( 0x25 ) ] ), [
+               when_( p( W.opI32GeS, [ p( W.opI32Add, [ lg( pos ), i32c( 1 ) ] ), lg( len ) ] ),
+                      [ fallback ] ),
+               ls( code, W.arrayGetU( strIdx, lg( 0 ), p( W.opI32Add, [ lg( pos ), i32c( 1 ) ] ) ) ),
+               W.ifElse( p( W.opI32Eq, [ lg( code ), i32c( 0x25 ) ] ), [
+                  // %% は % を 1 つ残す
+                  pushSeg( p( W.opI32Add, [ lg( start ), i32c( 1 ) ] ),
+                           p( W.opI32Add, [ lg( pos ), i32c( 1 ) ] ) ) ], [
+                  when_( p( W.opI32GeS, [ lg( argPos ),
+                                          W.structGet( self.tList, fListLen, lg( 1 ) ) ] ),
+                         [ fallback ] ),
+                  ls( arg, W.arrayGet( self.tAnyArr, W.structGet( self.tList, fListItems, lg( 1 ) ),
+                                       lg( argPos ) ) ),
+                  incr( argPos ),
+                  pushSeg( p( W.opI32Add, [ lg( start ), i32c( 1 ) ] ), lg( pos ) ),
+                  W.ifElse( p( W.opI32Eq, [ lg( code ), i32c( 0x73 ) ] ), [
+                     // %s
+                     when_( W.refTest( self.tLuaVal, lg( arg ) ), [ fallback ] ),
+                     W.call( self.fnListPush(), [ lg( pieces ),
+                                                  W.call( self.fnToStr(), [ lg( arg ) ] ) ] ) ], [
+                     // %d・%c (int の場合だけ)
+                     when_( p( W.opI32Eqz, [ W.refTest( self.tBoxI64, lg( arg ) ) ] ),
+                            [ fallback ] ),
+                     W.ifElse( p( W.opI32Eq, [ lg( code ), i32c( 0x64 ) ] ), [
+                        W.call( self.fnListPush(), [
+                           lg( pieces ),
+                           W.call( self.fnI64ToStr(), [ self.unboxI64( lg( arg ) ) ] ) ] ) ], [
+                        when_( p( W.opI32Ne, [ lg( code ), i32c( 0x63 ) ] ), [ fallback ] ),
+                        // Lua の %c は、値の下位 8 ビットの 1 バイト
+                        W.call( self.fnListPush(), [
+                           lg( pieces ),
+                           W.arrayNewFixed( self.tStr,
+                                            [ p( W.opI32WrapI64, [ self.unboxI64( lg( arg ) ) ] ) ] ) ] ) ],
+                               nil ) ], nil ) ],
+                  nil ),
+               ls( pos, p( W.opI32Add, [ lg( pos ), i32c( 2 ) ] ) ),
+               ls( start, lg( pos ) ),
+               W.br( 1 ) ] ),
+            incr( pos ),
+            W.br( 0 ) ], nil ) ], nil ),
+      pushSeg( p( W.opI32Add, [ lg( start ), i32c( 1 ) ] ), lg( len ) ),
+      W.call( self.fnStrJoin(), [ lg( pieces ) ] ) ] );
+   return index;
+}
+
+// ======== 文字列のバッファ (Str.Builder) ========
+//
+// 容量に余裕を持たせた文字列 ($Str の配列) で、先頭の 4 バイトに使用中の長さ (リトルエンディアン) を持つ。
+
+/** バッファの使用中の長さ */
+fn Runtime.bufLen( buf:&W.Ins ) : &W.Ins {
+   return p( W.opI32Or,
+             [ p( W.opI32Or,
+                  [ W.arrayGetU( self.tStr, buf, i32c( 0 ) ),
+                    p( W.opI32Shl, [ W.arrayGetU( self.tStr, buf, i32c( 1 ) ), i32c( 8 ) ] ) ] ),
+               p( W.opI32Or,
+                  [ p( W.opI32Shl, [ W.arrayGetU( self.tStr, buf, i32c( 2 ) ), i32c( 16 ) ] ),
+                    p( W.opI32Shl, [ W.arrayGetU( self.tStr, buf, i32c( 3 ) ), i32c( 24 ) ] ) ] ) ] );
+}
+
+/** バッファの使用中の長さを設定する */
+fn Runtime.setBufLen( buf:&W.Ins, len:&W.Ins ) : &W.Ins {
+   let mut list:List<&W.Ins> = [];
+   for index = 0, 3 {
+      list.insert( W.arraySet( self.tStr, buf, i32c( index ),
+                               p( W.opI32ShrU, [ len, i32c( index * 8 ) ] ) ) );
+   }
+   return W.seq( list );
+}
+
+/** 空のバッファを生成する */
+pub fn Runtime.newBuf() : &W.Ins {
+   return W.arrayNewDefault( self.tStr, i32c( 4 + 256 ) );
+}
+
+/** バッファの使用中の長さ (int) */
+pub fn Runtime.bufLenI64( buf:&W.Ins ) : &W.Ins {
+   return p( W.opI64ExtendI32U, [ self.bufLen( buf ) ] );
+}
+
+/** バッファを空にする */
+pub fn Runtime.clearBuf( buf:&W.Ins ) : &W.Ins {
+   return self.setBufLen( buf, i32c( 0 ) );
+}
+
+/** バッファに文字列を追加する。引数: バッファ、文字列。戻り値: バッファ (容量が足りない場合は新しいバッファ) */
+pub fn Runtime.fnBufAdd() mut : int {
+   if! let index = self.getFunc( "bufAdd" ) {
+      return index;
+   }
+   let strIdx = self.tStr;
+   let index, mut func = self.newFunc( "bufAdd", [ self.strType, self.strType ], [ self.strType ] );
+   let len = func.addLocal( W.typeI32 );
+   let need = func.addLocal( W.typeI32 );
+   let cap = func.addLocal( W.typeI32 );
+   let work = func.addLocal( self.strType );
+   func.setBody( [
+      ls( len, self.bufLen( lg( 0 ) ) ),
+      ls( need, p( W.opI32Add, [ p( W.opI32Add, [ lg( len ), W.arrayLen( lg( 1 ) ) ] ), i32c( 4 ) ] ) ),
+      when_( p( W.opI32GtU, [ lg( need ), W.arrayLen( lg( 0 ) ) ] ), [
+         // 容量を 2 倍 (足りなければ必要な長さ) にする
+         ls( cap, p( W.opI32Shl, [ W.arrayLen( lg( 0 ) ), i32c( 1 ) ] ) ),
+         when_( p( W.opI32GtU, [ lg( need ), lg( cap ) ] ), [ ls( cap, lg( need ) ) ] ),
+         ls( work, W.arrayNewDefault( strIdx, lg( cap ) ) ),
+         W.arrayCopy( strIdx, strIdx, lg( work ), i32c( 0 ), lg( 0 ), i32c( 0 ),
+                      p( W.opI32Add, [ lg( len ), i32c( 4 ) ] ) ),
+         ls( 0, lg( work ) ) ] ),
+      W.arrayCopy( strIdx, strIdx, lg( 0 ), p( W.opI32Add, [ lg( len ), i32c( 4 ) ] ),
+                   lg( 1 ), i32c( 0 ), W.arrayLen( lg( 1 ) ) ),
+      self.setBufLen( lg( 0 ), p( W.opI32Sub, [ lg( need ), i32c( 4 ) ] ) ),
+      lg( 0 ) ] );
+   return index;
+}
+
+/** バッファの内容の文字列 */
+pub fn Runtime.fnBufToStr() mut : int {
+   if! let index = self.getFunc( "bufToStr" ) {
+      return index;
+   }
+   let strIdx = self.tStr;
+   let index, mut func = self.newFunc( "bufToStr", [ self.strType ], [ self.strType ] );
+   let work = func.addLocal( self.strType );
+   func.setBody( [
+      ls( work, W.arrayNewDefault( strIdx, self.bufLen( lg( 0 ) ) ) ),
+      W.arrayCopy( strIdx, strIdx, lg( work ), i32c( 0 ), lg( 0 ), i32c( 4 ),
+                   W.arrayLen( lg( work ) ) ),
+      lg( work ) ] );
+   return index;
+}
+
+/**
+Str.getLineList (改行までの文字列 (改行を含む) と、最後の改行の後の文字列 (空でなければ) の List)。
+
+Lua 版は string.gmatch で分けているが、wasm では Lua を使わずに分ける。
+*/
+pub fn Runtime.fnStrLineList() mut : int {
+   if! let index = self.getFunc( "strLineList" ) {
+      return index;
+   }
+   let index, mut func = self.newFunc( "strLineList", [ self.strType ], [ self.listType ] );
+   let len = func.addLocal( W.typeI32 );
+   let pos = func.addLocal( W.typeI32 );
+   let start = func.addLocal( W.typeI32 );
+   let list = func.addLocal( self.listType );
+   // txt[ start, to ) を list に追加する
+   let pushSeg = fn ( to:&W.Ins ) : &W.Ins {
+      return W.call( self.fnListPush(), [
+         lg( list ), W.call( self.fnStrSub(), [
+            lg( 0 ), p( W.opI64ExtendI32S, [ p( W.opI32Add, [ lg( start ), i32c( 1 ) ] ) ] ),
+            p( W.opI64ExtendI32S, [ to ] ) ] ) ] );
+   };
+   func.setBody( [
+      ls( len, W.arrayLen( lg( 0 ) ) ),
+      ls( list, W.call( self.fnListNew(), [ i32c( 8 ) ] ) ),
+      W.block( [
+         W.loop( [
+            W.brIf( 1, p( W.opI32GeS, [ lg( pos ), lg( len ) ] ) ),
+            incr( pos ),
+            when_( p( W.opI32Eq, [ W.arrayGetU( self.tStr, lg( 0 ),
+                                                p( W.opI32Sub, [ lg( pos ), i32c( 1 ) ] ) ),
+                                   i32c( 0x0a ) ] ), [
+               pushSeg( lg( pos ) ),
+               ls( start, lg( pos ) ) ] ),
+            W.br( 0 ) ], nil ) ], nil ),
+      when_( p( W.opI32LtS, [ lg( start ), lg( len ) ] ), [ pushSeg( lg( len ) ) ] ),
+      lg( list ) ] );
    return index;
 }
 
@@ -1442,13 +2053,329 @@ pub fn Runtime.fnStrFind() mut : int {
    let index, mut func = self.newFunc(
       "strFind", [ self.strType, self.strType, W.typeI64, W.typeI32 ], [ self.listType ] );
    let args = func.addLocal( self.listType );
+   let len = func.addLocal( W.typeI64 );
+   let found = func.addLocal( W.typeI32 );
+   let result = func.addLocal( self.listType );
    func.setBody( [
+      // plain の場合と、パターンに特殊文字が無い場合は wasm の中で探す (Lua の str_find_aux と同じ)
+      when_( p( W.opI32Or, [ lg( 3 ), p( W.opI32Eqz, [ W.call( self.fnHasLuaSpecials(),
+                                                               [ lg( 1 ) ] ) ] ) ] ), [
+         ls( len, p( W.opI64ExtendI32U, [ W.arrayLen( lg( 0 ) ) ] ) ),
+         ls( 2, W.call( self.fnPosRelat(), [ lg( 2 ), lg( len ) ] ) ),
+         when_( p( W.opI64LtS, [ lg( 2 ), i64c( 1 ) ] ), [ ls( 2, i64c( 1 ) ) ] ),
+         ls( result, W.call( self.fnListNew(), [ i32c( 2 ) ] ) ),
+         when_( p( W.opI64GtS, [ lg( 2 ), p( W.opI64Add, [ lg( len ), i64c( 1 ) ] ) ] ), [
+            W.call( self.fnListPush(), [ lg( result ), W.refNull( W.htAny ) ] ),
+            W.ret( [ lg( result ) ] ) ] ),
+         ls( found, W.call( self.fnStrIndexOf(),
+                            [ lg( 0 ), lg( 1 ),
+                              p( W.opI32WrapI64, [ p( W.opI64Sub, [ lg( 2 ), i64c( 1 ) ] ) ] ) ] ) ),
+         W.ifElse( p( W.opI32LtS, [ lg( found ), i32c( 0 ) ] ), [
+            W.call( self.fnListPush(), [ lg( result ), W.refNull( W.htAny ) ] ) ], [
+            W.call( self.fnListPush(),
+                    [ lg( result ),
+                      self.boxI64( p( W.opI64ExtendI32S,
+                                      [ p( W.opI32Add, [ lg( found ), i32c( 1 ) ] ) ] ) ) ] ),
+            W.call( self.fnListPush(),
+                    [ lg( result ),
+                      self.boxI64( p( W.opI64ExtendI32S,
+                                      [ p( W.opI32Add, [ lg( found ), W.arrayLen( lg( 1 ) ) ] ) ] ) ) ] ) ],
+                  nil ),
+         W.ret( [ lg( result ) ] ) ] ),
       ls( args, W.call( self.fnListNew(), [ i32c( 4 ) ] ) ),
       W.call( self.fnListPush(), [ lg( args ), lg( 0 ) ] ),
       W.call( self.fnListPush(), [ lg( args ), lg( 1 ) ] ),
       W.call( self.fnListPush(), [ lg( args ), self.boxI64( lg( 2 ) ) ] ),
       W.call( self.fnListPush(), [ lg( args ), self.boxBool( lg( 3 ) ) ] ),
       W.call( self.fnLuaCall(), [ i32c( luaFind ), lg( args ) ] ) ] );
+   return index;
+}
+
+/** Lua の string ライブラリの posrelat (負の位置を末尾からの位置にする)。引数: 位置、長さ */
+fn Runtime.fnPosRelat() mut : int {
+   if! let index = self.getFunc( "posRelat" ) {
+      return index;
+   }
+   let index, mut func = self.newFunc( "posRelat", [ W.typeI64, W.typeI64 ], [ W.typeI64 ] );
+   func.setBody( [
+      when_( p( W.opI64GeS, [ lg( 0 ), i64c( 0 ) ] ), [ W.ret( [ lg( 0 ) ] ) ] ),
+      when_( p( W.opI64GtS, [ p( W.opI64Sub, [ i64c( 0 ), lg( 0 ) ] ), lg( 1 ) ] ),
+             [ W.ret( [ i64c( 0 ) ] ) ] ),
+      p( W.opI64Add, [ p( W.opI64Add, [ lg( 1 ), lg( 0 ) ] ), i64c( 1 ) ] ) ] );
+   return index;
+}
+
+/** Lua のパターンの特殊文字 (^$*+?.([%-) を含むかどうか */
+fn Runtime.fnHasLuaSpecials() mut : int {
+   if! let index = self.getFunc( "hasLuaSpecials" ) {
+      return index;
+   }
+   let index, mut func = self.newFunc( "hasLuaSpecials", [ self.strType ], [ W.typeI32 ] );
+   let pos = func.addLocal( W.typeI32 );
+   let code = func.addLocal( W.typeI32 );
+   let mut checks:List<&W.Ins> = [];
+   // ^ $ * + ? . ( [ % -
+   foreach ch in [ 0x5e, 0x24, 0x2a, 0x2b, 0x3f, 0x2e, 0x28, 0x5b, 0x25, 0x2d ] {
+      checks.insert( when_( p( W.opI32Eq, [ lg( code ), i32c( ch ) ] ), [ W.ret( [ i32c( 1 ) ] ) ] ) );
+   }
+   let mut loopBody:List<&W.Ins> = [
+      W.brIf( 1, p( W.opI32GeS, [ lg( pos ), W.arrayLen( lg( 0 ) ) ] ) ),
+      ls( code, W.arrayGetU( self.tStr, lg( 0 ), lg( pos ) ) ) ];
+   foreach check in checks {
+      loopBody.insert( check );
+   }
+   loopBody.insert( incr( pos ) );
+   loopBody.insert( W.br( 0 ) );
+   func.setBody( [ W.block( [ W.loop( loopBody, nil ) ], nil ), i32c( 0 ) ] );
+   return index;
+}
+
+/** txt の from (0 始まり) 以降で、最初に ptn が現れる位置 (0 始まり)。無い場合は -1 */
+fn Runtime.fnStrIndexOf() mut : int {
+   if! let index = self.getFunc( "strIndexOf" ) {
+      return index;
+   }
+   let strIdx = self.tStr;
+   let index, mut func = self.newFunc(
+      "strIndexOf", [ self.strType, self.strType, W.typeI32 ], [ W.typeI32 ] );
+   let last = func.addLocal( W.typeI32 );
+   let ptnLen = func.addLocal( W.typeI32 );
+   let first = func.addLocal( W.typeI32 );
+   let pos = func.addLocal( W.typeI32 );
+   func.setBody( [
+      ls( ptnLen, W.arrayLen( lg( 1 ) ) ),
+      ls( last, p( W.opI32Sub, [ W.arrayLen( lg( 0 ) ), lg( ptnLen ) ] ) ),
+      when_( p( W.opI32Eqz, [ lg( ptnLen ) ] ), [ W.ret( [ lg( 2 ) ] ) ] ),
+      ls( first, W.arrayGetU( strIdx, lg( 1 ), i32c( 0 ) ) ),
+      W.block( [
+         W.loop( [
+            W.brIf( 1, p( W.opI32GtS, [ lg( 2 ), lg( last ) ] ) ),
+            when_( p( W.opI32Eq, [ W.arrayGetU( strIdx, lg( 0 ), lg( 2 ) ), lg( first ) ] ), [
+               ls( pos, i32c( 1 ) ),
+               W.block( [
+                  W.loop( [
+                     when_( p( W.opI32GeS, [ lg( pos ), lg( ptnLen ) ] ),
+                            [ W.ret( [ lg( 2 ) ] ) ] ),
+                     W.brIf( 1, p( W.opI32Ne,
+                                   [ W.arrayGetU( strIdx, lg( 0 ),
+                                                  p( W.opI32Add, [ lg( 2 ), lg( pos ) ] ) ),
+                                     W.arrayGetU( strIdx, lg( 1 ), lg( pos ) ) ] ) ),
+                     incr( pos ),
+                     W.br( 0 ) ], nil ) ], nil ) ] ),
+            incr( 2 ),
+            W.br( 0 ) ], nil ) ], nil ),
+      i32c( -1 ) ] );
+   return index;
+}
+
+/**
+Lua の builtin の文字列の関数 (luaId) を wasm の中で処理する関数を返す。
+
+関数の引数・戻り値は fnLuaCall と同じ (引数の List、戻り値の List)。
+想定外の引数の場合は Lua の関数を呼ぶ (エラーのメッセージなども Lua と同じにするため)。
+wasm の中で処理しない関数の場合は nil。
+*/
+pub fn Runtime.getNativeStrFunc( luaId:int ) mut : int! {
+   let name;
+   switch luaId {
+      case luaByte { name = "strByte"; }
+      case luaRep { name = "strRep"; }
+      case luaLower { name = "strLower"; }
+      case luaUpper { name = "strUpper"; }
+      case luaReverse { name = "strReverse"; }
+      case luaLen { name = "strLen"; }
+      case luaReplace { name = "strReplace"; }
+      case luaFind { name = "strFindL"; }
+      case luaSub { name = "strSubL"; }
+      default { return nil; }
+   }
+   if! let index = self.getFunc( name ) {
+      return index;
+   }
+   let strIdx = self.tStr;
+   let index, mut func = self.newFunc( name, [ self.listType ], [ self.listType ] );
+   let txt = func.addLocal( self.strType );
+   let len = func.addLocal( W.typeI32 );
+   let pos = func.addLocal( W.typeI32 );
+   let work = func.addLocal( self.strType );
+   let result = func.addLocal( self.listType );
+   let num1 = func.addLocal( W.typeI64 );
+   let num2 = func.addLocal( W.typeI64 );
+   let str1 = func.addLocal( self.strType );
+   let str2 = func.addLocal( self.strType );
+   let found = func.addLocal( W.typeI32 );
+   let code = func.addLocal( W.typeI32 );
+   let fallback = W.ret( [ W.call( self.fnLuaCall(), [ i32c( luaId ), lg( 0 ) ] ) ] );
+   let argNum = W.structGet( self.tList, fListLen, lg( 0 ) );
+   // argIdx 番目 (0 始まり) の引数 (無い場合は nil)
+   let arg = fn ( argIdx:int ) : &W.Ins {
+      return W.ifElse( p( W.opI32GtS, [ argNum, i32c( argIdx ) ] ),
+                       [ self.listItem( lg( 0 ), argIdx ) ], [ W.refNull( W.htAny ) ], W.typeAnyRef );
+   };
+   // argIdx 番目の引数が int なら dst に設定し、nil なら def を設定する。それ以外は Lua で処理する
+   let optInt = fn ( argIdx:int, dst:int, def:&W.Ins ) : &W.Ins {
+      return W.ifElse( W.refIsNull( arg( argIdx ) ), [ ls( dst, def ) ], [
+         when_( p( W.opI32Eqz, [ W.refTest( self.tBoxI64, arg( argIdx ) ) ] ), [ fallback ] ),
+         ls( dst, self.unboxI64( arg( argIdx ) ) ) ], nil );
+   };
+   // argIdx 番目の引数が str なら dst に設定する。それ以外は Lua で処理する
+   let needStr = fn ( argIdx:int, dst:int ) : &W.Ins {
+      return W.seq( [
+         when_( p( W.opI32Eqz, [ W.refTest( strIdx, arg( argIdx ) ) ] ), [ fallback ] ),
+         ls( dst, W.refCast( strIdx, arg( argIdx ) ) ) ] );
+   };
+   // 1 バイトずつ変換した文字列を返す (conv: code を変換した値)
+   let mapBytes = fn ( conv:&W.Ins ) : List<&W.Ins> {
+      return [
+         ls( work, W.arrayNewDefault( strIdx, lg( len ) ) ),
+         W.block( [
+            W.loop( [
+               W.brIf( 1, p( W.opI32GeS, [ lg( pos ), lg( len ) ] ) ),
+               ls( code, W.arrayGetU( strIdx, lg( txt ), lg( pos ) ) ),
+               W.arraySet( strIdx, lg( work ), lg( pos ), conv ),
+               incr( pos ),
+               W.br( 0 ) ], nil ) ], nil ) ];
+   };
+   // code が from〜to の範囲なら diff を足す
+   let shiftRange = fn ( from:int, to:int, diff:int ) : &W.Ins {
+      return W.select( p( W.opI32Add, [ lg( code ), i32c( diff ) ] ), lg( code ),
+                       p( W.opI32LeU, [ p( W.opI32Sub, [ lg( code ), i32c( from ) ] ),
+                                        i32c( to - from ) ] ) );
+   };
+   let ret1 = fn ( val:&W.Ins ) : List<&W.Ins> {
+      return [
+         ls( result, W.call( self.fnListNew(), [ i32c( 1 ) ] ) ),
+         W.call( self.fnListPush(), [ lg( result ), val ] ),
+         lg( result ) ];
+   };
+   let mut body:List<&W.Ins> = [
+      needStr( 0, txt ),
+      ls( len, W.arrayLen( lg( txt ) ) ) ];
+   switch luaId {
+      case luaByte {
+         // string.byte( s, i, j ) (lstrlib.c の str_byte と同じ)
+         body.insert( optInt( 1, num1, i64c( 1 ) ) );
+         body.insert( ls( num1, W.call( self.fnPosRelat(),
+                                        [ lg( num1 ), p( W.opI64ExtendI32U, [ lg( len ) ] ) ] ) ) );
+         body.insert( optInt( 2, num2, lg( num1 ) ) );
+         body.insert( ls( num2, W.call( self.fnPosRelat(),
+                                        [ lg( num2 ), p( W.opI64ExtendI32U, [ lg( len ) ] ) ] ) ) );
+         body.insert( when_( p( W.opI64LtS, [ lg( num1 ), i64c( 1 ) ] ), [ ls( num1, i64c( 1 ) ) ] ) );
+         body.insert( when_( p( W.opI64GtS, [ lg( num2 ), p( W.opI64ExtendI32U, [ lg( len ) ] ) ] ),
+                             [ ls( num2, p( W.opI64ExtendI32U, [ lg( len ) ] ) ) ] ) );
+         body.insert( ls( result, W.call( self.fnListNew(), [ i32c( 1 ) ] ) ) );
+         body.insert( W.block( [
+            W.loop( [
+               W.brIf( 1, p( W.opI64GtS, [ lg( num1 ), lg( num2 ) ] ) ),
+               W.call( self.fnListPush(), [
+                  lg( result ),
+                  self.boxI64( p( W.opI64ExtendI32U, [
+                     W.arrayGetU( strIdx, lg( txt ),
+                                  p( W.opI32WrapI64, [ p( W.opI64Sub, [ lg( num1 ), i64c( 1 ) ] ) ] ) ) ] ) ) ] ),
+               ls( num1, p( W.opI64Add, [ lg( num1 ), i64c( 1 ) ] ) ),
+               W.br( 0 ) ], nil ) ], nil ) );
+         body.insert( lg( result ) );
+      }
+      case luaRep {
+         // string.rep( s, n, sep )
+         body.insert( when_( p( W.opI32Eqz, [ W.refTest( self.tBoxI64, arg( 1 ) ) ] ),
+                             [ fallback ] ) );
+         body.insert( ls( num1, self.unboxI64( arg( 1 ) ) ) );
+         body.insert( W.ifElse( W.refIsNull( arg( 2 ) ), [ ls( str1, W.arrayNewDefault( strIdx, i32c( 0 ) ) ) ],
+                                [ needStr( 2, str1 ) ], nil ) );
+         body.insert( when_( p( W.opI64LeS, [ lg( num1 ), i64c( 0 ) ] ),
+                             [ W.ret( [ W.seq( ret1( W.arrayNewDefault( strIdx, i32c( 0 ) ) ) ) ] ) ] ) );
+         // 結果の長さ (大きすぎる場合は Lua で処理する)
+         body.insert( ls( num2, p( W.opI64Sub,
+                                   [ p( W.opI64Mul, [ lg( num1 ),
+                                                      p( W.opI64ExtendI32U,
+                                                         [ p( W.opI32Add, [ lg( len ), W.arrayLen( lg( str1 ) ) ] ) ] ) ] ),
+                                     p( W.opI64ExtendI32U, [ W.arrayLen( lg( str1 ) ) ] ) ] ) ) );
+         body.insert( when_( p( W.opI32Or, [ p( W.opI64GtS, [ lg( num1 ), i64c( 0x10000000 ) ] ),
+                                             p( W.opI64GtS, [ lg( num2 ), i64c( 0x10000000 ) ] ) ] ),
+                             [ fallback ] ) );
+         body.insert( ls( work, W.arrayNewDefault( strIdx, p( W.opI32WrapI64, [ lg( num2 ) ] ) ) ) );
+         body.insert( W.block( [
+            W.loop( [
+               W.arrayCopy( strIdx, strIdx, lg( work ), lg( pos ), lg( txt ), i32c( 0 ), lg( len ) ),
+               ls( pos, p( W.opI32Add, [ lg( pos ), lg( len ) ] ) ),
+               ls( num1, p( W.opI64Sub, [ lg( num1 ), i64c( 1 ) ] ) ),
+               W.brIf( 1, p( W.opI64Eqz, [ lg( num1 ) ] ) ),
+               W.arrayCopy( strIdx, strIdx, lg( work ), lg( pos ), lg( str1 ), i32c( 0 ),
+                            W.arrayLen( lg( str1 ) ) ),
+               ls( pos, p( W.opI32Add, [ lg( pos ), W.arrayLen( lg( str1 ) ) ] ) ),
+               W.br( 0 ) ], nil ) ], nil ) );
+         append( body, ret1( lg( work ) ) );
+      }
+      case luaLower {
+         // C ロケールの tolower (A-Z だけ)
+         append( body, mapBytes( shiftRange( 0x41, 0x5a, 0x20 ) ) );
+         append( body, ret1( lg( work ) ) );
+      }
+      case luaUpper {
+         append( body, mapBytes( shiftRange( 0x61, 0x7a, -0x20 ) ) );
+         append( body, ret1( lg( work ) ) );
+      }
+      case luaReverse {
+         body.insert( ls( work, W.arrayNewDefault( strIdx, lg( len ) ) ) );
+         body.insert( W.block( [
+            W.loop( [
+               W.brIf( 1, p( W.opI32GeS, [ lg( pos ), lg( len ) ] ) ),
+               W.arraySet( strIdx, lg( work ), lg( pos ),
+                           W.arrayGetU( strIdx, lg( txt ),
+                                        p( W.opI32Sub, [ p( W.opI32Sub, [ lg( len ), lg( pos ) ] ),
+                                                         i32c( 1 ) ] ) ) ),
+               incr( pos ),
+               W.br( 0 ) ], nil ) ], nil ) );
+         append( body, ret1( lg( work ) ) );
+      }
+      case luaLen {
+         append( body, ret1( self.boxI64( p( W.opI64ExtendI32U, [ lg( len ) ] ) ) ) );
+      }
+      case luaFind {
+         // string.find( s, pattern, init, plain )
+         body.insert( needStr( 1, str1 ) );
+         body.insert( optInt( 2, num1, i64c( 1 ) ) );
+         // plain は Lua の真偽値として扱う (nil と false 以外は真)
+         body.insert( ls( code, W.ifElse( W.refIsNull( arg( 3 ) ), [ i32c( 0 ) ], [
+            W.ifElse( W.refTest( self.tBoxBool, arg( 3 ) ), [ self.unboxBool( arg( 3 ) ) ],
+                      [ i32c( 1 ) ], W.typeI32 ) ], W.typeI32 ) ) );
+         body.insert( W.call( self.fnStrFind(), [ lg( txt ), lg( str1 ), lg( num1 ), lg( code ) ] ) );
+      }
+      case luaSub {
+         // string.sub( s, i, j )
+         body.insert( when_( p( W.opI32Eqz, [ W.refTest( self.tBoxI64, arg( 1 ) ) ] ),
+                             [ fallback ] ) );
+         body.insert( ls( num1, self.unboxI64( arg( 1 ) ) ) );
+         body.insert( optInt( 2, num2, i64c( -1 ) ) );
+         append( body, ret1( W.call( self.fnStrSub(), [ lg( txt ), lg( num1 ), lg( num2 ) ] ) ) );
+      }
+      case luaReplace {
+         // _lune.replace( txt, src, dst ) (src が空の場合は Lua で処理する)
+         body.insert( needStr( 1, str1 ) );
+         body.insert( needStr( 2, str2 ) );
+         body.insert( when_( p( W.opI32Eqz, [ W.arrayLen( lg( str1 ) ) ] ), [ fallback ] ) );
+         body.insert( ls( result, W.call( self.fnListNew(), [ i32c( 8 ) ] ) ) );
+         body.insert( W.block( [
+            W.loop( [
+               ls( found, W.call( self.fnStrIndexOf(), [ lg( txt ), lg( str1 ), lg( pos ) ] ) ),
+               W.brIf( 1, p( W.opI32LtS, [ lg( found ), i32c( 0 ) ] ) ),
+               W.call( self.fnListPush(), [
+                  lg( result ), W.call( self.fnStrSub(), [
+                     lg( txt ), p( W.opI64ExtendI32S, [ p( W.opI32Add, [ lg( pos ), i32c( 1 ) ] ) ] ),
+                     p( W.opI64ExtendI32S, [ lg( found ) ] ) ] ) ] ),
+               W.call( self.fnListPush(), [ lg( result ), lg( str2 ) ] ),
+               ls( pos, p( W.opI32Add, [ lg( found ), W.arrayLen( lg( str1 ) ) ] ) ),
+               W.br( 0 ) ], nil ) ], nil ) );
+         body.insert( W.call( self.fnListPush(), [
+            lg( result ), W.call( self.fnStrSub(), [
+               lg( txt ), p( W.opI64ExtendI32S, [ p( W.opI32Add, [ lg( pos ), i32c( 1 ) ] ) ] ),
+               p( W.opI64ExtendI32S, [ lg( len ) ] ) ] ) ] ) );
+         body.insert( ls( work, W.call( self.fnStrJoin(), [ lg( result ) ] ) ) );
+         append( body, ret1( lg( work ) ) );
+      }
+   }
+   func.setBody( body );
    return index;
 }
 
@@ -1478,6 +2405,7 @@ pub fn Runtime.fnStrGsub() mut : int {
 ファイルの操作はホスト (lnswasm.mjs) の関数で行う。
 
 - file_open( パス, モード ) : ファイル番号 (失敗は -1)
+- file_popen( コマンド ) : ファイル番号 (コマンドの出力を読むファイル。失敗は -1)
 - file_error() : 直前の失敗のメッセージ
 - file_read( ファイル番号, 種類, バイト数 ) : 読んだ文字列 (無ければ null)。
   種類は 0: 全て ("a")、1: 1 行 ("l")、2: 改行付きの 1 行 ("L")、3: バイト数
@@ -1496,13 +2424,125 @@ pub fn Runtime.getFileType() mut : int {
    return self.tFile;
 }
 
+/**
+ホストの関数 (C のランタイムの関数 lnsr_<name>) を呼び出す関数を返す。
+
+C の関数には、文字列の引数を lnsr_buf() の領域にコピーして (アドレス, 長さ) で渡す。
+文字列の戻り値は、C の関数が長さ (nil は -1) を返し、内容は lnsr_res() の領域にある。
+それ以外の型の引数・戻り値はそのまま渡す。
+
+@param params 引数の型 (文字列は self.strType)
+@param results 戻り値の型 (文字列は self.strType)
+*/
 fn Runtime.hostFunc( name:str, params:&List<&W.ValType>, results:&List<&W.ValType> ) mut : int {
    if! let index = self.getFunc( "host." .. name ) {
       return index;
    }
-   let index = self.mod.importFunc( "lns", name, params, results );
-   self.mod.setFuncName( index, "host." .. name );
-   self.name2func[ "host." .. name ] = index;
+   let isStr = fn ( valType:&W.ValType ) : bool {
+      return valType == self.strType;
+   };
+   let mut cParams:List<&W.ValType> = [];
+   foreach param in params {
+      if isStr( param ) {
+         cParams.insert( W.typeI32 );
+         cParams.insert( W.typeI32 );
+      } else {
+         cParams.insert( param );
+      }
+   }
+   let strResult = #results == 1 and isStr( results[ 1 ] );
+   let cResults:&List<&W.ValType> = strResult and [ W.typeI32 ] or results;
+   let cFunc = self.mod.importFunc( cModule, "lnsr_" .. name, cParams, cResults );
+   self.mod.setFuncName( cFunc, "lnsrt." .. name );
+
+   let index, mut func = self.newFunc( "host." .. name, params, results );
+   let addr = func.addLocal( W.typeI32 );
+   let len = func.addLocal( W.typeI32 );
+   let mut body:List<&W.Ins> = [];
+   let mut args:List<&W.Ins> = [];
+   // 文字列の引数の長さの合計の領域を確保し、順に書き込む
+   let mut total:&W.Ins = i32c( 0 );
+   foreach param, pos in params {
+      if isStr( param ) {
+         total = p( W.opI32Add, [ total, W.arrayLen( lg( pos - 1 ) ) ] );
+      }
+   }
+   body.insert( ls( addr, W.call( self.fnCBuf, [ total ] ) ) );
+   // 文字列の引数の位置 (先頭からの、それより前の文字列の長さの合計)
+   let mut offset:&W.Ins = lg( addr );
+   foreach param, pos in params {
+      if isStr( param ) {
+         args.insert( offset );
+         args.insert( W.arrayLen( lg( pos - 1 ) ) );
+         body.insert( W.call( self.fnCopyToC(), [ lg( pos - 1 ), offset ] ) );
+         offset = p( W.opI32Add, [ offset, W.arrayLen( lg( pos - 1 ) ) ] );
+      } else {
+         args.insert( lg( pos - 1 ) );
+      }
+   }
+   if strResult {
+      body.insert( ls( len, W.call( cFunc, args ) ) );
+      body.insert( W.ifElse( p( W.opI32LtS, [ lg( len ), i32c( 0 ) ] ),
+                             [ W.refNull( self.tStr ) ],
+                             [ W.call( self.fnStrFromC(),
+                                       [ W.call( self.fnCRes, [] ), lg( len ) ] ) ],
+                             self.strType ) );
+   } else {
+      body.insert( W.call( cFunc, args ) );
+   }
+   func.setBody( body );
+   return index;
+}
+
+/** Node.js でだけ使える関数 (モジュール jsModule) を import する */
+fn Runtime.jsFunc( name:str, params:&List<&W.ValType>, results:&List<&W.ValType> ) mut : int {
+   if! let index = self.getFunc( "js." .. name ) {
+      return index;
+   }
+   let index = self.mod.importFunc( jsModule, name, params, results );
+   self.mod.setFuncName( index, "js." .. name );
+   self.name2func[ "js." .. name ] = index;
+   return index;
+}
+
+/** 文字列を C の memory の addr に書き込む。引数: 文字列、アドレス */
+fn Runtime.fnCopyToC() mut : int {
+   if! let index = self.getFunc( "copyToC" ) {
+      return index;
+   }
+   let index, mut func = self.newFunc( "copyToC", [ self.strType, W.typeI32 ], [] );
+   let len = func.addLocal( W.typeI32 );
+   let pos = func.addLocal( W.typeI32 );
+   func.setBody( [
+      ls( len, W.arrayLen( lg( 0 ) ) ),
+      W.block( [
+         W.loop( [
+            W.brIf( 1, p( W.opI32GeS, [ lg( pos ), lg( len ) ] ) ),
+            W.i32Store8( p( W.opI32Add, [ lg( 1 ), lg( pos ) ] ),
+                         W.arrayGetU( self.tStr, lg( 0 ), lg( pos ) ) ),
+            incr( pos ),
+            W.br( 0 ) ], nil ) ], nil ) ] );
+   return index;
+}
+
+/** C の memory の addr から len バイトの文字列を作る。引数: アドレス、長さ */
+fn Runtime.fnStrFromC() mut : int {
+   if! let index = self.getFunc( "strFromC" ) {
+      return index;
+   }
+   let index, mut func = self.newFunc( "strFromC", [ W.typeI32, W.typeI32 ], [ self.strType ] );
+   let work = func.addLocal( self.strType );
+   let pos = func.addLocal( W.typeI32 );
+   func.setBody( [
+      ls( work, W.arrayNewDefault( self.tStr, lg( 1 ) ) ),
+      W.block( [
+         W.loop( [
+            W.brIf( 1, p( W.opI32GeS, [ lg( pos ), lg( 1 ) ] ) ),
+            W.arraySet( self.tStr, lg( work ), lg( pos ),
+                        W.i32Load8U( p( W.opI32Add, [ lg( 0 ), lg( pos ) ] ) ) ),
+            incr( pos ),
+            W.br( 0 ) ], nil ) ], nil ),
+      lg( work ) ] );
    return index;
 }
 
@@ -1537,6 +2577,121 @@ pub fn Runtime.fnIoOpen() mut : int {
                             lg( fd ) ] ),
       W.refNull( self.tStr ) ] );
    return index;
+}
+
+/**
+io.popen。引数: コマンド。戻り値: ファイル (失敗は null)
+
+ホストでコマンドを実行し、その出力をメモリ上のファイルとして読めるようにする。
+*/
+pub fn Runtime.fnIoPopen() mut : int {
+   if! let index = self.getFunc( "ioPopen" ) {
+      return index;
+   }
+   let fnPopen = self.hostFunc( "file_popen", [ self.strType ], [ W.typeI32 ] );
+   let tFile = self.getFileType();
+   let index, mut func = self.newFunc( "ioPopen", [ self.strType ], [ self.objType ] );
+   let fd = func.addLocal( W.typeI32 );
+   func.setBody( [
+      ls( fd, W.call( fnPopen, [ lg( 0 ) ] ) ),
+      when_( p( W.opI32LtS, [ lg( fd ), i32c( 0 ) ] ), [ W.ret( [ W.refNull( self.tObj ) ] ) ] ),
+      W.structNew( tFile, [ i32c( 0 ),
+                            W.structNew( self.tVT, [ W.refNull( self.tAnyArr ) ] ),
+                            lg( fd ) ] ) ] );
+   return index;
+}
+
+/** io.stdin のファイル */
+pub fn Runtime.fnIoStdin() mut : int {
+   if! let index = self.getFunc( "ioStdin" ) {
+      return index;
+   }
+   let fnStdin = self.hostFunc( "file_stdin", [], [ W.typeI32 ] );
+   let tFile = self.getFileType();
+   let index, mut func = self.newFunc( "ioStdin", [], [ self.objType ] );
+   func.setBody( [
+      W.structNew( tFile, [ i32c( 0 ),
+                            W.structNew( self.tVT, [ W.refNull( self.tAnyArr ) ] ),
+                            W.call( fnStdin, [] ) ] ) ] );
+   return index;
+}
+
+/** コマンドの引数の List (先頭は wasm のパス) */
+pub fn Runtime.fnArgList() mut : int {
+   if! let index = self.getFunc( "argList" ) {
+      return index;
+   }
+   let fnCount = self.hostFunc( "arg_count", [], [ W.typeI32 ] );
+   let fnGet = self.hostFunc( "arg_get", [ W.typeI32 ], [ self.strType ] );
+   let index, mut func = self.newFunc( "argList", [], [ self.listType ] );
+   let list = func.addLocal( self.listType );
+   let num = func.addLocal( W.typeI32 );
+   let pos = func.addLocal( W.typeI32 );
+   func.setBody( [
+      ls( num, W.call( fnCount, [] ) ),
+      ls( list, W.call( self.fnListNew(), [ lg( num ) ] ) ),
+      W.block( [
+         W.loop( [
+            W.brIf( 1, p( W.opI32GeS, [ lg( pos ), lg( num ) ] ) ),
+            W.call( self.fnListPush(), [ lg( list ), W.call( fnGet, [ lg( pos ) ] ) ] ),
+            incr( pos ),
+            W.br( 0 ) ], nil ) ], nil ),
+      lg( list ) ] );
+   return index;
+}
+
+/** os.exit。引数: 終了コード (i64) */
+pub fn Runtime.fnOsExit() mut : int {
+   return self.hostFunc( "os_exit", [ W.typeI64 ], [] );
+}
+
+/**
+os.remove / os.rename。
+
+戻り値は Lua と同じく、成功なら true, nil、失敗なら nil, エラーのメッセージ。
+@param name "remove" か "rename"
+*/
+pub fn Runtime.fnOsFileOp( name:str ) mut : int {
+   if! let index = self.getFunc( "os_" .. name ) {
+      return index;
+   }
+   let mut params:List<&W.ValType> = [ self.strType ];
+   if name == "rename" {
+      params.insert( self.strType );
+   }
+   let fnHost = self.hostFunc( "os_" .. name, params, [ self.strType ] );
+   let index, mut func = self.newFunc( "os_" .. name, params, [ W.typeAnyRef, self.strType ] );
+   let mess = func.addLocal( self.strType );
+   let mut args:List<&W.Ins> = [];
+   foreach _, pos in params {
+      args.insert( lg( pos - 1 ) );
+   }
+   func.setBody( [
+      ls( mess, W.call( fnHost, args ) ),
+      when_( W.refIsNull( lg( mess ) ),
+             [ W.ret( [ self.boxBool( i32c( 1 ) ), W.refNull( self.tStr ) ] ) ] ),
+      W.refNull( W.htAny ),
+      lg( mess ) ] );
+   return index;
+}
+
+/** os.time() (引数無し)。現在の時刻 (秒、i64) */
+pub fn Runtime.fnOsTime() mut : int {
+   return self.hostFunc( "os_time", [], [ W.typeI64 ] );
+}
+
+/**
+ファイルの最終更新日時 (Depend.getFileLastModifiedTime。ホストで、1970/1/1 からの秒数を返す)。
+
+取得できない場合は NaN を返す。
+*/
+pub fn Runtime.fnFileMtime() mut : int {
+   return self.hostFunc( "file_mtime", [ self.strType ], [ W.typeF64 ] );
+}
+
+/** os.clock (ホストで、プロセスの CPU 時間を秒で返す) */
+pub fn Runtime.fnOsClock() mut : int {
+   return self.hostFunc( "os_clock", [], [ W.typeF64 ] );
 }
 
 /** ファイルかどうか (i32) */

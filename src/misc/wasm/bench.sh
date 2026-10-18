@@ -5,7 +5,7 @@
 #
 # test/wasm_bench/b_*.lns を、go (-langGo + go build) と wasm (-langWasm) に変換して実行し、
 # 実行時間 (3 回の最小値)、最大 RSS、GC の回数・停止時間を Markdown の表で出力する。
-# 結果は docs/sw_design/wasm_benchmark.md に記録する。
+# 結果は docs/sw_design/wasm/wasm_benchmark.md に記録する。
 #
 # 環境変数:
 #   LNSC       変換に使う lnsc (デフォルト: ./lnsc)
