@@ -45,10 +45,14 @@ jobs:
         make -C src go-build LUA=lua5.3 LUA51=
         make -C src LUACHECK=luacheck test-global
     - name: 'Upload Artifact'
+      # テストが失敗した場合も、原因を調べられるように結果とログを残す
+      if: always()
       uses: actions/upload-artifact@v7
       with:
         name: test-result
-        path: src/work/test*.result
+        path: |
+          src/work/test*.result
+          src/work/log/
         retention-days: 5
 
   docker-linux:

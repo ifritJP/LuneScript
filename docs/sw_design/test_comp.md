@@ -161,32 +161,45 @@ $ make go-build NO_TEST=y LANG_KIND=go     # 既存の src/lnsc で変換 (速�
 
 ### 3.4 並列実行 (`-j`) とエラー時の切り分け
 
-基本は `-j` を指定して並列に実行する。
+基本は `-j` を指定して並列に実行する。`-j1` より大幅に速い
+(2026-10-18 に `test-comp-with-go` で計測: `-j1` で約 2 分 35 秒、`-j` で約 33 秒)。
 
 ```
-$ make -C src -j$(nproc) test-comp-with-go
+$ make -C src -j test-comp-with-go
 ```
 
-ただし `-j` を付けると、複数のテストのログが混ざって出力され、1 つが失敗しても実行中の
-他のテストは終了まで動き続ける。そのため、エラーが起きたときにどこで失敗したのか分かりにくい。
-エラーが出たら、次の手順で原因を調べる。
+時間のかかるテスト (`test-parallel` の各テスト、5.6 参照) は、`logged-<テスト>` を通して実行する。
 
-1. `-j1` を指定して同じコマンドを再実行する。単に `-j` を外すのではなく `-j1` を明示することで、
-   環境変数 `MAKEFLAGS` などで `-j` が設定されていても確実に逐次実行になる。各処理が順番に実行され、
-   最初に失敗した箇所で停止するので、ログの末尾を見れば失敗したコマンドと出力が分かる。
+- 端末には、各行の先頭に `[<テスト>]` を付けて出力する。並列に実行して出力が混ざっても、どのテストの出力か分かる。
+- 各テストの出力は、混ざらない形で `work/log/<テスト>.log` にも保存する。終了コードは `work/log/<テスト>.status` に保存する。
+- 1 つのテストが失敗しても、他のテストは最後まで実行する。全てのテストの後で、次のように結果をまとめて表示する。
+  失敗したテストがあれば、テスト名とログの場所、ログの末尾を表示して失敗する。
 
-   ```
-   $ make -C src -j1 test-comp-with-go
-   ```
+  ```
+  ok -- test-org
+  NG -- _test-testing_new (exit 2, log: work/log/_test-testing_new.log)
+  ...
+  ========== NG: _test-testing_new
+  ---------- _test-testing_new (work/log/_test-testing_new.log)
+  (ログの末尾)
+  ```
 
-2. 失敗したターゲットが分かったら、`work/` に残っている結果ファイル
-   (`work/test1.result` と `work/test2.result` など、5.8 の比較表を参照) を直接 diff して原因を調べる。
+エラーが出たら、表示されたログ (`work/log/<テスト>.log`) を見て原因を調べる。
+必要なら、`work/` に残っている結果ファイル (`work/test1.result` と `work/test2.result` など、5.8 の比較表を参照) を直接 diff する。
 
-`-j1` での実行は時間がかかる。並列性を少し残したい場合は、`-j` のまま `TEST_SERIAL=y` を付ける方法もある。
-`test-parallel` の代わりに `test-serial` が使われ、テストのカテゴリ (`test-org`, `test-new` など) が順番に実行される。
+テスト以外の段階 (stage 1〜3 のビルド、`diff-result` など) は順に実行するので、`-j` でも最初に失敗した箇所で止まる。
+それでも分かりにくい場合は、`-j1` を指定して再実行する。単に `-j` を外すのではなく `-j1` を明示することで、
+環境変数 `MAKEFLAGS` などで `-j` が設定されていても確実に逐次実行になる。
 
 ```
-$ make -C src -j$(nproc) test-comp-with-go TEST_SERIAL=y
+$ make -C src -j1 test-comp-with-go
+```
+
+`-j` のまま `TEST_SERIAL=y` を付けると、`test-parallel` の各テストを順番に実行する
+(各テストの中は並列に実行する)。ログと結果の表示は `test-parallel` と同じ。
+
+```
+$ make -C src -j test-comp-with-go TEST_SERIAL=y
 ```
 
 ## 4. 主なパラメータ
@@ -199,6 +212,7 @@ $ make -C src -j$(nproc) test-comp-with-go TEST_SERIAL=y
 | `LUA51` | `lua5.1` | 空にすると Lua 5.1 クロステストを省略 |
 | `batch` | (なし) | Go 版で `n` にすると、batch モードではなくモジュールごとにビルド |
 | `TEST_SERIAL` | (なし) | `y` でテストカテゴリを逐次実行 (エラー箇所の特定用) |
+| `TEST_LOG_DIR` | `work/log` | `test-parallel` / `test-serial` の各テストのログ (`<テスト>.log`) と終了コード (`<テスト>.status`) の出力先 |
 | `SKIP_PROJ_TEST` | (なし) | `test/proj` のプロジェクトテストを省略 |
 | `SKIP_CHECKING_TESTING` | (なし) | `--testing` を使うテストを省略 (CI で使用) |
 | `SKIP_RUNTIME_VER_CHECK` | (なし) | `check-runtime-format` を省略 |
@@ -285,6 +299,8 @@ diff -u -r -I '_moduleObj.__buildId.*' -I '.*buildId = .*' -x lnsc -x binding.go
 ### 5.6 テスト本体: `test-parallel` / `test-serial` (1017)
 
 `make -jN` を指定すると、以下のテストを並列に実行する。
+各テストは `logged-<テスト>` を通して実行し、ログを `work/log/<テスト>.log` に保存する。
+全てのテストの後で、`test-stage-result` が結果をまとめて表示する (3.4 参照)。
 
 | ターゲット | 実行するコンパイラ | 内容 | 主な出力 |
 |---|---|---|---|
@@ -354,7 +370,7 @@ Go 版 (`test-comp2-para`) では次の 2 つも並行して行う:
 - `work/` は毎回 `rm -rf work/*` で削除される。
 - ランタイム (`runtime.lua`) やメタ形式を変更したときは、`Ver.lns` のバージョンを上げないと
   `check-runtime-format` / `check-meta-format` で失敗する。
-- `-j` で並列実行すると失敗箇所が分かりにくい。エラー時は `-j1` を指定して再実行する (3.4 参照)。
+- `-j` で並列実行した場合、失敗したテストは最後にまとめて表示され、ログは `work/log/` に残る (3.4 参照)。
 - `--default-lazy` のテストは、結果が **異なる** ことを期待している
   (`diff ... && exit 1 || echo ok`)。
 - `WITH_GO=y` では `check_singleBin` で lnsc 単体バイナリからバインド済みコードを読み込めることも確認する。

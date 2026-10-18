@@ -201,24 +201,57 @@ endif
 
 
 
-test-parallel: test-org test-org-proj \
+# test-parallel / test-serial で実行するテスト
+TEST_STAGE_TARGETS = test-org test-org-proj \
 			test-comp-go-new-2 test-comp-go-org-2 \
 			test-new test-new-proj test-new2 \
 			test-comp-go-new test-comp-go-org \
 			_test-testing_new \
 			test-formatter
+
+# テストの出力とその結果 (終了コード)
+TEST_LOG_DIR = work/log
+
+# logged-<テスト>: テストを実行し、出力を $(TEST_LOG_DIR)/<テスト>.log に保存する。
+#
+# -j で並列に実行しても、どのテストの出力か分かるように、端末には行頭に [<テスト>] を付けて出力する。
+# 失敗しても止めずに終了コードを $(TEST_LOG_DIR)/<テスト>.status に記録し、
+# 全てのテストの後で test-stage-result が失敗したテストをまとめて表示する。
+logged-%:
+	@mkdir -p $(TEST_LOG_DIR)
+	@{ $(MAKE) $* 2>&1; echo $$? > $(TEST_LOG_DIR)/$*.status; } |	\
+		tee $(TEST_LOG_DIR)/$*.log | sed -u 's/^/[$*] /'
+	@if [ "$$(cat $(TEST_LOG_DIR)/$*.status)" = 0 ]; then		\
+		echo "ok -- $*";						\
+	else								\
+		echo "NG -- $* (exit $$(cat $(TEST_LOG_DIR)/$*.status), log: $(TEST_LOG_DIR)/$*.log)"; \
+	fi
+
+# test-parallel / test-serial の結果をまとめて表示し、失敗したテストがあれば失敗する
+test-stage-result:
+	@ng="";								\
+	for target in $(TEST_STAGE_TARGETS); do				\
+		if [ "$$(cat $(TEST_LOG_DIR)/$$target.status 2>/dev/null)" != 0 ]; then \
+			ng="$$ng $$target";					\
+		fi;							\
+	done;								\
+	if [ "$$ng" != "" ]; then					\
+		echo "========== NG:$$ng";					\
+		for target in $$ng; do					\
+			echo "---------- $$target ($(TEST_LOG_DIR)/$$target.log)"; \
+			tail -n 20 $(TEST_LOG_DIR)/$$target.log;		\
+		done;							\
+		exit 1;							\
+	fi;								\
+	echo "========== ok: $(TEST_STAGE_TARGETS)"
+
+test-parallel: $(addprefix logged-,$(TEST_STAGE_TARGETS))
+	@$(MAKE) -s test-stage-result
 test-serial:
-	$(MAKE) test-org
-	$(MAKE) test-org-proj
-	$(MAKE) test-comp-go-new-2
-	$(MAKE) test-comp-go-org-2
-	$(MAKE) test-new
-	$(MAKE) test-new-proj
-	$(MAKE) test-new2
-	$(MAKE) test-comp-go-new
-	$(MAKE) test-comp-go-org
-	$(MAKE) _test-testing_new
-	$(MAKE) test-formatter
+	@for target in $(TEST_STAGE_TARGETS); do			\
+		$(MAKE) logged-$$target;				\
+	done
+	@$(MAKE) -s test-stage-result
 
 
 # 元の lnsc で test-go を実行
