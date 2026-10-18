@@ -776,23 +776,26 @@ function WasmConverter:__init(scriptPath, astResult, mod, option)
       end
    end
    self.path = path
+   self.scriptPath = scriptPath
+   self.astResult = astResult
+   self.ast = nil
    self.memStream = Util.memStream._new()
-   self.converter = function (  )
-   
-      local ast = getAstFromResult( astResult )
-      local conv = convWasm.createFilter( scriptPath, self.memStream, ast )
-      ast:get_node():processFilter( conv, convWasm.Opt._new(ast:get_node()) )
-   end
-   
    self:start( 1, string.format( "convwasm -- %s", scriptPath) )
 end
 function WasmConverter:runMain(  )
 
-   self.converter(  )
+   self.ast = getAstFromResult( self.astResult )
 end
-function WasmConverter:saveWasm(  )
+function WasmConverter:getAst(  )
 
    
+   return _lune.unwrap( self.ast)
+end
+function WasmConverter:saveWasm( importAstList )
+
+   local ast = self:getAst(  )
+   local conv = convWasm.createFilter( self.scriptPath, self.memStream, ast, importAstList )
+   ast:get_node():processFilter( conv, convWasm.Opt._new(ast:get_node()) )
    local file = io.open( self.path, "w" )
    if  nil == file then
       local _file = file

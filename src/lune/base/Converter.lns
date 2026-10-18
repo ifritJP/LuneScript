@@ -621,7 +621,9 @@ pub class PythonConverter extend Runner.Runner {
 pub class WasmConverter extend Runner.Runner {
    let mut memStream:Util.memStream;
    let path:str;
-   let converter:ConverterFunc;
+   let scriptPath:str;
+   let astResult:&CreateAstResult;
+   let mut ast:&AstInfo.ASTInfo!;
 
    pub fn __init( scriptPath:str, astResult:&CreateAstResult, mod:str,
                   option:&Option.Option ) __async
@@ -635,22 +637,33 @@ pub class WasmConverter extend Runner.Runner {
       }
 
       self.path = path;
+      self.scriptPath = scriptPath;
+      self.astResult = astResult;
+      self.ast = nil;
       self.memStream = new Util.memStream();
 
-      self.converter = fn () {
-         let ast = getAstFromResult( astResult );
-         let mut conv = convWasm.createFilter( scriptPath, self.memStream, ast );
-         ast.$node.processFilter( conv, new convWasm.Opt( ast.$node ) );
-      };
       self.start( __lns.runMode.Queue, "convwasm -- %s" (scriptPath) );
    }
 
    pro override fn runMain() __async mut {
-      self.converter();
+      // 変換は、import したモジュールの AST がそろってから saveWasm() で行う
+      self.ast = getAstFromResult( self.astResult );
    }
 
-   pub fn saveWasm() mut {
+   /** 変換するモジュールの AST */
+   pub fn getAst() mut : &AstInfo.ASTInfo {
       __join( self );
+      return unwrap self.ast;
+   }
+
+   /**
+   @param importAstList import しているモジュール (間接的なものを含む) の AST。依存される側が先
+   */
+   pub fn saveWasm( importAstList:&List<&AstInfo.ASTInfo> ) mut {
+      let ast = self.getAst();
+      let mut conv = convWasm.createFilter(
+         self.scriptPath, self.memStream, ast, importAstList );
+      ast.$node.processFilter( conv, new convWasm.Opt( ast.$node ) );
 
       let! mut file = io.open( self.path, "w" ) {
          Util.err( "can't open file -- %s" (self.path) ); // 要対応

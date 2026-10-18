@@ -117,6 +117,8 @@ pub class Runtime {
    pri let tCellF64:int {pub};
    pri let tCellI32:int {pub};
    pri let tCellRef:int {pub};
+   /** io.open で開いたファイル ($Obj の部分型。ホストのファイル番号を持つ)。使う場合だけ生成する */
+   pri let mut tFile:int;
 
    pri let strType:&W.ValType {pub};
    pri let anyArrType:&W.ValType {pub};
@@ -148,6 +150,7 @@ pub class Runtime {
       self.name2func = {};
       self.sig2cloInfo = {};
       self.name2luaFunc = {};
+      self.tFile = -1;
       self.luaImported = false;
 
       self.tStr = mod.addArrayType( W.fieldI8( true ) );
@@ -1160,6 +1163,17 @@ pub fn Runtime.fnListSort() mut : int {
 
 /** ホストが値を読み書きするための関数を export する */
 pub fn Runtime.exportHostFuncs() mut {
+   // ホストで文字列を生成するための関数 (ファイルの読み込みなどで使う)
+   {
+      let index, mut func = self.mod.addFunc( [ W.typeI32 ], [ self.strType ] );
+      func.setBody( [ W.arrayNewDefault( self.tStr, lg( 0 ) ) ] );
+      self.mod.exportFunc( "lns_str_new", index );
+   }
+   {
+      let index, mut func = self.mod.addFunc( [ self.strType, W.typeI32, W.typeI32 ], [] );
+      func.setBody( [ W.arraySet( self.tStr, lg( 0 ), lg( 1 ), lg( 2 ) ) ] );
+      self.mod.exportFunc( "lns_str_set", index );
+   }
    {
       let index, mut func = self.mod.addFunc( [ self.strType ], [ W.typeI32 ] );
       func.setBody( [ W.arrayLen( lg( 0 ) ) ] );
@@ -1455,5 +1469,159 @@ pub fn Runtime.fnStrGsub() mut : int {
       ls( result, W.call( self.fnLuaCall(), [ i32c( luaGsub ), lg( args ) ] ) ),
       W.refCast( self.tStr, self.listItem( lg( result ), 0 ) ),
       self.unboxI64( self.listItem( lg( result ), 1 ) ) ] );
+   return index;
+}
+
+// ======== ファイル (io.open) ========
+
+/*
+ファイルの操作はホスト (lnswasm.mjs) の関数で行う。
+
+- file_open( パス, モード ) : ファイル番号 (失敗は -1)
+- file_error() : 直前の失敗のメッセージ
+- file_read( ファイル番号, 種類, バイト数 ) : 読んだ文字列 (無ければ null)。
+  種類は 0: 全て ("a")、1: 1 行 ("l")、2: 改行付きの 1 行 ("L")、3: バイト数
+- file_write( ファイル番号, 文字列 )
+- file_seek( ファイル番号, 基準 (0: set、1: cur、2: end), 位置 ) : 位置 (失敗は -1)
+- file_close( ファイル番号 )
+*/
+
+/** ファイルの型 */
+pub fn Runtime.getFileType() mut : int {
+   if self.tFile < 0 {
+      self.tFile = self.mod.addStructType(
+         self.tObj, [ W.field( W.typeI32, true ), W.field( W.refType( self.tVT ), false ),
+                      W.field( W.typeI32, false ) ] );
+   }
+   return self.tFile;
+}
+
+fn Runtime.hostFunc( name:str, params:&List<&W.ValType>, results:&List<&W.ValType> ) mut : int {
+   if! let index = self.getFunc( "host." .. name ) {
+      return index;
+   }
+   let index = self.mod.importFunc( "lns", name, params, results );
+   self.mod.setFuncName( index, "host." .. name );
+   self.name2func[ "host." .. name ] = index;
+   return index;
+}
+
+/** ファイルのホストでの番号 */
+fn Runtime.fileFd( obj:&W.Ins ) mut : &W.Ins {
+   let tFile = self.getFileType();
+   return W.structGet( tFile, 2, W.refCast( tFile, obj ) );
+}
+
+/**
+io.open。引数: パス、モード (null は "r")。
+
+戻り値: ファイル (失敗は null)、エラーのメッセージ
+*/
+pub fn Runtime.fnIoOpen() mut : int {
+   if! let index = self.getFunc( "ioOpen" ) {
+      return index;
+   }
+   let fnOpen = self.hostFunc( "file_open", [ self.strType, self.strType ], [ W.typeI32 ] );
+   let fnError = self.hostFunc( "file_error", [], [ self.strType ] );
+   let tFile = self.getFileType();
+   let index, mut func = self.newFunc(
+      "ioOpen", [ self.strType, self.strType ], [ self.objType, self.strType ] );
+   let fd = func.addLocal( W.typeI32 );
+   func.setBody( [
+      when_( W.refIsNull( lg( 1 ) ), [ ls( 1, self.strLiteral( "r" ) ) ] ),
+      ls( fd, W.call( fnOpen, [ lg( 0 ), lg( 1 ) ] ) ),
+      when_( p( W.opI32LtS, [ lg( fd ), i32c( 0 ) ] ),
+             [ W.ret( [ W.refNull( self.tObj ), W.call( fnError, [] ) ] ) ] ),
+      W.structNew( tFile, [ i32c( 0 ),
+                            W.structNew( self.tVT, [ W.refNull( self.tAnyArr ) ] ),
+                            lg( fd ) ] ),
+      W.refNull( self.tStr ) ] );
+   return index;
+}
+
+/** ファイルかどうか (i32) */
+pub fn Runtime.isFile( obj:&W.Ins ) mut : &W.Ins {
+   return W.refTest( self.getFileType(), obj );
+}
+
+/**
+ファイルの read。引数: ファイル、読み方 (Lua の read の引数。nil は "l")
+*/
+pub fn Runtime.fnFileRead() mut : int {
+   if! let index = self.getFunc( "fileRead" ) {
+      return index;
+   }
+   let fnRead = self.hostFunc( "file_read", [ W.typeI32, W.typeI32, W.typeI64 ], [ self.strType ] );
+   let index, mut func = self.newFunc( "fileRead", [ W.typeAnyRef, W.typeAnyRef ], [ self.strType ] );
+   let kind = func.addLocal( W.typeI32 );
+   let num = func.addLocal( W.typeI64 );
+   let fmt = func.addLocal( self.strType );
+   let ch = func.addLocal( W.typeI32 );
+   func.setBody( [
+      ls( kind, i32c( 1 ) ),
+      when_( W.refTest( self.tBoxI64, lg( 1 ) ), [
+         ls( kind, i32c( 3 ) ), ls( num, self.unboxI64( lg( 1 ) ) ) ] ),
+      when_( W.refTest( self.tStr, lg( 1 ) ), [
+         ls( fmt, W.refCast( self.tStr, lg( 1 ) ) ),
+         // "*a" のような Lua 5.1 の形式は、先頭の * を除いて判定する
+         ls( ch, W.arrayGetU( self.tStr, lg( fmt ), i32c( 0 ) ) ),
+         when_( p( W.opI32Eq, [ lg( ch ), i32c( 0x2a ) ] ),
+                [ ls( ch, W.arrayGetU( self.tStr, lg( fmt ), i32c( 1 ) ) ) ] ),
+         when_( p( W.opI32Eq, [ lg( ch ), i32c( 0x61 ) ] ), [ ls( kind, i32c( 0 ) ) ] ),
+         when_( p( W.opI32Eq, [ lg( ch ), i32c( 0x4c ) ] ), [ ls( kind, i32c( 2 ) ) ] ) ] ),
+      W.call( fnRead, [ self.fileFd( lg( 0 ) ), lg( kind ), lg( num ) ] ) ] );
+   return index;
+}
+
+/** ファイルの write。引数: ファイル、文字列 */
+pub fn Runtime.fnFileWrite() mut : int {
+   if! let index = self.getFunc( "fileWrite" ) {
+      return index;
+   }
+   let fnWrite = self.hostFunc( "file_write", [ W.typeI32, self.strType ], [] );
+   let index, mut func = self.newFunc( "fileWrite", [ W.typeAnyRef, self.strType ], [] );
+   func.setBody( [ W.call( fnWrite, [ self.fileFd( lg( 0 ) ), lg( 1 ) ] ) ] );
+   return index;
+}
+
+/**
+ファイルの seek。引数: ファイル、基準 ("set" / "cur" / "end")、位置。
+
+戻り値は Lua と同じく、成功なら [位置]、失敗なら [nil, エラー] の List (...)
+*/
+pub fn Runtime.fnFileSeek() mut : int {
+   if! let index = self.getFunc( "fileSeek" ) {
+      return index;
+   }
+   let fnSeek = self.hostFunc( "file_seek", [ W.typeI32, W.typeI32, W.typeI64 ], [ W.typeI64 ] );
+   let index, mut func = self.newFunc(
+      "fileSeek", [ W.typeAnyRef, self.strType, W.typeI64 ], [ self.listType ] );
+   let whence = func.addLocal( W.typeI32 );
+   let ch = func.addLocal( W.typeI32 );
+   let pos = func.addLocal( W.typeI64 );
+   let result = func.addLocal( self.listType );
+   func.setBody( [
+      ls( whence, i32c( 1 ) ),
+      ls( ch, W.arrayGetU( self.tStr, lg( 1 ), i32c( 0 ) ) ),
+      when_( p( W.opI32Eq, [ lg( ch ), i32c( 0x73 ) ] ), [ ls( whence, i32c( 0 ) ) ] ),
+      when_( p( W.opI32Eq, [ lg( ch ), i32c( 0x65 ) ] ), [ ls( whence, i32c( 2 ) ) ] ),
+      ls( pos, W.call( fnSeek, [ self.fileFd( lg( 0 ) ), lg( whence ), lg( 2 ) ] ) ),
+      ls( result, W.call( self.fnListNew(), [ i32c( 2 ) ] ) ),
+      W.ifElse( p( W.opI64LtS, [ lg( pos ), i64c( 0 ) ] ),
+                [ W.call( self.fnListPush(), [ lg( result ), W.refNull( W.htAny ) ] ),
+                  W.call( self.fnListPush(), [ lg( result ), self.strLiteral( "Invalid argument" ) ] ) ],
+                [ W.call( self.fnListPush(), [ lg( result ), self.boxI64( lg( pos ) ) ] ) ], nil ),
+      lg( result ) ] );
+   return index;
+}
+
+/** ファイルの close。引数: ファイル */
+pub fn Runtime.fnFileClose() mut : int {
+   if! let index = self.getFunc( "fileClose" ) {
+      return index;
+   }
+   let fnClose = self.hostFunc( "file_close", [ W.typeI32 ], [] );
+   let index, mut func = self.newFunc( "fileClose", [ W.typeAnyRef ], [] );
+   func.setBody( [ W.call( fnClose, [ self.fileFd( lg( 0 ) ) ] ) ] );
    return index;
 }

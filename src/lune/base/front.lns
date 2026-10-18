@@ -802,7 +802,7 @@ fn Front.createPythonOption( scriptPath:str ) : &convPython.Option {
 }
 
 
-fn Front.convertToLanguage(ast:&AstInfo.ASTInfo, stream:oStream, path:str )
+fn Front.convertToLanguage(ast:&AstInfo.ASTInfo, stream:oStream, path:str ) mut
 {
    switch self.option.convTo {
       case .Go {
@@ -816,7 +816,8 @@ fn Front.convertToLanguage(ast:&AstInfo.ASTInfo, stream:oStream, path:str )
          ast.$node.processFilter( conv, new convPython.Opt( ast.$node ) );
       }
       case .Wasm {
-         let mut conv = convWasm.createFilter( path, stream, ast );
+         let mut conv = convWasm.createFilter(
+            path, stream, ast, self.getImportAstList( ast ) );
          ast.$node.processFilter( conv, new convWasm.Opt( ast.$node ) );
       }
    }
@@ -1419,6 +1420,43 @@ Converter.PythonConverter!
 /**
 wasm に変換しファイルに書き込む
 */
+/**
+ast が import しているモジュール (間接的なものを含む) の AST のリストを返す。依存される側が先。
+
+wasm では、import したモジュールも 1 つの wasm にまとめるので、全ての AST が必要になる。
+*/
+fn Front.getImportAstList( ast:&AstInfo.ASTInfo ) mut : &List<&AstInfo.ASTInfo> {
+   let mut list:List<&AstInfo.ASTInfo> = [];
+   let mut doneSet:Set<str> = (@);
+   self.addImportAst( ast, list, doneSet );
+   return list;
+}
+
+/** getImportAstList() の処理。ast が import しているモジュールを list に追加する */
+fn Front.addImportAst( ast:&AstInfo.ASTInfo, mut list:List<&AstInfo.ASTInfo>,
+                       mut doneSet:Set<str> ) mut
+{
+   let root = unwrap ast.$node@@@Nodes.RootNode;
+   // 順番を決めるため、モジュール名で整列する
+   let mut nameList:List<str> = [];
+   foreach exportInfo in root.$importModule2moduleInfo {
+      nameList.insert( exportInfo.$fullName );
+   }
+   nameList.sort(##);
+   foreach name in nameList {
+      if doneSet.has( name ) {
+         continue;
+      }
+      doneSet.add( name );
+      let! subAst = self.moduleMgr.getAst( name ) {
+         Util.err( "wasm: the AST of the imported module is not ready. " ..
+                   "use '--uptodate forceAll' -- %s" ( name ) );
+      };
+      self.addImportAst( subAst, list, doneSet );
+      list.insert( subAst );
+   }
+}
+
 local fn Front.saveToWasm(
    scriptPath:str, astResult:&Converter.CreateAstResult, mod:str ) mut :
 Converter.WasmConverter!
@@ -1545,7 +1583,9 @@ fn Front.saveToLua( updateInfo:UpdateInfo, baseDir:str! ) mut : Converter.Conver
             luaConv$.saveLua$();
             goConv$.saveGo$();
             pyConv$.savePython$();
-            wasmConv$.saveWasm$();
+            when! wasmConv {
+               wasmConv.saveWasm( self.getImportAstList( wasmConv.getAst() ) );
+            }
          };
       }
       case .Uptodate( metaInfo ) {

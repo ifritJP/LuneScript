@@ -255,8 +255,15 @@ class convFilter extend Nodes.Filter<Opt> {
    let mut stream:oStream;
    let processInfo:Ast.ProcessInfo;
    let builtinFuncs:&Builtin.BuiltinFuncType;
-   let moduleScope:&Ast.Scope;
-   let moduleTypeInfo:&Ast.TypeInfo;
+   /** 変換中のモジュールのスコープと型 (import したモジュールの変換中は、そのモジュール) */
+   let mut moduleScope:&Ast.Scope;
+   let mut moduleTypeInfo:&Ast.TypeInfo;
+   /** import したモジュールの AST (依存される側が先) */
+   let importAstList:&List<&AstInfo.ASTInfo>;
+   /** 全てのモジュールのスコープ (モジュールレベルの変数の判定に使う) */
+   let mut moduleScopeSet:Set<&Ast.Scope>;
+   /** import したモジュールの型 → モジュールの初期化 (トップレベルの処理) の関数 */
+   let mut module2init:Map<&Ast.TypeInfo,int>;
 
    let mut mod:W.Module;
    let mut rt:Rt.Runtime;
@@ -300,7 +307,8 @@ let f = fn () {} の場合、__func__ を持つ関数の型と宣言の型が別
    /** 本体を変換済みの関数 */
    let mut compiledFuncSet:Set<int>;
 
-   pub fn __init( streamName:str, stream:oStream, ast:&AstInfo.ASTInfo )
+   pub fn __init( streamName:str, stream:oStream, ast:&AstInfo.ASTInfo,
+                  importAstList:&List<&AstInfo.ASTInfo> )
    {
       super( true, ast.$exportInfo.$moduleTypeInfo,
              ast.$exportInfo.$moduleTypeInfo.$scope );
@@ -311,6 +319,10 @@ let f = fn () {} の場合、__func__ を持つ関数の型と宣言の型が別
       self.builtinFuncs = ast.$builtinFunc;
       self.moduleTypeInfo = ast.$exportInfo.$moduleTypeInfo;
       self.moduleScope = unwrap ast.$exportInfo.$moduleTypeInfo.$scope;
+      self.importAstList = importAstList;
+      self.moduleScopeSet = (@);
+      self.moduleScopeSet.add( self.moduleScope );
+      self.module2init = {};
 
       let mut mod = new W.Module();
       self.rt = new Rt.Runtime( mod );
@@ -833,7 +845,7 @@ fn convFilter.getAlgeInfo( algeType:&Ast.TypeInfo ) mut : &AlgeInfo! {
 
 /** モジュールレベルの変数 (グローバル変数にする) かどうか */
 fn convFilter.isGlobalSym( symbol:&Ast.SymbolInfo ) : bool {
-   return symbol.$scope == self.moduleScope;
+   return self.moduleScopeSet.has( symbol.$scope );
 }
 
 /** セルから値を読む */
@@ -2771,19 +2783,42 @@ fn convFilter.lowerStreamMethod( node:&Nodes.ExpCallNode, prefix:&Nodes.Node, na
 {
    let obj = self.tempLocal( self.rt.$objType );
    let mut pre:List<&W.Ins> = [ ls( obj, self.lowerExpAs( prefix, prefix.$expType ) ) ];
+   let isFile = self.rt.isFile( lg( obj ) );
    switch name {
       case "write" {
-         let txt = self.lowerArgAs( node, 1, Ast.builtinTypeString );
+         let txt = self.tempLocal( self.rt.$strType );
+         pre.insert( ls( txt, self.lowerArgAs( node, 1, Ast.builtinTypeString ) ) );
          self.getStdStream( true );
          pre.insert(
-            W.ifElse( W.refEq( lg( obj ), W.globalGet( self.stderrGlobal ) ),
-                      [ W.call( self.rt.$fnHostWriteErr, [ txt ] ) ],
-                      [ W.call( self.rt.$fnHostWrite, [ txt ] ) ], nil ) );
+            W.ifElse( isFile, [ W.call( self.rt.fnFileWrite(), [ lg( obj ), lg( txt ) ] ) ],
+                      [ W.ifElse( W.refEq( lg( obj ), W.globalGet( self.stderrGlobal ) ),
+                                  [ W.call( self.rt.$fnHostWriteErr, [ lg( txt ) ] ) ],
+                                  [ W.call( self.rt.$fnHostWrite, [ lg( txt ) ] ) ], nil ) ],
+                      nil ) );
          pre.insert( lg( obj ) );
          pre.insert( W.refNull( self.rt.$tStr ) );
          return W.seq( pre ), [ Ast.builtinTypeStem_, Ast.builtinTypeString.$nilableTypeInfo ];
       }
-      case "close", "flush" {
+      case "read" {
+         // 標準入力からの読み込みは未対応 (nil)
+         let fmt = self.lowerArgAs( node, 1, Ast.builtinTypeStem_ );
+         pre.insert( W.ifElse( isFile, [ W.call( self.rt.fnFileRead(), [ lg( obj ), fmt ] ) ],
+                               [ W.refNull( self.rt.$tStr ) ], self.rt.$strType ) );
+         return W.seq( pre ), [ Ast.builtinTypeString.$nilableTypeInfo ];
+      }
+      case "seek" {
+         pre.insert( W.call( self.rt.fnFileSeek(),
+                             [ lg( obj ), self.lowerArgAs( node, 1, Ast.builtinTypeString ),
+                               self.lowerArgAs( node, 2, Ast.builtinTypeInt ) ] ) );
+         // Lua と同じく、成功なら値は 1 つ、失敗なら 2 つ (...)
+         return W.seq( pre ), [ Ast.builtinTypeDDD ];
+      }
+      case "close" {
+         pre.insert( W.ifElse( isFile, [ W.call( self.rt.fnFileClose(), [ lg( obj ) ] ) ],
+                               nil, nil ) );
+         return W.seq( pre ), [];
+      }
+      case "flush" {
          return W.seq( pre ), [];
       }
    }
@@ -3024,6 +3059,17 @@ fn convFilter.lowerStaticCall( node:&Nodes.ExpCallNode, prefix:&Nodes.Node, name
       if methodType.equals( self.processInfo, strFunc ## ) {
          return self.lowerLuaCall( node, luaId, [] )**;
       }
+   }
+   if methodType.equals( self.processInfo, builtin.io_open ## ) {
+      let mut modeIns:&W.Ins = W.refNull( self.rt.$tStr );
+      if! let argList = node.$argList {
+         if #argList.$expList >= 2 and argList.$expList[ 2 ].$kind ~= Nodes.NodeKind.$Abbr {
+            modeIns = self.lowerArgAs( node, 2, Ast.builtinTypeString.$nilableTypeInfo );
+         }
+      }
+      pre.insert( W.call( self.rt.fnIoOpen(),
+                          [ self.lowerArgAs( node, 1, Ast.builtinTypeString ), modeIns ] ) );
+      return W.seq( pre ), methodType.$retTypeInfoList;
    }
    if methodType.equals( self.processInfo, builtin.__lns_sync_createFlag ## ) or
       methodType.equals( self.processInfo, builtin.__lns_sync__createPipe ## )
@@ -4694,6 +4740,15 @@ fn convFilter.lowerStmt( node:&Nodes.Node, mut out:List<&W.Ins> ) mut {
          append( out, self.lowerBlock( (unwrap node@@@Nodes.ScopeNode).$block ) );
          return;
       }
+      case Nodes.NodeKind.$Import {
+         let info = (unwrap node@@@Nodes.ImportNode).$info;
+         let! initIndex = self.module2init[ info.$moduleTypeInfo ] {
+            self.error( node, "not found the imported module -- %s" ( info.$modulePath ) );
+         };
+         // import したモジュールのシンボル (SubPkg など) は、モジュールの型で参照するので値は不要
+         out.insert( W.call( initIndex, [] ) );
+         return;
+      }
       case Nodes.NodeKind.$Apply {
          out.insert( self.lowerApply( unwrap node@@@Nodes.ApplyNode ) );
          return;
@@ -5253,10 +5308,8 @@ fn convFilter.collectDecl( node:&Nodes.Node ) mut {
       }, 0, alreadySet );
 }
 
-pub override fn convFilter.processRoot( node: &Nodes.RootNode, opt: Opt ) mut
-{
-   self.collectDecl( node );
-   // モジュールレベルの変数を先に登録する (関数から参照するため)
+/** モジュールレベルの変数を、グローバル変数として登録する (関数から参照するため) */
+fn convFilter.registerModuleVars( node:&Nodes.RootNode ) mut {
    foreach child in node.$children {
       if! let declNode = child@@@Nodes.DeclVarNode {
          foreach symbol in declNode.$symbolInfoList {
@@ -5269,6 +5322,49 @@ pub override fn convFilter.processRoot( node: &Nodes.RootNode, opt: Opt ) mut
          }
       }
    }
+}
+
+/**
+import したモジュールを変換する。
+
+モジュールのトップレベルの処理は初期化の関数にし、import 文の位置で呼び出す。
+Lua の require と同じく、初期化は最初の 1 回だけ行う。
+*/
+fn convFilter.lowerImportedModules() mut {
+   let mainScope = self.moduleScope;
+   let mainType = self.moduleTypeInfo;
+   foreach ast in self.importAstList {
+      let root = unwrap ast.$node@@@Nodes.RootNode;
+      let moduleType = ast.$exportInfo.$moduleTypeInfo;
+      self.moduleScope = unwrap moduleType.$scope;
+      self.moduleTypeInfo = moduleType;
+      self.moduleScopeSet.add( self.moduleScope );
+      self.collectDecl( root );
+      self.registerModuleVars( root );
+
+      let initIndex, mut initFunc = self.mod.addFunc( [], [] );
+      self.mod.setFuncName( initIndex, "init:" .. ast.$exportInfo.$fullName );
+      self.module2init[ moduleType ] = initIndex;
+      let doneGlobal = self.mod.addGlobal( W.typeI32, W.i32Const( 0 ) );
+
+      let mut saved = self.ctx;
+      self.ctx = new FuncCtx( initFunc, [], [] );
+      let mut body:List<&W.Ins> = [
+         W.ifElse( W.globalGet( doneGlobal ), [ W.ret( [] ) ], nil, nil ),
+         W.globalSet( doneGlobal, W.i32Const( 1 ) ) ];
+      append( body, self.lowerStmtList( root.$children ) );
+      initFunc.setBody( body );
+      self.ctx = saved;
+   }
+   self.moduleScope = mainScope;
+   self.moduleTypeInfo = mainType;
+}
+
+pub override fn convFilter.processRoot( node: &Nodes.RootNode, opt: Opt ) mut
+{
+   self.lowerImportedModules();
+   self.collectDecl( node );
+   self.registerModuleVars( node );
    let mainBody = self.lowerStmtList( node.$children );
    self.finalizeClasses();
    let mut body:List<&W.Ins> = [];
@@ -5281,7 +5377,12 @@ pub override fn convFilter.processRoot( node: &Nodes.RootNode, opt: Opt ) mut
    self.stream.write( self.mod.encode() );
 }
 
-pub fn createFilter( streamName:str, stream:oStream, ast:&AstInfo.ASTInfo ) : Nodes.Filter<Opt>
+/**
+@param importAstList import しているモジュール (間接的なものを含む) の AST。依存される側が先。
+   wasm では、これらのモジュールも 1 つの wasm にまとめて出力する。
+*/
+pub fn createFilter( streamName:str, stream:oStream, ast:&AstInfo.ASTInfo,
+                     importAstList:&List<&AstInfo.ASTInfo> ) : Nodes.Filter<Opt>
 {
-   return new convFilter( streamName, stream, ast );
+   return new convFilter( streamName, stream, ast, importAstList );
 }

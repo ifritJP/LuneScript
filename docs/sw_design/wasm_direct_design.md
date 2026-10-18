@@ -319,11 +319,12 @@ Lua 版との既知の差:
 - Lua の関数でのエラーのメッセージが少し異なる。Lua 版は `[string "..."]:75: bad argument #2 to 'format' ...` だが、
   wasm 版は位置が無く、関数名が `'string.format'` になる (C から呼んでいるので呼び出し元の名前が無い)。
 
-### 14.5 M2 後半: `test/testGo.lns` — 作業中
+### 14.5 M2 後半: `test/testGo.lns` — 完了 (Lua 連携の部分を除く)
 
-`test/testGo.lns` の section (`_section();` で区切った部分) のうち、
-Lua 連携・ファイル入出力を使う 17 個を除いた部分が、Lua 版と同じ出力 (1,065 行) になった。
-確認は、import (`test.subGoPkg.SubPkg`) と、それを使う 2 行を除いたコピーで行っている (import は未対応)。
+`test/testGo.lns` (+ `test/subGoPkg`) が、Lua 連携 (`_load` / `loadfile` / `io.popen`) を使う 15 個の section を除いて、
+Lua 版と同じ出力 (1,067 行) になった。
+`make test-wasm` に追加した (`test-wasm-testgo`)。除く section は `_section(); // nowasm: ...` と印を付けておき、
+テストの際に行番号を保ったまま空行にする (Lua 版の期待値も同じファイルから作る)。
 
 対応した機能:
 
@@ -340,7 +341,9 @@ Lua 連携・ファイル入出力を使う 17 個を除いた部分が、Lua �
 | generics のインタフェースを具体的な型で実装 | itable に、型パラメータ (anyref) と実装の型 (i64 など) を変換するアダプタを登録する (14.2 の課題) |
 | `__run` / `__join` / `__lns.Sync` | Lua 版と同じく、`__run` はその場で `run()` を呼び出す (Skip なら呼ばない)。`createFlag` / `_createPipe` は nil |
 | 文字列の関数 | `byte` / `rep` / `lower` / `upper` / `reverse` / `replace` と、`string.find` などのモジュールの関数は Lua の関数を呼び出す。`string._join` は wasm で実装 |
-| その他 | `alias`、Map の `#`、`for` の実数の増分、`__func__`、`type()`、`tonumber()`、stem の値の `[]`、`__asyncLock`、enum / alge の `get__txt()`、関数を持つメンバの呼び出し、static メンバの getter、インタフェースの getter |
+| import (複数のモジュール) | import したモジュール (間接的なものを含む) も 1 つの wasm にまとめる。各モジュールのトップレベルの処理は初期化の関数にし、import 文の位置で呼び出す (Lua の require と同じく 1 回だけ)。front が依存の順に AST を集めて convWasm に渡すので、`--uptodate forceAll` で AST を作る必要がある (`.meta` から読み込んだモジュールは AST が無い) |
+| `io.open` とファイルの `read` / `write` / `seek` / `close` | ホスト (`lnswasm.mjs`) の関数 (`file_open` など) で、Node.js の fs を使う。ファイルの値は `$Obj` の部分型でホストのファイル番号を持つ。ホストで文字列を作るため、`lns_str_new` / `lns_str_set` を export する |
+| その他 | `alias`、Map の `#`、`for` の実数の増分、`__func__`、`type()`、`tonumber()`、stem の値の `[]`、`__asyncLock`、enum / alge の `get__txt()`、関数を持つメンバの呼び出し、static メンバの getter、インタフェースの getter、`__lns.runMode` などの builtin の定数 |
 
 作業中に見つかった既存の問題:
 
@@ -351,10 +354,10 @@ Lua 連携・ファイル入出力を使う 17 個を除いた部分が、Lua �
 Lua 版との既知の差:
 
 - generics のクラスの `_fromMap` で、型パラメータのメンバは型を検査しない (型を消去しているため)。
+- ファイルの `read` が失敗した場合 (書き込み用に開いたファイルの読み込みなど)、Lua 版は `nil, メッセージ, 番号` を返すが、wasm 版は `nil` だけを返す。
+- 標準入力からの `read` は未対応 (nil を返す)。
 
 残りの作業:
 
-- import (複数のモジュール)
-- `io.open` / `io.popen` (ホストの関数で実装する)
-- `_load` などの Lua 連携 (M3)
-- `make test-wasm` に `test/testGo.lns` を追加する (対象外の section を除く印を付ける)
+- M2: `test/start.lns` のうち、Lua 連携を使わない部分 (3.2)
+- M3: `_load` / `loadfile` / `io.popen` などの Lua 連携 (`Luaval`、`__luago`)。testGo の `// nowasm` の 15 個の section

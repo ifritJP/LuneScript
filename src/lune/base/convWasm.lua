@@ -642,13 +642,13 @@ end
 
 local convFilter = {}
 setmetatable( convFilter, { __index = Nodes.Filter } )
-function convFilter._new( streamName, stream, ast )
+function convFilter._new( streamName, stream, ast, importAstList )
    local obj = {}
    convFilter._setmeta( obj )
-   if obj.__init then obj:__init( streamName, stream, ast ); end
+   if obj.__init then obj:__init( streamName, stream, ast, importAstList ); end
    return obj
 end
-function convFilter:__init(streamName, stream, ast) 
+function convFilter:__init(streamName, stream, ast, importAstList) 
    Nodes.Filter.__init( self,true, ast:get_exportInfo():get_moduleTypeInfo(), ast:get_exportInfo():get_moduleTypeInfo():get_scope())
    self.streamName = streamName
    self.stream = stream
@@ -656,6 +656,10 @@ function convFilter:__init(streamName, stream, ast)
    self.builtinFuncs = ast:get_builtinFunc()
    self.moduleTypeInfo = ast:get_exportInfo():get_moduleTypeInfo()
    self.moduleScope = _lune.unwrap( ast:get_exportInfo():get_moduleTypeInfo():get_scope())
+   self.importAstList = importAstList
+   self.moduleScopeSet = {}
+   self.moduleScopeSet[self.moduleScope]= true
+   self.module2init = {}
    local mod = W.Module._new()
    self.rt = Rt.Runtime._new(mod)
    self.mod = mod
@@ -1230,7 +1234,7 @@ end
 
 function convFilter:isGlobalSym( symbol )
 
-   return symbol:get_scope() == self.moduleScope
+   return _lune._Set_has(self.moduleScopeSet, symbol:get_scope() )
 end
 
 function convFilter:cellGet( rep, cell )
@@ -3164,16 +3168,28 @@ function convFilter:lowerStreamMethod( node, prefix, name )
 
    local obj = self:tempLocal( self.rt:get_objType() )
    local pre = {ls( obj, self:lowerExpAs( prefix, prefix:get_expType() ) )}
+   local isFile = self.rt:isFile( lg( obj ) )
    do
       local _switchExp = name
       if _switchExp == "write" then
-         local txt = self:lowerArgAs( node, 1, Ast.builtinTypeString )
+         local txt = self:tempLocal( self.rt:get_strType() )
+         table.insert( pre, ls( txt, self:lowerArgAs( node, 1, Ast.builtinTypeString ) ) )
          self:getStdStream( true )
-         table.insert( pre, W.ifElse( W.refEq( lg( obj ), W.globalGet( self.stderrGlobal ) ), {W.call( self.rt:get_fnHostWriteErr(), {txt} )}, {W.call( self.rt:get_fnHostWrite(), {txt} )}, nil ) )
+         table.insert( pre, W.ifElse( isFile, {W.call( self.rt:fnFileWrite(  ), {lg( obj ), lg( txt )} )}, {W.ifElse( W.refEq( lg( obj ), W.globalGet( self.stderrGlobal ) ), {W.call( self.rt:get_fnHostWriteErr(), {lg( txt )} )}, {W.call( self.rt:get_fnHostWrite(), {lg( txt )} )}, nil )}, nil ) )
          table.insert( pre, lg( obj ) )
          table.insert( pre, W.refNull( self.rt:get_tStr() ) )
          return W.seq( pre ), {Ast.builtinTypeStem_, Ast.builtinTypeString:get_nilableTypeInfo()}
-      elseif _switchExp == "close" or _switchExp == "flush" then
+      elseif _switchExp == "read" then
+         local fmt = self:lowerArgAs( node, 1, Ast.builtinTypeStem_ )
+         table.insert( pre, W.ifElse( isFile, {W.call( self.rt:fnFileRead(  ), {lg( obj ), fmt} )}, {W.refNull( self.rt:get_tStr() )}, self.rt:get_strType() ) )
+         return W.seq( pre ), {Ast.builtinTypeString:get_nilableTypeInfo()}
+      elseif _switchExp == "seek" then
+         table.insert( pre, W.call( self.rt:fnFileSeek(  ), {lg( obj ), self:lowerArgAs( node, 1, Ast.builtinTypeString ), self:lowerArgAs( node, 2, Ast.builtinTypeInt )} ) )
+         return W.seq( pre ), {Ast.builtinTypeDDD}
+      elseif _switchExp == "close" then
+         table.insert( pre, W.ifElse( isFile, {W.call( self.rt:fnFileClose(  ), {lg( obj )} )}, nil, nil ) )
+         return W.seq( pre ), {}
+      elseif _switchExp == "flush" then
          return W.seq( pre ), {}
       end
    end
@@ -3380,6 +3396,19 @@ function convFilter:lowerStaticCall( node, prefix, name, methodType, pre )
       if methodType:equals( self.processInfo, strFunc ) then
          return self:lowerLuaCall( node, luaId, {} )
       end
+   end
+   if methodType:equals( self.processInfo, builtin.io_open ) then
+      local modeIns = W.refNull( self.rt:get_tStr() )
+      do
+         local argList = node:get_argList()
+         if argList ~= nil then
+            if #argList:get_expList() >= 2 and argList:get_expList()[2]:get_kind() ~= Nodes.NodeKind.get_Abbr() then
+               modeIns = self:lowerArgAs( node, 2, Ast.builtinTypeString:get_nilableTypeInfo() )
+            end
+         end
+      end
+      table.insert( pre, W.call( self.rt:fnIoOpen(  ), {self:lowerArgAs( node, 1, Ast.builtinTypeString ), modeIns} ) )
+      return W.seq( pre ), methodType:get_retTypeInfoList()
    end
    if methodType:equals( self.processInfo, builtin.__lns_sync_createFlag ) or methodType:equals( self.processInfo, builtin.__lns_sync__createPipe ) then
       table.insert( pre, W.refNull( W.htAny ) )
@@ -5081,6 +5110,17 @@ function convFilter:lowerStmt( node, out )
       elseif _switchExp == Nodes.NodeKind.get_Scope() then
          append( out, self:lowerBlock( (_lune.unwrap( _lune.__Cast( node, 3, Nodes.ScopeNode )) ):get_block() ) )
          return 
+      elseif _switchExp == Nodes.NodeKind.get_Import() then
+         local info = (_lune.unwrap( _lune.__Cast( node, 3, Nodes.ImportNode )) ):get_info()
+         local initIndex = self.module2init[info:get_moduleTypeInfo()]
+         if  nil == initIndex then
+            local _initIndex = initIndex
+         
+            self:error( node, string.format( "not found the imported module -- %s", info:get_modulePath()) )
+         end
+         
+         table.insert( out, W.call( initIndex, {} ) )
+         return 
       elseif _switchExp == Nodes.NodeKind.get_Apply() then
          table.insert( out, self:lowerApply( _lune.unwrap( _lune.__Cast( node, 3, Nodes.ApplyNode )) ) )
          return 
@@ -5699,10 +5739,8 @@ function convFilter:collectDecl( node )
    , 0, alreadySet )
 end
 
+function convFilter:registerModuleVars( node )
 
-function convFilter:processRoot( node, opt )
-
-   self:collectDecl( node )
    for __index, child in ipairs( node:get_children() ) do
       do
          local declNode = _lune.__Cast( child, 3, Nodes.DeclVarNode )
@@ -5717,6 +5755,41 @@ function convFilter:processRoot( node, opt )
          end
       end
    end
+end
+
+function convFilter:lowerImportedModules(  )
+
+   local mainScope = self.moduleScope
+   local mainType = self.moduleTypeInfo
+   for __index, ast in ipairs( self.importAstList ) do
+      local root = _lune.unwrap( _lune.__Cast( ast:get_node(), 3, Nodes.RootNode ))
+      local moduleType = ast:get_exportInfo():get_moduleTypeInfo()
+      self.moduleScope = _lune.unwrap( moduleType:get_scope())
+      self.moduleTypeInfo = moduleType
+      self.moduleScopeSet[self.moduleScope]= true
+      self:collectDecl( root )
+      self:registerModuleVars( root )
+      local initIndex, initFunc = self.mod:addFunc( {}, {} )
+      self.mod:setFuncName( initIndex, "init:" .. ast:get_exportInfo():get_fullName() )
+      self.module2init[moduleType] = initIndex
+      local doneGlobal = self.mod:addGlobal( W.typeI32, W.i32Const( 0 ) )
+      local saved = self.ctx
+      self.ctx = FuncCtx._new(initFunc, {}, {})
+      local body = {W.ifElse( W.globalGet( doneGlobal ), {W.ret( {} )}, nil, nil ), W.globalSet( doneGlobal, W.i32Const( 1 ) )}
+      append( body, self:lowerStmtList( root:get_children() ) )
+      initFunc:setBody( body )
+      self.ctx = saved
+   end
+   self.moduleScope = mainScope
+   self.moduleTypeInfo = mainType
+end
+
+
+function convFilter:processRoot( node, opt )
+
+   self:lowerImportedModules(  )
+   self:collectDecl( node )
+   self:registerModuleVars( node )
    local mainBody = self:lowerStmtList( node:get_children() )
    self:finalizeClasses(  )
    local body = {}
@@ -5729,10 +5802,9 @@ function convFilter:processRoot( node, opt )
    self.stream:write( self.mod:encode(  ) )
 end
 
+local function createFilter( streamName, stream, ast, importAstList )
 
-local function createFilter( streamName, stream, ast )
-
-   return convFilter._new(streamName, stream, ast)
+   return convFilter._new(streamName, stream, ast, importAstList)
 end
 _moduleObj.createFilter = createFilter
 

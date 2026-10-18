@@ -194,6 +194,7 @@ function Runtime:__init(mod)
    self.name2func = {}
    self.sig2cloInfo = {}
    self.name2luaFunc = {}
+   self.tFile = -1
    self.luaImported = false
    self.tStr = mod:addArrayType( W.fieldI8( true ) )
    self.strType = W.refType( self.tStr )
@@ -930,6 +931,16 @@ end
 function Runtime:exportHostFuncs(  )
 
    do
+      local index, func = self.mod:addFunc( {W.typeI32}, {self.strType} )
+      func:setBody( {W.arrayNewDefault( self.tStr, lg( 0 ) )} )
+      self.mod:exportFunc( "lns_str_new", index )
+   end
+   do
+      local index, func = self.mod:addFunc( {self.strType, W.typeI32, W.typeI32}, {} )
+      func:setBody( {W.arraySet( self.tStr, lg( 0 ), lg( 1 ), lg( 2 ) )} )
+      self.mod:exportFunc( "lns_str_set", index )
+   end
+   do
       local index, func = self.mod:addFunc( {self.strType}, {W.typeI32} )
       func:setBody( {W.arrayLen( lg( 0 ) )} )
       self.mod:exportFunc( "lns_str_len", index )
@@ -1186,6 +1197,121 @@ function Runtime:fnStrGsub(  )
    local result = func:addLocal( self.listType )
    local args = func:addLocal( self.listType )
    func:setBody( {ls( args, W.call( self:fnListNew(  ), {i32c( 4 )} ) ), W.call( self:fnListPush(  ), {lg( args ), lg( 0 )} ), W.call( self:fnListPush(  ), {lg( args ), lg( 1 )} ), W.call( self:fnListPush(  ), {lg( args ), lg( 2 )} ), ls( result, W.call( self:fnLuaCall(  ), {i32c( _moduleObj.luaGsub ), lg( args )} ) ), W.refCast( self.tStr, self:listItem( lg( result ), 0 ) ), self:unboxI64( self:listItem( lg( result ), 1 ) )} )
+   return index
+end
+
+function Runtime:getFileType(  )
+
+   if self.tFile < 0 then
+      self.tFile = self.mod:addStructType( self.tObj, {W.field( W.typeI32, true ), W.field( W.refType( self.tVT ), false ), W.field( W.typeI32, false )} )
+   end
+   return self.tFile
+end
+
+
+function Runtime:hostFunc( name, params, results )
+
+   do
+      local index = self:getFunc( "host." .. name )
+      if index ~= nil then
+         return index
+      end
+   end
+   local index = self.mod:importFunc( "lns", name, params, results )
+   self.mod:setFuncName( index, "host." .. name )
+   self.name2func["host." .. name] = index
+   return index
+end
+
+function Runtime:fileFd( obj )
+
+   local tFile = self:getFileType(  )
+   return W.structGet( tFile, 2, W.refCast( tFile, obj ) )
+end
+
+function Runtime:fnIoOpen(  )
+
+   do
+      local index = self:getFunc( "ioOpen" )
+      if index ~= nil then
+         return index
+      end
+   end
+   local fnOpen = self:hostFunc( "file_open", {self.strType, self.strType}, {W.typeI32} )
+   local fnError = self:hostFunc( "file_error", {}, {self.strType} )
+   local tFile = self:getFileType(  )
+   local index, func = self:newFunc( "ioOpen", {self.strType, self.strType}, {self.objType, self.strType} )
+   local fd = func:addLocal( W.typeI32 )
+   func:setBody( {when_( W.refIsNull( lg( 1 ) ), {ls( 1, self:strLiteral( "r" ) )} ), ls( fd, W.call( fnOpen, {lg( 0 ), lg( 1 )} ) ), when_( p( W.opI32LtS, {lg( fd ), i32c( 0 )} ), {W.ret( {W.refNull( self.tObj ), W.call( fnError, {} )} )} ), W.structNew( tFile, {i32c( 0 ), W.structNew( self.tVT, {W.refNull( self.tAnyArr )} ), lg( fd )} ), W.refNull( self.tStr )} )
+   return index
+end
+
+function Runtime:isFile( obj )
+
+   return W.refTest( self:getFileType(  ), obj )
+end
+
+function Runtime:fnFileRead(  )
+
+   do
+      local index = self:getFunc( "fileRead" )
+      if index ~= nil then
+         return index
+      end
+   end
+   local fnRead = self:hostFunc( "file_read", {W.typeI32, W.typeI32, W.typeI64}, {self.strType} )
+   local index, func = self:newFunc( "fileRead", {W.typeAnyRef, W.typeAnyRef}, {self.strType} )
+   local kind = func:addLocal( W.typeI32 )
+   local num = func:addLocal( W.typeI64 )
+   local fmt = func:addLocal( self.strType )
+   local ch = func:addLocal( W.typeI32 )
+   func:setBody( {ls( kind, i32c( 1 ) ), when_( W.refTest( self.tBoxI64, lg( 1 ) ), {ls( kind, i32c( 3 ) ), ls( num, self:unboxI64( lg( 1 ) ) )} ), when_( W.refTest( self.tStr, lg( 1 ) ), {ls( fmt, W.refCast( self.tStr, lg( 1 ) ) ), ls( ch, W.arrayGetU( self.tStr, lg( fmt ), i32c( 0 ) ) ), when_( p( W.opI32Eq, {lg( ch ), i32c( 0x2a )} ), {ls( ch, W.arrayGetU( self.tStr, lg( fmt ), i32c( 1 ) ) )} ), when_( p( W.opI32Eq, {lg( ch ), i32c( 0x61 )} ), {ls( kind, i32c( 0 ) )} ), when_( p( W.opI32Eq, {lg( ch ), i32c( 0x4c )} ), {ls( kind, i32c( 2 ) )} )} ), W.call( fnRead, {self:fileFd( lg( 0 ) ), lg( kind ), lg( num )} )} )
+   return index
+end
+
+function Runtime:fnFileWrite(  )
+
+   do
+      local index = self:getFunc( "fileWrite" )
+      if index ~= nil then
+         return index
+      end
+   end
+   local fnWrite = self:hostFunc( "file_write", {W.typeI32, self.strType}, {} )
+   local index, func = self:newFunc( "fileWrite", {W.typeAnyRef, self.strType}, {} )
+   func:setBody( {W.call( fnWrite, {self:fileFd( lg( 0 ) ), lg( 1 )} )} )
+   return index
+end
+
+function Runtime:fnFileSeek(  )
+
+   do
+      local index = self:getFunc( "fileSeek" )
+      if index ~= nil then
+         return index
+      end
+   end
+   local fnSeek = self:hostFunc( "file_seek", {W.typeI32, W.typeI32, W.typeI64}, {W.typeI64} )
+   local index, func = self:newFunc( "fileSeek", {W.typeAnyRef, self.strType, W.typeI64}, {self.listType} )
+   local whence = func:addLocal( W.typeI32 )
+   local ch = func:addLocal( W.typeI32 )
+   local pos = func:addLocal( W.typeI64 )
+   local result = func:addLocal( self.listType )
+   func:setBody( {ls( whence, i32c( 1 ) ), ls( ch, W.arrayGetU( self.tStr, lg( 1 ), i32c( 0 ) ) ), when_( p( W.opI32Eq, {lg( ch ), i32c( 0x73 )} ), {ls( whence, i32c( 0 ) )} ), when_( p( W.opI32Eq, {lg( ch ), i32c( 0x65 )} ), {ls( whence, i32c( 2 ) )} ), ls( pos, W.call( fnSeek, {self:fileFd( lg( 0 ) ), lg( whence ), lg( 2 )} ) ), ls( result, W.call( self:fnListNew(  ), {i32c( 2 )} ) ), W.ifElse( p( W.opI64LtS, {lg( pos ), i64c( 0 )} ), {W.call( self:fnListPush(  ), {lg( result ), W.refNull( W.htAny )} ), W.call( self:fnListPush(  ), {lg( result ), self:strLiteral( "Invalid argument" )} )}, {W.call( self:fnListPush(  ), {lg( result ), self:boxI64( lg( pos ) )} )}, nil ), lg( result )} )
+   return index
+end
+
+function Runtime:fnFileClose(  )
+
+   do
+      local index = self:getFunc( "fileClose" )
+      if index ~= nil then
+         return index
+      end
+   end
+   local fnClose = self:hostFunc( "file_close", {W.typeI32}, {} )
+   local index, func = self:newFunc( "fileClose", {W.typeAnyRef}, {} )
+   func:setBody( {W.call( fnClose, {self:fileFd( lg( 0 ) )} )} )
    return index
 end
 

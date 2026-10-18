@@ -63,6 +63,30 @@ test-wasm: $(WASM_LUA)
 			$(WASM_WORK_DIR)/$$name.wasm.result || exit 1;		\
 		echo "ok -- $$name ($$(stat -c %s $(WASM_WORK_DIR)/$$dir/$$name.wasm) bytes)"; \
 	done
+	$(MAKE) test-wasm-testgo
+
+# test/testGo.lns (+ test/subGoPkg) を、Lua 版と wasm 版で比べる。
+# "_section(); // nowasm" の section は、wasm で未対応の機能 (Lua 連携) を使うので、
+# 行番号を保ったまま空行にして除く。
+# import したモジュールも wasm にまとめるので、--uptodate forceAll で AST を作る。
+WASM_TESTGO_DIR=$(WASM_WORK_DIR)/testgo
+test-wasm-testgo: $(WASM_LUA)
+	rm -rf $(WASM_TESTGO_DIR)
+	mkdir -p $(WASM_TESTGO_DIR)/test
+	rsync -a --include='*.lua' --include='*.lns' --exclude='*.*' lune $(WASM_TESTGO_DIR)
+	if [ -f lnsc ]; then cp -a lnsc $(WASM_TESTGO_DIR); fi
+	cp -r test/subGoPkg $(WASM_TESTGO_DIR)/test/
+	awk '/^_section\(\);/ { skip = ( $$0 ~ /\/\/ *nowasm/ ) } { print skip ? "" : $$0 }' \
+		test/testGo.lns | sed 's@/.nolua51./@//@g' > $(WASM_TESTGO_DIR)/test/testGo.lns
+	(cd $(WASM_TESTGO_DIR); $(LNSC) test/testGo.lns exe $(EXE_OPT)	\
+		> testGo.lua.result 2> testGo.lua.err)
+	(cd $(WASM_TESTGO_DIR); $(LNSC) test/testGo.lns SAVE . -langWasm	\
+		--uptodate forceAll > /dev/null 2> testGo.conv.err)
+	(cd $(WASM_TESTGO_DIR); $(NODE) $(CURDIR)/misc/wasm/lnswasm.mjs test/testGo.wasm \
+		> testGo.wasm.result 2>&1)
+	diff -u $(WASM_TESTGO_DIR)/testGo.lua.result $(WASM_TESTGO_DIR)/testGo.wasm.result
+	@echo "ok -- testGo ($$(stat -c %s $(WASM_TESTGO_DIR)/test/testGo.wasm) bytes,"	\
+		"$$(wc -l < $(WASM_TESTGO_DIR)/testGo.lua.result) lines)"
 
 # go 版のネイティブ実行と wasm 実行の速度を比べる (docs/sw_design/wasm_benchmark.md)
 # WASM_OPT に Binaryen の wasm-opt を指定すると、wasm-opt -O3 した wasm も測る

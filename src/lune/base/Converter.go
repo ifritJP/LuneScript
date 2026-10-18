@@ -19,47 +19,47 @@ return "CreateAstResult.Creater"
 }
 type Converter_ConverterFunc func (_env *LnsEnv)
 // for 336
-func Converter_convExp0_2476(arg1 []LnsAny) LnsAny {
+func Converter_convExp0_2461(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 345
-func Converter_convExp0_2547(arg1 []LnsAny) LnsAny {
+func Converter_convExp0_2532(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 78
-func Converter_convExp0_1600(arg1 []LnsAny) (LnsAny, LnsAny) {
+func Converter_convExp0_1585(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // for 226
-func Converter_convExp0_1935(arg1 []LnsAny) string {
+func Converter_convExp0_1920(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 285
-func Converter_convExp0_2186(arg1 []LnsAny) string {
+func Converter_convExp0_2171(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 286
-func Converter_convExp0_2199(arg1 []LnsAny) string {
+func Converter_convExp0_2184(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 341
-func Converter_convExp0_2500(arg1 []LnsAny) (bool, string) {
+func Converter_convExp0_2485(arg1 []LnsAny) (bool, string) {
     return Lns_getFromMulti( arg1, 0 ).(bool), Lns_getFromMulti( arg1, 1 ).(string)
 }
 // for 464
-func Converter_convExp0_2747(arg1 []LnsAny) LnsAny {
+func Converter_convExp0_2732(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 541
-func Converter_convExp0_2877(arg1 []LnsAny) LnsAny {
+func Converter_convExp0_2862(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 610
-func Converter_convExp0_2950(arg1 []LnsAny) LnsAny {
+func Converter_convExp0_2935(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 655
-func Converter_convExp0_3014(arg1 []LnsAny) LnsAny {
+// for 668
+func Converter_convExp0_3062(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // 46: decl @lune.@base.@Converter.createModuleInfo
@@ -85,8 +85,8 @@ func Converter_byteCompileFromLuaTxt(_env *LnsEnv, txt string,stripDebugInfo boo
         var err LnsAny
         chunk,err = _env.GetVM().Load(txt, nil)
         if chunk != nil{
-            chunk_276 := chunk.(*Lns_luaValue)
-            ret = _env.GetVM().String_dump(chunk_276, stripDebugInfo)
+            chunk_278 := chunk.(*Lns_luaValue)
+            ret = _env.GetVM().String_dump(chunk_278, stripDebugInfo)
         } else {
             Util_err(_env, Lns_unwrapDefault( err, "load error").(string))
         }
@@ -128,19 +128,19 @@ func Converter_closeStreams(_env *LnsEnv, stream LnsAny,metaStream LnsAny,depend
             var oldLine LnsAny
             oldLine = oldStream.FP.Read(_env, "*l")
             if oldLine != nil{
-                oldLine_325 := oldLine.(string)
+                oldLine_327 := oldLine.(string)
                 if len(oldBuildIdLine) == 0{
-                    if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(oldLine_325,"^_moduleObj.__buildId", nil, nil))){
-                        oldBuildIdLine = oldLine_325
+                    if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(oldLine_327,"^_moduleObj.__buildId", nil, nil))){
+                        oldBuildIdLine = oldLine_327
                     }
                 }
             }
             
             if newLine != nil{
-                newLine_329 := newLine.(string)
+                newLine_331 := newLine.(string)
                 if len(newBuildIdLine) == 0{
-                    if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(newLine_329,"^_moduleObj.__buildId", nil, nil))){
-                        newBuildIdLine = newLine_329
+                    if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(newLine_331,"^_moduleObj.__buildId", nil, nil))){
+                        newBuildIdLine = newLine_331
                     }
                 }
             }
@@ -149,20 +149,20 @@ func Converter_closeStreams(_env *LnsEnv, stream LnsAny,metaStream LnsAny,depend
                 var cont bool
                 cont = false
                 if newLine != nil && oldLine != nil{
-                    newLine_335 := newLine.(string)
-                    oldLine_336 := oldLine.(string)
-                    if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(oldLine_336,"^_moduleObj.__buildId", nil, nil))){
-                        if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(newLine_335,"^_moduleObj.__buildId", nil, nil))){
+                    newLine_337 := newLine.(string)
+                    oldLine_338 := oldLine.(string)
+                    if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(oldLine_338,"^_moduleObj.__buildId", nil, nil))){
+                        if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(newLine_337,"^_moduleObj.__buildId", nil, nil))){
                             tailBeginPos = newStream.FP.Get_lineNo(_env)
                             cont = true
                         }
                     } else if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
-                        _env.SetStackVal( Lns_car(_env.GetVM().String_find(oldLine_336,"^__dependModuleMap.*buildId =", nil, nil))) &&
-                        _env.SetStackVal( Lns_car(_env.GetVM().String_find(newLine_335,"^__dependModuleMap.*buildId =", nil, nil))) )){
+                        _env.SetStackVal( Lns_car(_env.GetVM().String_find(oldLine_338,"^__dependModuleMap.*buildId =", nil, nil))) &&
+                        _env.SetStackVal( Lns_car(_env.GetVM().String_find(newLine_337,"^__dependModuleMap.*buildId =", nil, nil))) )){
                         var oldSub string
-                        oldSub = Converter_convExp0_2186(Lns_2DDD(_env.GetVM().String_gsub(oldLine_336,"buildId =.*", "")))
+                        oldSub = Converter_convExp0_2171(Lns_2DDD(_env.GetVM().String_gsub(oldLine_338,"buildId =.*", "")))
                         var newSub string
-                        newSub = Converter_convExp0_2199(Lns_2DDD(_env.GetVM().String_gsub(newLine_335,"buildId =.*", "")))
+                        newSub = Converter_convExp0_2184(Lns_2DDD(_env.GetVM().String_gsub(newLine_337,"buildId =.*", "")))
                         if oldSub == newSub{
                             cont = true
                         }
@@ -201,22 +201,22 @@ func Converter_closeStreams(_env *LnsEnv, stream LnsAny,metaStream LnsAny,depend
         return false,""
     }
     if stream != nil{
-        stream_356 := stream.(Lns_oStream)
-        stream_356.Close(_env)
+        stream_358 := stream.(Lns_oStream)
+        stream_358.Close(_env)
     }
     if dependStream != nil{
-        dependStream_358 := dependStream.(Lns_oStream)
-        dependStream_358.Close(_env)
+        dependStream_360 := dependStream.(Lns_oStream)
+        dependStream_360.Close(_env)
     }
     if metaStream != nil{
-        metaStream_360 := metaStream.(*Util_memStream)
+        metaStream_362 := metaStream.(*Util_memStream)
         if saveMetaFlag{
             var newMetaTxt string
-            newMetaTxt = metaStream_360.FP.Get_txt(_env)
+            newMetaTxt = metaStream_362.FP.Get_txt(_env)
             var oldMetaTxt string
             oldMetaTxt = ""
             {
-                _oldFileObj := Converter_convExp0_2476(Lns_2DDD(Lns_io_open(metaPath, nil)))
+                _oldFileObj := Converter_convExp0_2461(Lns_2DDD(Lns_io_open(metaPath, nil)))
                 if !Lns_IsNil( _oldFileObj ) {
                     oldFileObj := _oldFileObj.(Lns_luaStream)
                     oldMetaTxt = Lns_unwrapDefault( oldFileObj.Read(_env, "*a"), "").(string)
@@ -229,7 +229,7 @@ func Converter_closeStreams(_env *LnsEnv, stream LnsAny,metaStream LnsAny,depend
             var Converter_saveMeta func(_env *LnsEnv, meta string)
             Converter_saveMeta = func(_env *LnsEnv, meta string) {
                 {
-                    _fileObj := Converter_convExp0_2547(Lns_2DDD(Lns_io_open(metaPath, "w")))
+                    _fileObj := Converter_convExp0_2532(Lns_2DDD(Lns_io_open(metaPath, "w")))
                     if !Lns_IsNil( _fileObj ) {
                         fileObj := _fileObj.(Lns_luaStream)
                         fileObj.Write(_env, meta)
@@ -253,10 +253,9 @@ func Converter_closeStreams(_env *LnsEnv, stream LnsAny,metaStream LnsAny,depend
 // 225: decl @lune.@base.@Converter.closeStreams.txt2ModuleId
 func Converter_closeStreams__txt2ModuleId_0_(_env *LnsEnv, txt string) *FrontInterface_ModuleId {
     var buildIdTxt string
-    buildIdTxt = Converter_convExp0_1935(Lns_2DDD(_env.GetVM().String_gsub(Lns_car(_env.GetVM().String_gsub(txt,"^_moduleObj.__buildId = ", "")).(string),"\"", "")))
+    buildIdTxt = Converter_convExp0_1920(Lns_2DDD(_env.GetVM().String_gsub(Lns_car(_env.GetVM().String_gsub(txt,"^_moduleObj.__buildId = ", "")).(string),"\"", "")))
     return FrontInterface_ModuleId_createIdFromTxt(_env, buildIdTxt)
 }
-
 
 
 
@@ -350,7 +349,7 @@ func (self *Converter_LuaConverter) SaveLua(_env *LnsEnv) {
     var streamDst Lns_luaStream
     
     {
-        _streamDst := Converter_convExp0_2747(Lns_2DDD(Lns_io_open(self.luaPath, "w")))
+        _streamDst := Converter_convExp0_2732(Lns_2DDD(Lns_io_open(self.luaPath, "w")))
         if _streamDst == nil{
             Util_err(_env, _env.GetVM().String_format("write open error -- %s", Lns_2DDD(self.luaPath)))
         } else {
@@ -364,8 +363,8 @@ func (self *Converter_LuaConverter) SaveLua(_env *LnsEnv) {
     metaMemStream = NewUtil_memStream(_env)
     metaMemStream.FP.Write(_env, metaTxt)
     if dependsStreamDst != nil{
-        dependsStreamDst_394 := dependsStreamDst.(Lns_oStream)
-        dependsStreamDst_394.Write(_env, Lns_unwrap( dependTxt).(string))
+        dependsStreamDst_396 := dependsStreamDst.(Lns_oStream)
+        dependsStreamDst_396.Write(_env, Lns_unwrap( dependTxt).(string))
     }
     Converter_closeStreams(_env, streamDst, metaMemStream, dependsStreamDst, self.metaPath, self.option.Mode == Option_ModeKind__SaveMeta)
 }
@@ -382,7 +381,7 @@ func (self *Converter_GoConverter) SaveGo(_env *LnsEnv) {
     var file Lns_luaStream
     
     {
-        _file := Converter_convExp0_2877(Lns_2DDD(Lns_io_open(self.path, "w")))
+        _file := Converter_convExp0_2862(Lns_2DDD(Lns_io_open(self.path, "w")))
         if _file == nil{
             Util_err(_env, _env.GetVM().String_format("can't open file -- %s", Lns_2DDD(self.path)))
         } else {
@@ -405,7 +404,7 @@ func (self *Converter_PythonConverter) SavePython(_env *LnsEnv) {
     var file Lns_luaStream
     
     {
-        _file := Converter_convExp0_2950(Lns_2DDD(Lns_io_open(self.path, "w")))
+        _file := Converter_convExp0_2935(Lns_2DDD(Lns_io_open(self.path, "w")))
         if _file == nil{
             Util_err(_env, _env.GetVM().String_format("can't open file -- %s", Lns_2DDD(self.path)))
         } else {
@@ -417,15 +416,24 @@ func (self *Converter_PythonConverter) SavePython(_env *LnsEnv) {
 }
 // 648: decl @lune.@base.@Converter.WasmConverter.runMain
 func (self *Converter_WasmConverter) RunMain(_env *LnsEnv) {
-    self.converter(_env)
+    self.ast = Converter_getAstFromResult_6_(_env, self.astResult)
 }
-// 652: decl @lune.@base.@Converter.WasmConverter.saveWasm
-func (self *Converter_WasmConverter) SaveWasm(_env *LnsEnv) {
+// 654: decl @lune.@base.@Converter.WasmConverter.getAst
+func (self *Converter_WasmConverter) GetAst(_env *LnsEnv) *AstInfo_ASTInfo {
     LnsJoin(_env, self.FP)
+    return Lns_unwrap( self.ast).(*AstInfo_ASTInfo)
+}
+// 662: decl @lune.@base.@Converter.WasmConverter.saveWasm
+func (self *Converter_WasmConverter) SaveWasm(_env *LnsEnv, importAstList *LnsList2_[*AstInfo_ASTInfo]) {
+    var ast *AstInfo_ASTInfo
+    ast = self.FP.GetAst(_env)
+    var conv *Nodes_Filter
+    conv = ConvWasm_createFilter(_env, self.scriptPath, self.memStream.FP, ast, importAstList)
+    ast.FP.Get_node(_env).FP.ProcessFilter(_env, conv, ConvWasm_Opt2Stem(NewConvWasm_Opt(_env, ast.FP.Get_node(_env))))
     var file Lns_luaStream
     
     {
-        _file := Converter_convExp0_3014(Lns_2DDD(Lns_io_open(self.path, "w")))
+        _file := Converter_convExp0_3062(Lns_2DDD(Lns_io_open(self.path, "w")))
         if _file == nil{
             Util_err(_env, _env.GetVM().String_format("can't open file -- %s", Lns_2DDD(self.path)))
         } else {
@@ -831,16 +839,19 @@ func (self *Converter_PythonConverter) InitConverter_PythonConverter(_env *LnsEn
 // declaration Class -- WasmConverter
 type Converter_WasmConverterMtd interface {
     GetLnsSyncFlag() *Lns_syncFlag
+    GetAst(_env *LnsEnv) *AstInfo_ASTInfo
     Run(_env *LnsEnv)
     RunMain(_env *LnsEnv)
-    SaveWasm(_env *LnsEnv)
+    SaveWasm(_env *LnsEnv, arg1 *LnsList2_[*AstInfo_ASTInfo])
     Start(_env *LnsEnv, arg1 LnsInt, arg2 LnsAny) bool
 }
 type Converter_WasmConverter struct {
     Runner_Runner
     memStream *Util_memStream
     path string
-    converter Converter_ConverterFunc
+    scriptPath string
+    astResult LnsAny
+    ast LnsAny
     FP Converter_WasmConverterMtd
 }
 func Converter_WasmConverter2Stem( obj LnsAny ) LnsAny {
@@ -877,7 +888,7 @@ func NewConverter_WasmConverter(_env *LnsEnv, arg1 string, arg2 LnsAny, arg3 str
     obj.InitConverter_WasmConverter(_env, arg1, arg2, arg3, arg4)
     return obj
 }
-// 626: DeclConstr
+// 628: DeclConstr
 func (self *Converter_WasmConverter) InitConverter_WasmConverter(_env *LnsEnv, scriptPath string,astResult LnsAny,mod string,option *Option_Option) {
     self.InitRunner_Runner(_env)
     var path string
@@ -890,14 +901,10 @@ func (self *Converter_WasmConverter) InitConverter_WasmConverter(_env *LnsEnv, s
         }
     }
     self.path = path
+    self.scriptPath = scriptPath
+    self.astResult = astResult
+    self.ast = nil
     self.memStream = NewUtil_memStream(_env)
-    self.converter = Converter_ConverterFunc(func(_env *LnsEnv) {
-        var ast *AstInfo_ASTInfo
-        ast = Converter_getAstFromResult_6_(_env, astResult)
-        var conv *Nodes_Filter
-        conv = ConvWasm_createFilter(_env, scriptPath, self.memStream.FP, ast)
-        ast.FP.Get_node(_env).FP.ProcessFilter(_env, conv, ConvWasm_Opt2Stem(NewConvWasm_Opt(_env, ast.FP.Get_node(_env))))
-    })
     self.FP.Start(_env, 1, _env.GetVM().String_format("convwasm -- %s", Lns_2DDD(scriptPath)))
 }
 

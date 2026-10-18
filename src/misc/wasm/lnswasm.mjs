@@ -17,7 +17,9 @@
 // --no-liftoff を設定する前に読み込んで初期化する (初期化が遅くならないように)。
 // 環境変数 LNS_WASM_LIFTOFF=1 で、V8 の標準の動作 (Liftoff から段階的に最適化) にする。
 
-import { readFileSync, writeSync } from 'node:fs';
+import {
+  readFileSync, writeSync, openSync, readSync, closeSync, fstatSync,
+} from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { setFlagsFromString } from 'node:v8';
 
@@ -141,8 +143,140 @@ export async function run(wasmPath) {
     return bytes;
   }
 
+  /** バイト列から wasm の文字列を作る */
+  function newStr(bytes) {
+    const ref = exports.lns_str_new(bytes.length);
+    for (let i = 0; i < bytes.length; i++) {
+      exports.lns_str_set(ref, i, bytes[i]);
+    }
+    return ref;
+  }
+
+  // io.open で開いたファイル (番号 → { fd, pos, append })
+  const files = new Map();
+  let nextFileNo = 0;
+  let lastFileError = '';
+  /** Lua の io.open のモード → Node.js の flags */
+  const modeMap = {
+    r: 'r', w: 'w', a: 'a', 'r+': 'r+', 'w+': 'w+', 'a+': 'a+',
+  };
+  /** Lua (C の strerror) と同じエラーのメッセージ */
+  const errMessMap = {
+    ENOENT: 'No such file or directory',
+    EACCES: 'Permission denied',
+    EISDIR: 'Is a directory',
+    EEXIST: 'File exists',
+  };
+  /** file の pos から最大 size バイトを読む */
+  function readBytes(file, size) {
+    const buf = Buffer.alloc(size);
+    const num = readSync(file.fd, buf, 0, size, file.pos);
+    file.pos += num;
+    return buf.subarray(0, num);
+  }
+  /** ファイルを読む (file_read の本体) */
+  function fileRead(file, kind, num) {
+    switch (kind) {
+      case 0: { // "a": 残りの全て (終端でも "")
+        const size = fstatSync(file.fd).size;
+        return newStr(readBytes(file, Math.max(0, size - file.pos)));
+      }
+      case 1: // "l": 1 行 (改行を除く)
+      case 2: { // "L": 改行付きの 1 行
+        const chunks = [];
+        for (;;) {
+          const bytes = readBytes(file, 1);
+          if (bytes.length === 0) {
+            if (chunks.length === 0) {
+              return null;
+            }
+            break;
+          }
+          if (bytes[0] === 0x0a) {
+            if (kind === 2) {
+              chunks.push(bytes);
+            }
+            break;
+          }
+          chunks.push(bytes);
+        }
+        return newStr(Buffer.concat(chunks));
+      }
+      default: { // バイト数
+        const bytes = readBytes(file, Number(num));
+        if (bytes.length === 0 && Number(num) > 0) {
+          return null;
+        }
+        return newStr(bytes);
+      }
+    }
+  }
+
+  const fileFuncs = {
+    file_open: (pathRef, modeRef) => {
+      const path = readStr(pathRef).toString('utf8');
+      const mode = readStr(modeRef).toString('latin1').replace('b', '');
+      const flags = modeMap[mode];
+      if (!flags) {
+        lastFileError = `invalid mode '${mode}'`;
+        return -1;
+      }
+      try {
+        const fd = openSync(path, flags);
+        const fileNo = nextFileNo++;
+        files.set(fileNo, { fd, pos: 0, append: flags.startsWith('a') });
+        return fileNo;
+      } catch (err) {
+        lastFileError = `${path}: ${errMessMap[err.code] ?? err.message}`;
+        return -1;
+      }
+    },
+    file_error: () => newStr(Buffer.from(lastFileError, 'utf8')),
+    file_read: (fileNo, kind, num) => {
+      try {
+        return fileRead(files.get(fileNo), kind, num);
+      } catch (err) {
+        // 書き込み用に開いたファイルの読み込みなど。Lua 版と同じく nil にする
+        return null;
+      }
+    },
+    file_write: (fileNo, ref) => {
+      const file = files.get(fileNo);
+      const bytes = readStr(ref);
+      if (file.append) {
+        writeSync(file.fd, bytes, 0, bytes.length, null);
+      } else {
+        writeSync(file.fd, bytes, 0, bytes.length, file.pos);
+        file.pos += bytes.length;
+      }
+    },
+    file_seek: (fileNo, whence, offset) => {
+      const file = files.get(fileNo);
+      let base = 0;
+      if (whence === 1) {
+        base = file.pos;
+      } else if (whence === 2) {
+        base = fstatSync(file.fd).size;
+      }
+      const pos = base + Number(offset);
+      if (pos < 0) {
+        return -1n;
+      }
+      file.pos = pos;
+      return BigInt(pos);
+    },
+    file_close: (fileNo) => {
+      const file = files.get(fileNo);
+      if (file) {
+        closeSync(file.fd);
+        files.delete(fileNo);
+      }
+    },
+  };
+
   const imports = {
     lns: {
+      ...fileFuncs,
       write: (ref) => write(readStr(ref)),
       write_err: (ref) => {
         flush();
